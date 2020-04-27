@@ -6,9 +6,9 @@ To install, you will need cargo/rustc and npm/node. Then:
 
 ```bash
 git clone https://github.com/thisminute/cwf.git
-cd cwf/www # npm stuff is in the www directory
+cd cwf/www    # npm stuff is in the www directory
 npm run clean # will run wasm-pack and npm install
-npm start # opens a new browser tab in watch mode for the binary!
+npm start     # opens a new browser tab in watch mode for the binary!
 ```
 
 Once started, try editing src/app.rs. Example:
