@@ -5,8 +5,8 @@ This project uses webpack-dev-server to locally serve a wasm binary compiled fro
 To install, you will need cargo/rustc and npm/node. Then:
 
 ```bash
-git clone https://github.com/thisminute/cwf.git
-cd cwf/www    # npm stuff is in the www directory
+git clone https://github.com/thisminute/cascading-wasm-framework.git
+cd cascading-wasm-framework/www    # npm stuff is in the www directory
 npm run clean # will run wasm-pack and npm install
 npm start     # opens a new browser tab in watch mode for the binary!
 ```
