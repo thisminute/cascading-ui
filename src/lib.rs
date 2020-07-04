@@ -1,19 +1,18 @@
-#[macro_use]
-mod cwf;
+use cwf::*;
 
-use wasm_bindgen::prelude::*;
-
-#[wasm_bindgen(start)]
-pub fn run() -> Result<(), JsValue> {
-
-	cwf!{
-		span {
-			text: hello;
-		}
-		div {
-			text: world;
-		}
+cwf! {
+	title: "Test Website Title";
+	background_color: red;
+	text_align: center;
+	content: "testing thingy";
+	a1 {
+		b1: asd;
+		b2: asd;
 	}
-
-	Ok(())
 }
+
+// cwf! {
+// 	klasdjf: asd;
+// 	klasdjf: asd;
+// 	klasdjf: asd;
+// }
