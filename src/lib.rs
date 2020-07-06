@@ -1,18 +1,34 @@
-use cwf::*;
+use cwf::cwf;
 
 cwf! {
-	title: "Test Website Title";
-	background_color: red;
-	text_align: center;
-	content: "testing thingy";
-	a1 {
-		b1: asd;
-		b2: asd;
+	title: "Stack Overflow";
+
+	header {
+		text: "S/O";
+		hamburger {}
+		logo {}
+		products {
+			text: "Products";
+			searchbar {}
+		}
+		search {}
+		icons {
+			profile {}
+			inbox {}
+			achievements {}
+			review {}
+			help {}
+			// site-switcher {}
+		}
+	}
+	content {
+		mainbar {
+			headline {}
+			filter {}
+			list {}
+		}
+		sidebar {
+			stuff {}
+		}
 	}
 }
-
-// cwf! {
-// 	klasdjf: asd;
-// 	klasdjf: asd;
-// 	klasdjf: asd;
-// }

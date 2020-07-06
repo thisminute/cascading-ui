@@ -10,6 +10,7 @@
   "scripts": {
     "start": "run-p -n --aggregate-output serve rustwatch",
     "serve": "webpack-dev-server --open",
+    "test": "wasm-pack test --node ..",
     "rustwatch": "onchange -ik ../cwf -- wasm-pack build",
     "build": "npm run clean && webpack --config webpack.config.js",
     "clean": "rm -f package-lock.json && rm -rf node_modules && rm -f ../Cargo.lock && rm -rf ../pkg && rm -rf ../target && wasm-pack build && npm install && npm audit fix"
