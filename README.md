@@ -2,10 +2,22 @@ Based on the https://github.com/rustwasm/wasm-pack-template.git
 
 This project uses webpack-dev-server to locally serve a wasm binary compiled from a custom syntax called CWF. The language is implemented with Rust macros and gets compiled by Rust, and this environment exists to test and develop the language. The language implementation currently sits in `src/app/cwf.rs`, with example/WIP templates in `src/app.rs`.
 
-To install, you will need (rust)[https://www.rust-lang.org/tools/install] and (node)[https://nodejs.org/en/download/]. Then:
+To install, you will need (rust)[https://www.rust-lang.org/tools/install] and (node)[https://nodejs.org/en/download/] and (wasm-pack)[https://rustwasm.github.io/wasm-pack/installer/].
 
-```bash
+
+Then:
+```
 git clone https://github.com/thisminute/cascading-wasm-framework.git
+```
+
+For windows users, run in the root directory:
+```
+rustup toolchain install stable-x86_64-pc-windows-gnu
+rustup default stable-x86_64-pc-windows-gnu
+```
+
+Then:
+```
 cd cwf/www    # npm stuff is in the www directory
 npm run clean # will run wasm-pack and npm install
 npm start     # opens a new browser tab in watch mode for the binary!
