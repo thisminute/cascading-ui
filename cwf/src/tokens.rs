@@ -28,7 +28,7 @@ pub struct CwfIdent {
 
 impl Parse for CwfIdent {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		eprint!("CwfIdentParse ");
+		eprintln!("CwfIdentParse ");
 
 		let mut parts = Vec::new();
 		while input.peek(Ident) {
@@ -67,7 +67,7 @@ pub struct Rule {
 
 impl Parse for Rule {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		eprint!("RuleParse ");
+		eprintln!("RuleParse ");
 		let property = input.parse()?;
 		input.parse::<Token![:]>()?;
 		let value = input.parse()?;
@@ -96,7 +96,7 @@ pub struct List {
 
 impl Parse for List {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		eprint!("ListParse ");
+		eprintln!("ListParse ");
 		let identifier = input.parse()?;
 
 		let content;
