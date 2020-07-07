@@ -8,7 +8,7 @@ wasm_bindgen_test_configure!(run_in_browser);
 
 cwf! {
 	text {
-		content: "hello world";
+		text: "hello world";
 	}
 }
 
