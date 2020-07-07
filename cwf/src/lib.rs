@@ -16,6 +16,11 @@ use {
 	},
 };
 
+//
+//fn handle(val: &str, current_element: &HtmlElement) -> Option {
+//	current_element.set_inner_html(val)
+//}
+
 fn rule_quote(rule: &Rule) -> TokenStream2 {
 	let property = &rule.property.to_string();
 	let value = &rule.value;
@@ -34,7 +39,16 @@ fn rule_quote(rule: &Rule) -> TokenStream2 {
 		},
 		"href" => {
 			quote! {
-				current_element.set_attribute("href", #value)?;
+			    if #value.contains("."){
+			        if #value.starts_with("http") {
+			           current_element.set_attribute("href", #value)?;
+			        } else {
+			            current_element.set_attribute("href", &format!("https://{}", #value)[..])?;
+			        }
+			    } else {
+			        //current_element.set_onclick( handle );
+			        current_element.set_attribute("test", #value)?;
+			    }
 			}
 		},
 		"tip" => {

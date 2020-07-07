@@ -10,9 +10,14 @@ cwf! {
 		hamburger {}
 		logo {}
 		a {
-		    text: "A link!";
+		    text: "Google It!";
 		    tip: "A mouseover!";
-		    href: "#";
+		    href: "http://www.gooogle.com";
+		}
+		a {
+		    text: "Click me!";
+		    tip: "Another mouseover!";
+		    href: "my-route";
 		}
 		products {
 			text: "Products";
