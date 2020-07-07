@@ -34,12 +34,12 @@ fn rule_quote(rule: &Rule) -> TokenStream2 {
 		},
 		"href" => {
 			quote! {
-				current_element.set_attribute("href", #value);
+				current_element.set_attribute("href", #value)?;
 			}
 		},
 		"tip" => {
 			quote! {
-				current_element.set_attribute("title", #value);
+				current_element.set_attribute("title", #value)?;
 			}
 		},
 		_ => {
