@@ -9,6 +9,11 @@ cwf! {
 		color: "blue";
 		hamburger {}
 		logo {}
+		a {
+		    text: "A link!";
+		    tip: "A mouseover!";
+		    href: "#";
+		}
 		products {
 			text: "Products";
 			searchbar {}

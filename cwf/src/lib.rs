@@ -32,6 +32,16 @@ fn rule_quote(rule: &Rule) -> TokenStream2 {
 				current_element.set_inner_html(#value);
 			}
 		},
+		"href" => {
+			quote! {
+				current_element.set_attribute("href", #value);
+			}
+		},
+		"tip" => {
+			quote! {
+				current_element.set_attribute("title", #value);
+			}
+		},
 		_ => {
 			quote! {
 				current_element.style().set_property(
