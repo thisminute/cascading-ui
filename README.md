@@ -7,9 +7,21 @@ To install, you will need:
 1. (node/npm)[https://nodejs.org/en/download/]
 1. (wasm-pack)[https://rustwasm.github.io/wasm-pack/installer/]
 
-```bash
+Then:
+```
 git clone https://github.com/thisminute/cascading-wasm-framework.git
-cd cascading-wasm-framework/www    # npm stuff is in the www directory
+cd cascading-wasm-framework
+```
+
+For windows users, run in the root directory:
+```
+rustup toolchain install stable-x86_64-pc-windows-gnu
+rustup default stable-x86_64-pc-windows-gnu
+```
+
+Then:
+```
+cd www    # npm stuff is in the www directory
 npm run clean # will run wasm-pack and npm install
 npm start     # opens a new browser tab in watch mode for the binary!
 ```
