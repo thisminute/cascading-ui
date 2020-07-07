@@ -5,6 +5,8 @@ cwf! {
 
 	header {
 		text: "S/O";
+		background_color: "yellow";
+		color: "blue";
 		hamburger {}
 		logo {}
 		products {
@@ -18,7 +20,6 @@ cwf! {
 			achievements {}
 			review {}
 			help {}
-			// site-switcher {}
 		}
 	}
 	content {

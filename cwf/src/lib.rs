@@ -26,12 +26,12 @@ fn rule_quote(rule: &Rule) -> TokenStream2 {
 				head.append_child(element)?;
 				element.set_inner_html(#value);
 			}
-		}
+		},
 		"text" => {
 			quote! {
 				current_element.set_inner_html(#value);
 			}
-		}
+		},
 		_ => {
 			quote! {
 				current_element.style().set_property(
@@ -39,7 +39,7 @@ fn rule_quote(rule: &Rule) -> TokenStream2 {
 					#value
 				)?;
 			}
-		}
+		},
 	}
 }
 
@@ -50,7 +50,7 @@ fn list_quote(list: &List) -> TokenStream2 {
 	let (descend, ascend) = if identifier != "_cwf" {
 		(
 			quote! {
-				let element = &document.create_element(#identifier).unwrap();
+				let element = &create_element(document, &#identifier);
 				current_element.append_child(element).unwrap();
 				let current_element = element;
 			},
@@ -93,7 +93,10 @@ pub fn cwf(input: TokenStream) -> TokenStream {
 	let expanded = quote! {
 		use {
 			std::collections::HashMap,
-			wasm_bindgen::prelude::*,
+			wasm_bindgen::{
+				prelude::*,
+				JsCast,
+			},
 			web_sys::{
 				console,
 				Document,
@@ -123,6 +126,14 @@ pub fn cwf(input: TokenStream) -> TokenStream {
 		// 	} }
 		// }
 
+		fn create_element(document: &Document, name: &str) -> HtmlElement {
+			document
+				.create_element(name)
+				.expect(&format!("Failed to create `{}` element.", name)[..])
+				.dyn_into::<HtmlElement>()
+				.expect("Failed to construct element.")
+		}
+
 		#[wasm_bindgen(start)]
 		pub fn run() -> Result<(), JsValue> {
 			let window = &web_sys::window().expect("Failed to access global `window`.");
@@ -134,7 +145,7 @@ pub fn cwf(input: TokenStream) -> TokenStream {
 			// let classes = HashMap::new();
 			// let mut elements = HashMap::new();
 			// elements.insert("body", body).unwrap();
-			let current_element: &Element = body.as_ref();
+			let current_element = body;
 			#dom;
 
 			Ok(())
