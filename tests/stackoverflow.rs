@@ -9,18 +9,6 @@ wasm_bindgen_test_configure!(run_in_browser);
 cwf! {
 	title: "Stack Overflow";
 
-	.header {
-		.logo {
-			?click: {
-				!route: "/";
-			}
-		}
-		.products {
-			text: "Products";
-			searchbar {}
-		}
-	}
-
 	header {
 		hamburger {}
 		logo {}
@@ -32,7 +20,7 @@ cwf! {
 			achievements {}
 			review {}
 			help {}
-			site-switcher {}
+			// site-switcher {}
 		}
 	}
 	content {
