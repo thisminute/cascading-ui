@@ -47,3 +47,7 @@ represents
 ```
 
 Try editing the tag types or content of the elements, or adding more!
+
+# Understanding the Code
+
+`./www` contains a node/webpack environment

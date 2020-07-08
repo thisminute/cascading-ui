@@ -8,18 +8,15 @@ use {
 		TokenStream,
 	},
 	syn::{
+		Expr,
 		export::{
 			quote::quote,
 			TokenStream2,
+			ToTokens,
 		},
 		parse_macro_input,
 	},
 };
-
-//
-//fn handle(val: &str, current_element: &HtmlElement) -> Option {
-//	current_element.set_inner_html(val)
-//}
 
 fn rule_quote(rule: &Rule) -> TokenStream2 {
 	let property = &rule.property.to_string();
@@ -38,17 +35,33 @@ fn rule_quote(rule: &Rule) -> TokenStream2 {
 			}
 		},
 		"href" => {
-			quote! {
-			    if #value.contains("."){
-			        if #value.starts_with("http") {
-			           current_element.set_attribute("href", #value)?;
-			        } else {
-			            current_element.set_attribute("href", &format!("https://{}", #value)[..])?;
-			        }
-			    } else {
-			        //current_element.set_onclick( handle );
-			        current_element.set_attribute("test", #value)?;
-			    }
+			match value {
+				Expr::Lit(value) => {
+					let value = value.into_token_stream().to_string();
+					if value.contains(".") {
+						if value.starts_with("http") {
+							quote! {
+								current_element.set_attribute("href", #value)?;
+							}
+						} else {
+							quote! {
+								current_element.set_attribute("href", &format!("https://{}", #value)[..])?;
+							}
+						}
+					} else {
+						quote! {
+							let on_click = Closure::wrap(Box::new(|e: Event| {
+								let element = e.target().unwrap().dyn_into::<HtmlElement>().unwrap();
+								element.set_inner_html("hi");
+							}) as Box<FnMut(Event)>);
+							current_element.set_onclick(Some(on_click.as_ref().unchecked_ref()));
+							on_click.forget();
+						}
+					}
+				},
+				_ => {
+					quote! {}
+				},
 			}
 		},
 		"tip" => {
@@ -116,6 +129,7 @@ pub fn cwf(input: TokenStream) -> TokenStream {
 	// build output
 	let expanded = quote! {
 		use {
+			js_sys::Function,
 			std::collections::HashMap,
 			wasm_bindgen::{
 				prelude::*,
@@ -125,6 +139,8 @@ pub fn cwf(input: TokenStream) -> TokenStream {
 				console,
 				Document,
 				Element,
+				Event,
+				EventListener,
 				HtmlElement,
 				HtmlHeadElement,
 				Window,
