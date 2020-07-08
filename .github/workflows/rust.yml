@@ -23,6 +23,4 @@ jobs:
     - name: Run tests (chrome)
       run: wasm-pack test --headless --chrome
     - name: Run tests (firefox)
-      run: wasm-pack test --headless --firefox    
-    - name: Run tests (safari)
-      run: wasm-pack test --headless --safari
+      run: wasm-pack test --headless --firefox
