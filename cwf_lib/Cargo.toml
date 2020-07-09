@@ -10,3 +10,4 @@ proc-macro = true
 proc-macro2 = { version = "1.0", features = ["nightly"] }
 syn = { version = "1.0", features = ["extra-traits", "full", "visit-mut", "parsing"] }
 quote = "1.0"
+fs = "0.0.5"

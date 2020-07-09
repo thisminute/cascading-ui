@@ -3,6 +3,10 @@ extern crate syn;
 mod tokens;
 
 use {
+	std::fs::{
+		read_dir,
+		read_to_string,
+	},
 	crate::tokens::*,
 	proc_macro::{
 		TokenStream,
@@ -112,15 +116,31 @@ fn list_quote(list: &List) -> TokenStream2 {
 #[proc_macro]
 pub fn cwf(input: TokenStream) -> TokenStream {
 	// wrap the input in a list with the `cwf` identifier so that we can treate it as the root of a tree of lists
-	let input = TokenStream2::from(input);
+	let mut input = TokenStream2::from(input);
+
+	// import .cwf files from the current directory and attach them to the input
+	for entry in read_dir("./cwf").expect("should read the current directory") {
+		match entry {
+			Ok(entry) => {
+				let filename = entry.path().display().to_string();
+				if filename.ends_with(".cwf") {
+					let contents: TokenStream2 = read_to_string(entry.path()).unwrap()[..].parse().unwrap();
+					contents.to_tokens(&mut input);
+				}
+			},
+			_ => {},
+		}
+	};
 	let input = quote! {
 		_cwf {
 			#input
 		}
 	};
-	let input = TokenStream::from(input);
+
+	eprintln!("input tokens: {}", input);
 
 	// parse input into a struct
+	let input = TokenStream::from(input);
 	let list = &parse_macro_input!(input as List);
 
 	// transform List object into Rust code that builds the dom
@@ -128,6 +148,7 @@ pub fn cwf(input: TokenStream) -> TokenStream {
 
 	// build output
 	let expanded = quote! {
+		extern crate console_error_panic_hook;
 		use {
 			js_sys::Function,
 			std::collections::HashMap,
@@ -176,6 +197,7 @@ pub fn cwf(input: TokenStream) -> TokenStream {
 
 		#[wasm_bindgen(start)]
 		pub fn run() -> Result<(), JsValue> {
+			std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 			let window = &web_sys::window().expect("Failed to access global `window`.");
 			let document = &window.document().expect("Failed to access `window.document`.");
 			let head = &document.head().expect("Failed to access `window.document.head`.");

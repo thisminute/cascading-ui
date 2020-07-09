@@ -8,10 +8,11 @@
     "create-wasm-app": ".bin/create-cwf-app.js"
   },
   "scripts": {
-    "start": "run-p -n --aggregate-output serve rustwatch",
+    "start": "run-p -n --aggregate-output serve rustwatch cwfwatch",
     "serve": "webpack-dev-server --open",
     "test": "wasm-pack test --node ..",
-    "rustwatch": "onchange -ik ../cwf ../src -- wasm-pack build",
+    "rustwatch": "onchange -ik ../src ../cwf_lib -- wasm-pack build",
+    "cwfwatch": "onchange -ik ../cwf -- touch ../src/lib.rs",
     "build": "npm run clean && webpack --config webpack.config.js",
     "clean": "rm -f package-lock.json && rm -rf node_modules && rm -f ../Cargo.lock && rm -rf ../pkg && rm -rf ../target && wasm-pack build && npm install && npm audit fix"
   },
