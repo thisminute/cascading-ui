@@ -4,10 +4,10 @@ extern crate syn;
 use {
 	syn::{
 		Expr,
+		ext::IdentExt,
 		Ident,
 		Token,
-	},
-	syn::{
+
 		braced,
 		export::{
 			TokenStream2,
@@ -22,18 +22,20 @@ use {
 };
 
 #[derive(Debug)]
-pub struct CwfIdent {
+pub struct HyphenatedIdent {
 	pub parts: Vec<Ident>,
 }
 
-impl Parse for CwfIdent {
+impl Parse for HyphenatedIdent {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		eprintln!("CwfIdentParse ");
-
+		eprintln!("HyphenatedIdent");
 		let mut parts = Vec::new();
-		while input.peek(Ident) {
+		while input.peek(Ident::peek_any) {
 			parts.push(input.parse()?);
-			// let thing2: Token![-] = input.parse()?;
+			match input.parse::<Token![-]>() {
+				Ok(_) => { continue; },
+				Err(_) => { break; },
+			}
 		}
 
 		Ok(Self {
@@ -42,22 +44,35 @@ impl Parse for CwfIdent {
 	}
 }
 
-impl ToTokens for CwfIdent {
+impl ToTokens for HyphenatedIdent {
 	fn to_tokens(&self, tokens: &mut TokenStream2) {
-		for part in &self.parts {
-			part.to_tokens(tokens);
-		}
+		self.to_string().to_tokens(tokens)
 	}
 }
 
-impl ToString for CwfIdent {
+impl ToString for HyphenatedIdent {
 	fn to_string(&self) -> String {
-		self.parts
+		let result = self.parts
 			.iter()
 			.map(|ident| { ident.to_string() })
-			.collect::<String>()
+			.collect::<Vec<String>>()
+			.join("-");
+		result
 	}
 }
+
+// #[derive(Debug)]
+// pub struct Item {
+// 	pub is_rule: bool,
+// 	pub rule: Rule,
+// 	pub list: List,
+// }
+
+// impl Parse for Item {
+// 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
+
+// 	}
+// }
 
 #[derive(Debug)]
 pub struct Rule {
@@ -67,7 +82,7 @@ pub struct Rule {
 
 impl Parse for Rule {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		eprintln!("RuleParse ");
+		eprintln!("RuleParse");
 		let property = input.parse()?;
 		input.parse::<Token![:]>()?;
 		let value = input.parse()?;
@@ -96,15 +111,16 @@ pub struct List {
 
 impl Parse for List {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		eprintln!("ListParse ");
+		eprintln!("ListParse");
 		let identifier = input.parse()?;
+		eprintln!("{}", identifier);
 
 		let content;
 		braced!(content in input);
 
 		let mut rules = Vec::new();
 		let mut lists = Vec::new();
-		while content.peek(Ident) {
+		while content.peek(Ident::peek_any) {
 			if content.peek2(Token![:]) {
 				rules.push(content.parse()?);
 			} else if content.peek2(Brace) {
