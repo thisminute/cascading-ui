@@ -1,0 +1,26 @@
+// .big-button {
+//    width: "9001px";
+// }
+//
+// .click-button {
+//    border-radius: "5px";
+// }
+//
+// input {
+//    inputfield: text;
+// }
+// $inputthing: input;
+//
+// get_data {
+//    ?click {
+//       $special-button-data: $inputthing.value;
+//    }
+// }
+//
+// special-button[$special-button-data] {
+//    text: $text;
+//    background-color: $color;
+// }
+//
+// button(.big-button,.click-button) {
+// }
