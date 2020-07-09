@@ -1,4 +1,4 @@
-// #![cfg(target_arch = "wasm32")]
+extern crate cwf;
 use cwf::cwf;
 
 extern crate wasm_bindgen_test;
