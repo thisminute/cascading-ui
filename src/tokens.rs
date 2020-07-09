@@ -28,7 +28,7 @@ pub struct HyphenatedIdent {
 
 impl Parse for HyphenatedIdent {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		eprintln!("HyphenatedIdent");
+		// eprintln!("HyphenatedIdent");
 		let mut parts = Vec::new();
 		while input.peek(Ident::peek_any) {
 			parts.push(input.parse()?);
@@ -82,7 +82,7 @@ pub struct Rule {
 
 impl Parse for Rule {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		eprintln!("RuleParse");
+		// eprintln!("RuleParse");
 		let property = input.parse()?;
 		input.parse::<Token![:]>()?;
 		let value = input.parse()?;
@@ -111,9 +111,9 @@ pub struct List {
 
 impl Parse for List {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		eprintln!("ListParse");
+		// eprintln!("ListParse");
 		let identifier = input.parse()?;
-		eprintln!("{}", identifier);
+		// eprintln!("{}", identifier);
 
 		let content;
 		braced!(content in input);

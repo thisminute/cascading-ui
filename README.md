@@ -1,6 +1,4 @@
-Based on the https://github.com/rustwasm/wasm-pack-template.git
-
-This project uses webpack-dev-server to locally serve a wasm binary compiled from a custom syntax called CWF. The language is implemented with Rust macros and gets compiled by Rust, and this environment exists to test and develop the language. The language implementation currently sits in `./cwf`, with an arbitrary test template in `./src` and unit test templates in `./tests`.
+CWF is a front end web language implemented with Rust procedural macros.
 
 To install, you will need:
 1. [rustc/cargo](https://www.rust-lang.org/tools/install)
@@ -9,7 +7,7 @@ To install, you will need:
 
 Then:
 ```bash
-git clone https://github.com/thisminute/cascading-wasm-framework.git
+git clone --recurse-submodules https://github.com/thisminute/cascading-wasm-framework.git
 cd cascading-wasm-framework
 ```
 
@@ -19,35 +17,14 @@ rustup toolchain install stable-x86_64-pc-windows-gnu
 rustup default stable-x86_64-pc-windows-gnu
 ```
 
-Then:
-```bash
-cd www        # npm stuff is in the www directory
-npm run clean # will run wasm-pack and npm install
-npm start     # opens a new browser tab in watch mode for the binary!
-```
-
-Once started, try editing src/lib.rs. Example:
-
-```cwf
-div {
-   text: hello;
-}
-span {
-   text: world;
-}
-```
-represents
-```html
-<div>
-   hello
-</div>
-<span>
-   world
-</span>
-```
-
-Try editing the tag types or content of the elements, or adding more!
-
 # Understanding the Code
 
-`./www` contains a node/webpack environment
+## Procedural Macro
+`./src/lib.rs` is the entry point for the procedural macro that generates Rust code from Cwf file input.
+`./src/tokens.rs` is the definition file for the tokens that the language consists of. Rule and List are the most important tokens.
+
+## Integration Tests
+`./tests` has a collection of cwf examples that render different features. Currently, they just check to see that the examples compile.
+
+## `create-cwf-app`
+`./create-cwf-app` creates a node/webpack server that is used to test and deploy the language. See its README for usage details.
