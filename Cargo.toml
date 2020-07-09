@@ -2,7 +2,7 @@
 name = "cwf"
 version = "0.0.1"
 description = "Compiled web framework based on CSS syntax"
-repository = "github.com/thisminute/create-cwf-app"
+repository = "github.com/thisminute/cascading-wasm-framework"
 license = "MIT"
 
 [lib]
