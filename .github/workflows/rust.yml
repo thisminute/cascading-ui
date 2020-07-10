@@ -17,10 +17,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install
-      run: cargo install wasm-pack
-    - name: Build
-      run: cargo build --verbose
+      run: cargo install wasm-pack 
+    - name: Run tests (CLI)
+      run: cargo test --target wasm32-unknown-unknown --verbose
     - name: Run tests (chrome)
       run: wasm-pack test --chrome
     - name: Run tests (firefox)
       run: wasm-pack test --headless --firefox
+    - name: Build
+      run: cargo build --verbose 
