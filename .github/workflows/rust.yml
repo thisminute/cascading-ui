@@ -18,8 +18,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install
       run: cargo install wasm-pack 
-    - name: Run tests (CLI)
-      run: cargo test --target wasm32-unknown-unknown --verbose
+    - name: Add wasm32-unknown-unknown target
+      run: rustup target add wasm32-unknown-unknown
     - name: Run tests (chrome)
       run: wasm-pack test --chrome
     - name: Run tests (firefox)
