@@ -19,6 +19,6 @@ jobs:
     - name: Install
       run: cargo install wasm-pack
     - name: Build
-      ren: cargo build --verbose
+      run: cargo build --verbose
     - name: Run tests (chrome)
       run: wasm-pack test --release --headless --chrome
