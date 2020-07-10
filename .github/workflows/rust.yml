@@ -19,4 +19,4 @@ jobs:
     - name: Install
       run: cargo install wasm-pack
     - name: Run tests (chrome)
-      run: wasm-pack test --headless --chrome
+      run: wasm-pack test --release --headless --chrome
