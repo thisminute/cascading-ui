@@ -17,12 +17,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install
-      run: cargo install wasm-pack 
-    - name: Add wasm32-unknown-unknown target
-      run: rustup target add wasm32-unknown-unknown
+      run: cargo install wasm-pack
     - name: Run tests (chrome)
-      run: wasm-pack test --chrome
-    - name: Run tests (firefox)
-      run: wasm-pack test --headless --firefox
-    - name: Build
-      run: cargo build --verbose 
+      run: wasm-pack test --headless --chrome
