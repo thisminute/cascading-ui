@@ -28,7 +28,7 @@ pub struct HyphenatedIdent {
 
 impl Parse for HyphenatedIdent {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		// eprintln!("HyphenatedIdent");
+		eprintln!("HyphenatedIdent");
 		let mut parts = Vec::new();
 		while input.peek(Ident::peek_any) {
 			parts.push(input.parse()?);
@@ -61,19 +61,6 @@ impl ToString for HyphenatedIdent {
 	}
 }
 
-// #[derive(Debug)]
-// pub struct Item {
-// 	pub is_rule: bool,
-// 	pub rule: Rule,
-// 	pub list: List,
-// }
-
-// impl Parse for Item {
-// 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-
-// 	}
-// }
-
 #[derive(Debug)]
 pub struct Rule {
 	pub property: Ident,
@@ -82,11 +69,13 @@ pub struct Rule {
 
 impl Parse for Rule {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		// eprintln!("RuleParse");
-		let property = input.parse()?;
+		eprintln!("RuleParse");
+		let property: Ident = input.parse()?;
 		input.parse::<Token![:]>()?;
 		let value = input.parse()?;
 		input.parse::<Token![;]>()?;
+		eprintln!("{}", property.to_string());
+		eprintln!("Done RuleParse");
 		Ok(Self {
 			property,
 			value,
@@ -102,50 +91,89 @@ impl ToTokens for Rule {
 }
 
 #[derive(Debug)]
-pub struct List {
-	// prefix: Punct,
-	pub identifier: Ident,
-	pub rules: Vec<Rule>,
-	pub lists: Vec<List>,
+pub enum Prefix {
+	Instance,
+	Class,
+	Action,
+	Listener,
 }
 
-impl Parse for List {
+#[derive(Debug)]
+pub struct Block {
+	prefix: Prefix,
+	pub identifier: Ident,
+	pub rules: Vec<Rule>,
+	pub blocks: Vec<Block>,
+}
+
+
+// can't implement Peek for some reason, so have to use these silly functions instead
+fn peek_rule(input: ParseStream) -> bool {
+	input.peek (Ident::peek_any) &&
+	input.peek2(Token![:])
+}
+fn peek_block(input: ParseStream) -> bool {
+	input.peek (Ident::peek_any) &&
+	input.peek2(Brace)
+}
+fn peek_prefixed_block(input: ParseStream) -> bool {
+	(
+		input.peek(Token![.]) ||
+		input.peek(Token![!]) ||
+		input.peek(Token![?])
+	) &&
+	input.peek2(Ident::peek_any) &&
+	input.peek3(Brace)
+}
+
+impl Parse for Block {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		// eprintln!("ListParse");
+		eprintln!("BlockParse");
+
+		let prefix =
+			if input.peek(Token![.]) { input.parse::<Token![.]>()?; Prefix::Class    } else
+			if input.peek(Token![!]) { input.parse::<Token![!]>()?; Prefix::Action   } else
+			if input.peek(Token![?]) { input.parse::<Token![?]>()?; Prefix::Listener } else
+			{ Prefix::Instance };
+
 		let identifier = input.parse()?;
-		// eprintln!("{}", identifier);
+		eprintln!("identifier: {}", identifier);
 
 		let content;
 		braced!(content in input);
 
 		let mut rules = Vec::new();
-		let mut lists = Vec::new();
-		while content.peek(Ident::peek_any) {
-			if content.peek2(Token![:]) {
+		let mut blocks = Vec::new();
+		loop {
+			if peek_rule(&content) {
 				rules.push(content.parse()?);
-			} else if content.peek2(Brace) {
-				lists.push(content.parse()?);
+			} else if
+				peek_block(&content) ||
+				peek_prefixed_block(&content)
+			 {
+				blocks.push(content.parse()?);
 			} else {
 				break;
 			}
 		}
 
 		Ok(Self {
+			prefix,
 			identifier,
 			rules,
-			lists,
+			blocks,
 		})
 	}
 }
 
-impl ToTokens for List {
+impl ToTokens for Block {
 	fn to_tokens(&self, tokens: &mut TokenStream2) {
 		self.identifier.to_tokens(tokens);
 		for rule in &self.rules {
 			rule.to_tokens(tokens);
 		}
-		for list in &self.lists {
-			list.to_tokens(tokens);
+		for block in &self.blocks {
+			block.to_tokens(tokens);
 		}
 	}
 }
