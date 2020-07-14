@@ -79,10 +79,10 @@ fn rule_quote(rule: &Rule) -> TokenStream2 {
 	}
 }
 
-fn list_quote(list: &List) -> TokenStream2 {
-	let identifier = &list.identifier.to_string();
-	let rule_quotes = list.rules.iter().map(rule_quote);
-	let list_quotes = list.lists.iter().map(list_quote);
+fn list_quote(block: &Block) -> TokenStream2 {
+	let identifier = &block.identifier.to_string();
+	let rule_quotes = block.rules.iter().map(rule_quote);
+	let block_quotes = block.blocks.iter().map(list_quote);
 	let (descend, ascend) = if identifier != "_cwf" {
 		(
 			quote! {
@@ -102,7 +102,7 @@ fn list_quote(list: &List) -> TokenStream2 {
 		#descend
 
 		#( #rule_quotes )*
-		#( #list_quotes )*
+		#( #block_quotes )*
 
 		#ascend
 	}
@@ -136,9 +136,11 @@ pub fn cwf(input: TokenStream) -> TokenStream {
 
 	// parse input into a struct
 	let input = TokenStream::from(input);
-	let list = &parse_macro_input!(input as List);
+	let list = &parse_macro_input!(input as Block);
 
-	// transform List object into Rust code that builds the dom
+	eprintln!("Done parsing macro input");
+
+	// transform Block object into Rust code that builds the dom
 	let dom = list_quote(list);
 	let expanded = quote! {
 		extern crate wasm_bindgen;
