@@ -33,8 +33,8 @@ impl Parse for HyphenatedIdent {
 		while input.peek(Ident::peek_any) {
 			parts.push(input.parse()?);
 			match input.parse::<Token![-]>() {
-				Ok(_) => { continue; },
-				Err(_) => { break; },
+				Ok(_) => { continue; }
+				Err(_) => { break; }
 			}
 		}
 
@@ -70,11 +70,10 @@ pub struct Rule {
 impl Parse for Rule {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
 		eprintln!("RuleParse");
-		let property: Ident = input.parse()?;
+		let property = input.parse()?;
 		input.parse::<Token![:]>()?;
 		let value = input.parse()?;
 		input.parse::<Token![;]>()?;
-		eprintln!("{}", property.to_string());
 		eprintln!("Done RuleParse");
 		Ok(Self {
 			property,
@@ -100,7 +99,7 @@ pub enum Prefix {
 
 #[derive(Debug)]
 pub struct Block {
-	prefix: Prefix,
+	pub prefix: Prefix,
 	pub identifier: Ident,
 	pub rules: Vec<Rule>,
 	pub blocks: Vec<Block>,
