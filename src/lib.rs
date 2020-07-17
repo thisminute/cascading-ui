@@ -3,23 +3,14 @@ extern crate syn;
 mod tokens;
 
 use {
+	crate::tokens::*,
+	proc_macro::TokenStream,
 	std::{
-		fs::{
-			read_dir,
-			read_to_string,
-		},
+		fs::{read_dir, read_to_string},
 		path::Path,
 	},
-	crate::tokens::*,
-	proc_macro::{
-		TokenStream,
-	},
 	syn::{
-		export::{
-			quote::quote,
-			TokenStream2,
-			ToTokens,
-		},
+		export::{quote::quote, ToTokens, TokenStream2},
 		parse_macro_input,
 	},
 };
@@ -37,30 +28,18 @@ fn rule_quote(rule: &Rule) -> TokenStream2 {
 		}
 		"text" => {
 			quote! {
-				current_element.set_inner_html("what");
+				current_element.set_inner_html(#value);
 			}
 		}
-		"href" => {
-			let value = value.into_token_stream().to_string();
-			if value.contains(".") {
-				if value.starts_with("http") {
-					quote! {
-						current_element.set_attribute("href", #value)?;
-					}
-				} else {
-					quote! {
-						current_element.set_attribute("href", &format!("https://{}", #value)[..])?;
-					}
-				}
-			} else {
-				quote! {
-					let on_click = Closure::wrap(Box::new(|e: Event| {
-						let element = e.target().unwrap().dyn_into::<HtmlElement>().unwrap();
-						element.set_inner_html("hi");
-					}) as Box<FnMut(Event)>);
-					current_element.set_onclick(Some(on_click.as_ref().unchecked_ref()));
-					on_click.forget();
-				}
+		"link" => {
+			quote! {
+				let on_click = Closure::wrap(Box::new(move |e: Event| {
+					let element = e.target().unwrap().dyn_into::<HtmlElement>().unwrap();
+					document.location().unwrap().assign(#value);
+				}) as Box<FnMut(Event)>);
+				current_element.set_onclick(Some(on_click.as_ref().unchecked_ref()));
+				current_element.style().set_property("cursor", "pointer")?;
+				on_click.forget();
 			}
 		}
 		"tip" => {
@@ -96,10 +75,10 @@ fn block_quote(block: &Block) -> TokenStream2 {
 	};
 
 	match identifier {
-		"_cwf" => { quotes }
+		"_cwf" => quotes,
 		_ => {
 			quote! {
-				let element = &create_element(document, #identifier);
+				let element = &create_element(&document, #identifier);
 				current_element.append_child(element).unwrap();
 				let current_element = element;
 
@@ -122,6 +101,7 @@ fn lib() -> TokenStream {
 			},
 			web_sys::{
 				Document,
+				Event,
 				HtmlElement,
 			},
 		};
@@ -134,6 +114,7 @@ fn lib() -> TokenStream {
 				.expect("Failed to construct element.")
 		}
 	};
+	eprintln!("cwf_lib: {}", expanded);
 	expanded.into()
 }
 
@@ -155,15 +136,20 @@ fn dom(input: TokenStream2) -> TokenStream {
 	let dom = block_quote(block);
 
 	let expanded = quote! {
-		let window = &web_sys::window().expect("getting window");
-		let document = &window.document().expect("getting `window.document`");
-		let head = &document.head().expect("getting `window.document.head`");
-		let body = &document.body().expect("getting `window.document.body`");
-		let style = &document.create_element("style").expect("creating a `style` element");
-		head.append_child(style).expect("appending `style` to `head`");
-		let current_element = body;
+		let window = web_sys::window().expect("getting window");
+		let document = window.document().expect("getting `window.document`");
+		let head = document.head().expect("getting `window.document.head`");
+		let body = document.body().expect("getting `window.document.body`");
+		let style = document.create_element("style").expect("creating a `style` element");
+		head.append_child(&style).expect("appending `style` to `head`");
+		let current_element = &body;
 		#dom;
 	};
+
+	eprintln!(
+		"cwf_dom: *****************************\n {} \n **************************************",
+		expanded
+	);
 
 	expanded.into()
 }
@@ -179,7 +165,8 @@ pub fn cwf(input: TokenStream) -> TokenStream {
 			let entry = entry.expect("reading .cwf file");
 			let filename = entry.path().display().to_string();
 			if filename.ends_with(".cwf") {
-				let contents: TokenStream2 = read_to_string(entry.path()).unwrap()[..].parse().unwrap();
+				let contents: TokenStream2 =
+					read_to_string(entry.path()).unwrap()[..].parse().unwrap();
 				contents.to_tokens(&mut input);
 			}
 		}
@@ -197,21 +184,21 @@ pub fn cwf(input: TokenStream) -> TokenStream {
 		}
 	};
 
+	eprintln!(
+		"cwf_full: ****************************\n {} \n **************************************",
+		expanded
+	);
+
 	expanded.into()
 }
 
 #[proc_macro]
 pub fn cwf_dom(input: TokenStream) -> TokenStream {
 	let input = TokenStream2::from(input);
-	let expanded = dom(input);
-	eprintln!("cwf_dom: *****************************\n {} \n **************************************", expanded);
-	expanded.into()
+	dom(input).into()
 }
 
 #[proc_macro]
 pub fn cwf_lib(_input: TokenStream) -> TokenStream {
-	let expanded = lib();
-	eprintln!("cwf_lib: {}", expanded);
-
-	expanded.into()
+	lib().into()
 }

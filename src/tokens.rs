@@ -1,24 +1,13 @@
 extern crate proc_macro;
 extern crate syn;
 
-use {
-	syn::{
-		Expr,
-		ext::IdentExt,
-		Ident,
-		Token,
-
-		braced,
-		export::{
-			TokenStream2,
-			ToTokens,
-		},
-		parse::{
-			Parse,
-			ParseStream,
-		},
-		token::Brace,
-	},
+use syn::{
+	braced,
+	export::{ToTokens, TokenStream2},
+	ext::IdentExt,
+	parse::{Parse, ParseStream},
+	token::Brace,
+	Expr, Ident, Token,
 };
 
 #[derive(Debug)]
@@ -33,14 +22,16 @@ impl Parse for HyphenatedIdent {
 		while input.peek(Ident::peek_any) {
 			parts.push(input.parse()?);
 			match input.parse::<Token![-]>() {
-				Ok(_) => { continue; }
-				Err(_) => { break; }
+				Ok(_) => {
+					continue;
+				}
+				Err(_) => {
+					break;
+				}
 			}
 		}
 
-		Ok(Self {
-			parts,
-		})
+		Ok(Self { parts })
 	}
 }
 
@@ -52,9 +43,10 @@ impl ToTokens for HyphenatedIdent {
 
 impl ToString for HyphenatedIdent {
 	fn to_string(&self) -> String {
-		let result = self.parts
+		let result = self
+			.parts
 			.iter()
-			.map(|ident| { ident.to_string() })
+			.map(|ident| ident.to_string())
 			.collect::<Vec<String>>()
 			.join("-");
 		result
@@ -75,10 +67,7 @@ impl Parse for Rule {
 		let value = input.parse()?;
 		input.parse::<Token![;]>()?;
 		eprintln!("Done RuleParse");
-		Ok(Self {
-			property,
-			value,
-		})
+		Ok(Self { property, value })
 	}
 }
 
@@ -105,35 +94,35 @@ pub struct Block {
 	pub blocks: Vec<Block>,
 }
 
-
 // can't implement Peek for some reason, so have to use these silly functions instead
 fn peek_rule(input: ParseStream) -> bool {
-	input.peek (Ident::peek_any) &&
-	input.peek2(Token![:])
+	input.peek(Ident::peek_any) && input.peek2(Token![:])
 }
 fn peek_block(input: ParseStream) -> bool {
-	input.peek (Ident::peek_any) &&
-	input.peek2(Brace)
+	input.peek(Ident::peek_any) && input.peek2(Brace)
 }
 fn peek_prefixed_block(input: ParseStream) -> bool {
-	(
-		input.peek(Token![.]) ||
-		input.peek(Token![!]) ||
-		input.peek(Token![?])
-	) &&
-	input.peek2(Ident::peek_any) &&
-	input.peek3(Brace)
+	(input.peek(Token![.]) || input.peek(Token![!]) || input.peek(Token![?]))
+		&& input.peek2(Ident::peek_any)
+		&& input.peek3(Brace)
 }
 
 impl Parse for Block {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
 		eprintln!("BlockParse");
 
-		let prefix =
-			if input.peek(Token![.]) { input.parse::<Token![.]>()?; Prefix::Class    } else
-			if input.peek(Token![!]) { input.parse::<Token![!]>()?; Prefix::Action   } else
-			if input.peek(Token![?]) { input.parse::<Token![?]>()?; Prefix::Listener } else
-			{ Prefix::Instance };
+		let prefix = if input.peek(Token![.]) {
+			input.parse::<Token![.]>()?;
+			Prefix::Class
+		} else if input.peek(Token![!]) {
+			input.parse::<Token![!]>()?;
+			Prefix::Action
+		} else if input.peek(Token![?]) {
+			input.parse::<Token![?]>()?;
+			Prefix::Listener
+		} else {
+			Prefix::Instance
+		};
 
 		let identifier = input.parse()?;
 		eprintln!("identifier: {}", identifier);
@@ -146,10 +135,7 @@ impl Parse for Block {
 		loop {
 			if peek_rule(&content) {
 				rules.push(content.parse()?);
-			} else if
-				peek_block(&content) ||
-				peek_prefixed_block(&content)
-			 {
+			} else if peek_block(&content) || peek_prefixed_block(&content) {
 				blocks.push(content.parse()?);
 			} else {
 				break;

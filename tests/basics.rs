@@ -1,5 +1,5 @@
 extern crate cwf;
-use cwf::{ cwf_lib, cwf_dom };
+use cwf::{cwf_dom, cwf_lib};
 
 extern crate wasm_bindgen_test;
 use wasm_bindgen_test::*;
