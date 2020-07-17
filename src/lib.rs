@@ -38,13 +38,13 @@ fn rule_quote(rule: &Rule) -> TokenStream2 {
 					document.location().unwrap().assign(#value);
 				}) as Box<FnMut(Event)>);
 				current_element.set_onclick(Some(on_click.as_ref().unchecked_ref()));
-				current_element.style().set_property("cursor", "pointer")?;
+				current_element.style().set_property("cursor", "pointer").unwrap();
 				on_click.forget();
 			}
 		}
 		"tip" => {
 			quote! {
-				current_element.set_attribute("title", #value)?;
+				current_element.set_attribute("title", #value).unwrap();
 			}
 		}
 		_ => {
