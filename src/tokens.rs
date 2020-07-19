@@ -17,7 +17,6 @@ pub struct HyphenatedIdent {
 
 impl Parse for HyphenatedIdent {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		eprintln!("HyphenatedIdent");
 		let mut parts = Vec::new();
 		while input.peek(Ident::peek_any) {
 			parts.push(input.parse()?);
@@ -61,12 +60,10 @@ pub struct Rule {
 
 impl Parse for Rule {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		eprintln!("RuleParse");
 		let property = input.parse()?;
 		input.parse::<Token![:]>()?;
 		let value = input.parse()?;
 		input.parse::<Token![;]>()?;
-		eprintln!("Done RuleParse");
 		Ok(Self { property, value })
 	}
 }
@@ -109,8 +106,6 @@ fn peek_prefixed_block(input: ParseStream) -> bool {
 
 impl Parse for Block {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		eprintln!("BlockParse");
-
 		let prefix = if input.peek(Token![.]) {
 			input.parse::<Token![.]>()?;
 			Prefix::Class
@@ -125,7 +120,6 @@ impl Parse for Block {
 		};
 
 		let identifier = input.parse()?;
-		eprintln!("identifier: {}", identifier);
 
 		let content;
 		braced!(content in input);

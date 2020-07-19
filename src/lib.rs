@@ -6,7 +6,7 @@ use {
 	crate::tokens::*,
 	proc_macro::TokenStream,
 	std::{
-		fs::{read_dir, read_to_string},
+		fs::{read_dir, read_to_string, write},
 		path::Path,
 	},
 	syn::{
@@ -33,10 +33,9 @@ fn rule_quote(rule: &Rule) -> TokenStream2 {
 		}
 		"link" => {
 			quote! {
-				let on_click = Closure::wrap(Box::new(move |e: Event| {
-					let element = e.target().unwrap().dyn_into::<HtmlElement>().unwrap();
-					document.location().unwrap().assign(#value);
-				}) as Box<FnMut(Event)>);
+				let on_click = Closure::wrap(Box::new(move |_e: Event| {
+					document.location().unwrap().assign(#value).unwrap();
+				}) as Box<dyn FnMut(Event)>);
 				current_element.set_onclick(Some(on_click.as_ref().unchecked_ref()));
 				current_element.style().set_property("cursor", "pointer").unwrap();
 				on_click.forget();
@@ -114,13 +113,10 @@ fn lib() -> TokenStream {
 				.expect("Failed to construct element.")
 		}
 	};
-	eprintln!("cwf_lib: {}", expanded);
 	expanded.into()
 }
 
 fn dom(input: TokenStream2) -> TokenStream {
-	eprintln!("input tokens: {}", input);
-
 	// wrap the input in a block with a `_cwf` identifier so that we can treate it as the root of a tree of blocks
 	let input = quote! {
 		_cwf {
@@ -145,12 +141,6 @@ fn dom(input: TokenStream2) -> TokenStream {
 		let current_element = &body;
 		#dom;
 	};
-
-	eprintln!(
-		"cwf_dom: *****************************\n {} \n **************************************",
-		expanded
-	);
-
 	expanded.into()
 }
 
@@ -184,10 +174,7 @@ pub fn cwf(input: TokenStream) -> TokenStream {
 		}
 	};
 
-	eprintln!(
-		"cwf_full: ****************************\n {} \n **************************************",
-		expanded
-	);
+	write("cwf_macro_output.rs", expanded.to_string()).unwrap();
 
 	expanded.into()
 }
