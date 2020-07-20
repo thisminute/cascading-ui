@@ -1,9 +1,12 @@
 extern crate proc_macro;
 extern crate syn;
+mod parse;
+mod quote;
+mod to_tokens;
 mod tokens;
 
 use {
-	crate::tokens::*,
+	crate::{quote::Quote, tokens::*},
 	proc_macro::TokenStream,
 	std::{
 		fs::{read_dir, read_to_string, write},
@@ -15,82 +18,8 @@ use {
 	},
 };
 
-fn rule_quote(rule: &Rule) -> TokenStream2 {
-	let property = &rule.property.to_string();
-	let value = &rule.value;
-	match &property.to_string()[..] {
-		"title" => {
-			quote! {
-				let element = &document.create_element("title").unwrap();
-				head.append_child(element).unwrap();
-				element.set_inner_html(#value);
-			}
-		}
-		"text" => {
-			quote! {
-				current_element.set_inner_html(#value);
-			}
-		}
-		"link" => {
-			quote! {
-				let on_click = Closure::wrap(Box::new(move |_e: Event| {
-					document.location().unwrap().assign(#value).unwrap();
-				}) as Box<dyn FnMut(Event)>);
-				current_element.set_onclick(Some(on_click.as_ref().unchecked_ref()));
-				current_element.style().set_property("cursor", "pointer").unwrap();
-				on_click.forget();
-			}
-		}
-		"tip" => {
-			quote! {
-				current_element.set_attribute("title", #value).unwrap();
-			}
-		}
-		_ => {
-			quote! {
-				current_element.style().set_property(
-					&str::replace(#property, "_", "-"),
-					#value
-				)?;
-			}
-		}
-	}
-}
-
-fn block_quote(block: &Block) -> TokenStream2 {
-	let identifier = &block.identifier.to_string()[..];
-	let rule_quotes = block.rules.iter().map(rule_quote);
-	let block_quotes = block.blocks.iter().map(block_quote);
-	match block.prefix {
-		Prefix::Instance => {}
-		Prefix::Class => {}
-		Prefix::Action => {}
-		Prefix::Listener => {}
-	}
-
-	let quotes = quote! {
-		#( #rule_quotes )*
-		#( #block_quotes )*
-	};
-
-	match identifier {
-		"_cwf" => quotes,
-		_ => {
-			quote! {
-				let element = &create_element(&document, #identifier);
-				current_element.append_child(element).unwrap();
-				let current_element = element;
-
-				#quotes
-
-				let current_element = current_element.parent_element().unwrap();
-			}
-		}
-	}
-}
-
-fn lib() -> TokenStream {
-	let expanded = quote! {
+fn lib() -> TokenStream2 {
+	quote! {
 		extern crate wasm_bindgen;
 		extern crate web_sys;
 		use {
@@ -112,36 +41,12 @@ fn lib() -> TokenStream {
 				.dyn_into::<HtmlElement>()
 				.expect("Failed to construct element.")
 		}
-	};
-	expanded.into()
+	}
 }
 
-fn dom(input: TokenStream2) -> TokenStream {
-	// wrap the input in a block with a `_cwf` identifier so that we can treate it as the root of a tree of blocks
-	let input = quote! {
-		_cwf {
-			#input
-		}
-	};
-
-	// parse input into a struct
-	let input = TokenStream::from(input);
-	let block = &parse_macro_input!(input as Block);
-
-	// transform Block object into Rust code that builds the dom
-	let dom = block_quote(block);
-
-	let expanded = quote! {
-		let window = web_sys::window().expect("getting window");
-		let document = window.document().expect("getting `window.document`");
-		let head = document.head().expect("getting `window.document.head`");
-		let body = document.body().expect("getting `window.document.body`");
-		let style = document.create_element("style").expect("creating a `style` element");
-		head.append_child(&style).expect("appending `style` to `head`");
-		let current_element = &body;
-		#dom;
-	};
-	expanded.into()
+fn dom(input: TokenStream) -> TokenStream {
+	let dom = &parse_macro_input!(input as Document);
+	dom.quote("").into()
 }
 
 #[proc_macro]
@@ -163,7 +68,7 @@ pub fn cwf(input: TokenStream) -> TokenStream {
 	}
 
 	let lib = TokenStream2::from(lib());
-	let dom = TokenStream2::from(dom(input));
+	let dom = TokenStream2::from(dom(input.into()));
 	let expanded = quote! {
 		#lib
 
@@ -174,14 +79,13 @@ pub fn cwf(input: TokenStream) -> TokenStream {
 		}
 	};
 
-	write("cwf_macro_output.rs", expanded.to_string()).unwrap();
+	write("target/cwf_macro_output.rs", expanded.to_string()).unwrap();
 
 	expanded.into()
 }
 
 #[proc_macro]
 pub fn cwf_dom(input: TokenStream) -> TokenStream {
-	let input = TokenStream2::from(input);
 	dom(input).into()
 }
 
