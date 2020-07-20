@@ -3,29 +3,29 @@ use {
 	syn::export::{quote::quote, TokenStream2},
 };
 
-struct List<'a> {
+pub struct List<'a> {
 	id: &'a str,
-	next: &'a List<'a>,
+	next: &'a Option<List<'a>>,
 }
 
-struct Context<'a> {
-	path: List<'a>,
-	r#type: Prefix,
+pub struct Context<'a> {
+	pub path: Option<List<'a>>,
+	pub r#type: Prefix,
 }
 
 pub trait Quote {
-	fn quote(&self, context: &str) -> TokenStream2;
+	fn quote(&self, context: &Context) -> TokenStream2;
 }
 
 impl Quote for Rule {
-	fn quote(&self, context: &str) -> TokenStream2 {
+	fn quote(&self, context: &Context) -> TokenStream2 {
 		let property = &self.property.to_string();
 		let value = &self.value;
-		let root = context == "";
+		let at_root = context.path.is_none();
 
 		match &property.to_string()[..] {
 			// meta information for the page and/or project must be defined at the top level
-			"title" if root => {
+			"title" if at_root => {
 				quote! {
 					let element = meta.document.create_element("title").unwrap();
 					meta.head.append_child(&element).unwrap();
@@ -68,7 +68,7 @@ impl Quote for Rule {
 }
 
 impl Quote for Block {
-	fn quote(&self, context: &str) -> TokenStream2 {
+	fn quote(&self, context: &Context) -> TokenStream2 {
 		let identifier = &self.identifier.to_string()[..];
 
 		match self.prefix {
@@ -109,7 +109,7 @@ impl Quote for Block {
 }
 
 impl Quote for Document {
-	fn quote(&self, context: &str) -> TokenStream2 {
+	fn quote(&self, context: &Context) -> TokenStream2 {
 		let dom = self.root.quote(context);
 
 		quote! {

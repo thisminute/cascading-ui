@@ -6,7 +6,7 @@ mod to_tokens;
 mod tokens;
 
 use {
-	crate::{quote::Quote, tokens::*},
+	crate::{quote::*, tokens::*},
 	proc_macro::TokenStream,
 	std::{
 		fs::{read_dir, read_to_string, write},
@@ -46,7 +46,10 @@ fn lib() -> TokenStream2 {
 
 fn dom(input: TokenStream) -> TokenStream {
 	let dom = &parse_macro_input!(input as Document);
-	dom.quote("").into()
+	dom.quote(&Context {
+		path: None,
+		r#type: Prefix::Instance,
+	}).into()
 }
 
 #[proc_macro]
