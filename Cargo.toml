@@ -2,7 +2,7 @@
 authors = ["us"]
 description = "Compiled web language based on CSS syntax"
 license = "MIT"
-name = "cwl"
+name = "cascading-wasm-language"
 repository = "https://github.com/thisminute/cascading-wasm-language"
 version = "0.0.0"
 
