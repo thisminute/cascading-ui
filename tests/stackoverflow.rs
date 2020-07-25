@@ -1,16 +1,16 @@
-extern crate cwf;
-use cwf::{cwf_dom, cwf_lib};
+extern crate cwl;
+use cwl::{cwl_dom, cwl_lib};
 
 extern crate wasm_bindgen_test;
 use wasm_bindgen_test::*;
 
 wasm_bindgen_test_configure!(run_in_browser);
 
-cwf_lib!();
+cwl_lib!();
 
 #[wasm_bindgen_test]
 fn compile() {
-	cwf_dom! {
+	cwl_dom! {
 		title: "Stack Overflow";
 
 		header {
@@ -24,7 +24,7 @@ fn compile() {
 				achievements {}
 				review {}
 				help {}
-				// https://github.com/thisminute/cascading-wasm-framework/issues/2
+				// https://github.com/thisminute/cascading-wasm-language/issues/2
 				// site-switcher {}
 			}
 		}

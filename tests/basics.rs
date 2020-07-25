@@ -1,28 +1,28 @@
-extern crate cwf;
-use cwf::{cwf_dom, cwf_lib};
+extern crate cwl;
+use cwl::{cwl_dom, cwl_lib};
 
 extern crate wasm_bindgen_test;
 use wasm_bindgen_test::*;
 
 wasm_bindgen_test_configure!(run_in_browser);
 
-cwf_lib!();
+cwl_lib!();
 
 #[wasm_bindgen_test]
 fn empty() {
-	cwf_dom! {}
+	cwl_dom! {}
 }
 
 #[wasm_bindgen_test]
 fn instance() {
-	cwf_dom! {
+	cwl_dom! {
 		thingy {}
 	}
 }
 
 #[wasm_bindgen_test]
 fn class() {
-	cwf_dom! {
+	cwl_dom! {
 		.thingy {}
 		thingy {}
 	}
@@ -30,7 +30,7 @@ fn class() {
 
 #[wasm_bindgen_test]
 fn class2() {
-	cwf_dom! {
+	cwl_dom! {
 		thingy {}
 		.thingy {}
 	}

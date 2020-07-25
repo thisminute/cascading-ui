@@ -53,16 +53,16 @@ fn dom(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn cwf(input: TokenStream) -> TokenStream {
+pub fn cwl(input: TokenStream) -> TokenStream {
 	let mut input = TokenStream2::from(input);
 
-	// if it exists, import .cwf files from the `cwf` directory and attach them to the input
-	let path = "./cwf";
+	// if it exists, import .cwl files from the `cwl` directory and attach them to the input
+	let path = "./cwl";
 	if Path::new(path).exists() {
 		for entry in read_dir(path).expect(&format!("reading from {}", path)[..]) {
-			let entry = entry.expect("reading .cwf file");
+			let entry = entry.expect("reading .cwl file");
 			let filename = entry.path().display().to_string();
-			if filename.ends_with(".cwf") {
+			if filename.ends_with(".cwl") {
 				let contents: TokenStream2 =
 					read_to_string(entry.path()).unwrap()[..].parse().unwrap();
 				contents.to_tokens(&mut input);
@@ -82,17 +82,17 @@ pub fn cwf(input: TokenStream) -> TokenStream {
 		}
 	};
 
-	write("target/cwf_macro_output.rs", expanded.to_string()).unwrap();
+	write("target/cwl_macro_output.rs", expanded.to_string()).unwrap();
 
 	expanded.into()
 }
 
 #[proc_macro]
-pub fn cwf_dom(input: TokenStream) -> TokenStream {
+pub fn cwl_dom(input: TokenStream) -> TokenStream {
 	dom(input).into()
 }
 
 #[proc_macro]
-pub fn cwf_lib(_input: TokenStream) -> TokenStream {
+pub fn cwl_lib(_input: TokenStream) -> TokenStream {
 	lib().into()
 }
