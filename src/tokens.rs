@@ -1,14 +1,20 @@
 use syn::{Expr, Ident};
 
 #[derive(Debug)]
-pub struct HyphenatedIdent {
+struct HyphenatedIdent {
 	pub parts: Vec<Ident>,
 }
 
+pub struct Cwl {
+	pub document: Document,
+}
+
 #[derive(Debug)]
-pub struct Rule {
-	pub property: Ident,
-	pub value: Expr,
+pub struct Header {}
+
+#[derive(Debug)]
+pub struct Document {
+	pub root: Block,
 }
 
 #[derive(Debug)]
@@ -18,7 +24,6 @@ pub enum Prefix {
 	Action,
 	Listener,
 }
-
 #[derive(Debug)]
 pub struct Block {
 	pub prefix: Prefix,
@@ -28,6 +33,7 @@ pub struct Block {
 }
 
 #[derive(Debug)]
-pub struct Document {
-	pub root: Block,
+pub struct Rule {
+	pub property: Ident,
+	pub value: Expr,
 }

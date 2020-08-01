@@ -1,5 +1,5 @@
-extern crate cwl;
-use cwl::{cwl_dom, cwl_lib};
+extern crate cascading_wasm_language;
+use cascading_wasm_language::{cwl_dom, cwl_lib};
 
 extern crate wasm_bindgen_test;
 use wasm_bindgen_test::*;

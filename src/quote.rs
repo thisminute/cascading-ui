@@ -1,27 +1,149 @@
 use {
-	crate::tokens::*,
+	crate::{
+		meta::{Context, Meta},
+		tokens::*,
+	},
+	std::collections::HashMap,
 	syn::export::{quote::quote, TokenStream2},
 };
 
-pub struct List<'a> {
-	id: &'a str,
-	next: &'a Option<List<'a>>,
-}
-
-pub struct Context<'a> {
-	pub path: Option<List<'a>>,
-	pub r#type: Prefix,
-}
-
 pub trait Quote {
+	fn quote(&self) -> TokenStream2;
+}
+
+trait ContextQuote {
 	fn quote(&self, context: &Context) -> TokenStream2;
 }
 
-impl Quote for Rule {
+impl Quote for Cwl {
+	fn quote(&self) -> TokenStream2 {
+		let header = Header {}.quote();
+		let document = self.document.quote();
+		quote! {
+			#header
+
+			#[wasm_bindgen(start)]
+			pub fn run() -> Result<(), JsValue> {
+				#document
+				Ok(())
+			}
+		}
+	}
+}
+
+impl Quote for Header {
+	fn quote(&self) -> TokenStream2 {
+		quote! {
+			extern crate wasm_bindgen;
+			extern crate web_sys;
+			use {
+				wasm_bindgen::{
+					prelude::*,
+					JsCast,
+				},
+				web_sys::{
+					Document,
+					Event,
+					HtmlElement,
+					Window,
+				},
+			};
+			fn create_element(document: &Document, name: &str) -> HtmlElement {
+				document
+					.create_element(name)
+					.expect(&format!("Failed to create `{}` element.", name)[..])
+					.dyn_into::<HtmlElement>()
+					.expect("Failed to construct element.")
+			}
+		}
+	}
+}
+impl Quote for Document {
+	fn quote(&self, &mut Meta) -> TokenStream2 {
+		let meta = Meta {
+			title: None,
+			classes: HashMap::new(),
+		};
+
+		let dom = self.root.quote(&Context {
+			// path:,
+			// r#type:,
+		});
+
+		quote! {
+			use {
+				web_sys::{
+					Element,
+					HtmlHeadElement,
+				},
+			};
+
+			struct Meta {
+				window: Window,
+				document: Document,
+				head: HtmlHeadElement,
+				style: Element,
+			}
+
+			let window = web_sys::window().expect("getting window");
+			let document = window.document().expect("getting `window.document`");
+			let head = document.head().expect("getting `window.document.head`");
+			let body = document.body().expect("getting `window.document.body`");
+			let style = document.create_element("style").expect("creating a `style` element");
+			head.append_child(&style).expect("appending `style` to `head`");
+			let current_element = &body;
+			let meta = Meta { window, document, head, style };
+			#dom;
+		}
+	}
+}
+
+impl ContextQuote for Block {
+	fn quote(&self, context: &Context) -> TokenStream2 {
+		let identifier = &self.identifier.to_string()[..];
+
+		match self.prefix {
+			Prefix::Instance => {
+				let rule_quotes = self.rules.iter().map(|rule| rule.quote(context));
+				let block_quotes = self.blocks.iter().map(|block| block.quote(context));
+
+				let quotes = quote! {
+					#( #rule_quotes )*
+					#( #block_quotes )*
+				};
+
+				match identifier {
+					_ => {
+						quote! {
+							let element = &create_element(&meta.document, #identifier);
+							current_element.append_child(element).unwrap();
+							let current_element = element;
+
+							#quotes
+
+							let current_element = current_element.parent_element().unwrap();
+						}
+					}
+				}
+			}
+			Prefix::Class => {
+				quote! {}
+			}
+			Prefix::Action => {
+				quote! {}
+			}
+			Prefix::Listener => {
+				quote! {}
+			}
+		}
+	}
+}
+
+impl ContextQuote for Rule {
 	fn quote(&self, context: &Context) -> TokenStream2 {
 		let property = &self.property.to_string();
 		let value = &self.value;
-		let at_root = context.path.is_none();
+		let at_root = true; //context.path.is_none();
 
 		match &property.to_string()[..] {
 			// meta information for the page and/or project must be defined at the top level
@@ -63,98 +185,6 @@ impl Quote for Rule {
 					)?;
 				}
 			}
-		}
-	}
-}
-
-impl Quote for Block {
-	fn quote(&self, context: &Context) -> TokenStream2 {
-		let identifier = &self.identifier.to_string()[..];
-
-		match self.prefix {
-			Prefix::Instance => {
-				let rule_quotes = self.rules.iter().map(|rule| rule.quote(context));
-				let block_quotes = self.blocks.iter().map(|block| block.quote(context));
-
-				let quotes = quote! {
-					#( #rule_quotes )*
-					#( #block_quotes )*
-				};
-
-				match identifier {
-					_ => {
-						quote! {
-							let element = &create_element(&meta.document, #identifier);
-							current_element.append_child(element).unwrap();
-							let current_element = element;
-
-							#quotes
-
-							let current_element = current_element.parent_element().unwrap();
-						}
-					}
-				}
-			}
-			Prefix::Class => {
-				quote! {}
-			}
-			Prefix::Action => {
-				quote! {}
-			}
-			Prefix::Listener => {
-				quote! {}
-			}
-		}
-	}
-}
-
-impl Quote for Document {
-	fn quote(&self, context: &Context) -> TokenStream2 {
-		let dom = self.root.quote(context);
-
-		quote! {
-			use {
-				std::collections::HashMap,
-				web_sys::{
-					Document,
-					Element,
-					HtmlHeadElement,
-					HtmlElement,
-					Window,
-				},
-			};
-
-			struct Meta {
-				window: Window,
-				document: Document,
-				head: HtmlHeadElement,
-				style: Element,
-				// classes: HashMap<&'a str, Class<'a>>,
-				// elements: HashMap<&'a str, &'a HtmlElement>,
-			}
-
-			struct Class<'a> {
-				text: &'a str,
-				styles: Vec<&'a str>,
-			}
-			impl Default for Class<'_> {
-				fn default() -> Self {
-					Class {
-						text: "",
-						styles: Vec::new(),
-					}
-				}
-			}
-
-			let window = web_sys::window().expect("getting window");
-			let document = window.document().expect("getting `window.document`");
-			let head = document.head().expect("getting `window.document.head`");
-			let body = document.body().expect("getting `window.document.body`");
-			let style = document.create_element("style").expect("creating a `style` element");
-			head.append_child(&style).expect("appending `style` to `head`");
-			let current_element = &body;
-			let meta = Meta { window, document, head, style };
-			#dom;
 		}
 	}
 }
