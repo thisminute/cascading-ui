@@ -3,7 +3,10 @@ use {
 		meta::{Context, Meta},
 		tokens::*,
 	},
-	syn::{export::quote::quote_spanned, spanned::Spanned},
+	syn::{
+		export::quote::{quote, quote_spanned},
+		spanned::Spanned,
+	},
 };
 
 pub trait Lex {
@@ -56,21 +59,22 @@ impl ContextLex for Block {
 impl ContextLex for Rule {
 	fn lex(&self, meta: &mut Meta, _context: Option<&Context>) {
 		let property = self.property.to_string();
+		let value = &self.value;
 		let at_root = true; // context.path.is_none();
 
 		match &property.to_string()[..] {
 			// meta information for the page and/or project must be defined at the top level
-			"title" if at_root => match &meta.title {
-				Some(_title) => {
-					quote_spanned! {
+			"title" if at_root => {
+				meta.title = Some(match &meta.title {
+					Some(_title) => quote_spanned! {
 						self.value.span() =>
-						compile_error!("initial title cannot be set more than once");
-					};
-				}
-				None => {
-					meta.title = Some(stringify!(self.value));
-				}
-			},
+						compile_error!("initial page title cannot be set more than once (showing last)");
+					},
+					None => {
+						quote! { #value }
+					}
+				})
+			}
 
 			"text" => {}
 			"link" => {}

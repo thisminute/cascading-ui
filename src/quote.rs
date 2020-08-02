@@ -15,12 +15,29 @@ impl Quote for Website<'_> {
 	fn quote(&self) -> TokenStream2 {
 		let header = Header {}.quote();
 		let document = self.document.quote();
+
+		let title = match &self.document.meta.title {
+			Some(title) => {
+				quote! {
+					let element = document.create_element("title").unwrap();
+					head.append_child(&element).unwrap();
+					element.set_inner_html(#title);
+				}
+			}
+			None => {
+				quote! {
+					compile_error!("you must set a title for the page");
+				}
+			}
+		};
+
 		quote! {
 			#header
 
 			#[wasm_bindgen(start)]
 			pub fn run() -> Result<(), JsValue> {
 				#document
+				#title
 				Ok(())
 			}
 		}
@@ -134,18 +151,8 @@ impl ContextQuote for Rule {
 	fn quote(&self, _context: &Context) -> TokenStream2 {
 		let property = &self.property.to_string();
 		let value = &self.value;
-		let at_root = true; //context.path.is_none();
 
 		match &property.to_string()[..] {
-			// meta information for the page and/or project must be defined at the top level
-			"title" if at_root => {
-				quote! {
-					let element = meta.document.create_element("title").unwrap();
-					meta.head.append_child(&element).unwrap();
-					element.set_inner_html(#value);
-				}
-			}
-
 			"text" => {
 				quote! {
 					current_element.set_inner_html(#value);
@@ -173,7 +180,7 @@ impl ContextQuote for Rule {
 					body.style().set_property(
 						&str::replace(#property, "_", "-"),
 						#value
-					)?;
+					).unwrap();
 				}
 			}
 		}
