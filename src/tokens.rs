@@ -1,19 +1,22 @@
-use syn::{Expr, Ident};
+use {
+	crate::meta::Meta,
+	syn::{Expr, Ident},
+};
 
 #[derive(Debug)]
 struct HyphenatedIdent {
 	pub parts: Vec<Ident>,
 }
 
-pub struct Cwl {
-	pub document: Document,
+pub struct Website<'a> {
+	pub document: Document<'a>,
 }
 
 #[derive(Debug)]
 pub struct Header {}
 
-#[derive(Debug)]
-pub struct Document {
+pub struct Document<'a> {
+	pub meta: Meta<'a>,
 	pub root: Block,
 }
 

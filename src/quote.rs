@@ -1,9 +1,5 @@
 use {
-	crate::{
-		meta::{Context, Meta},
-		tokens::*,
-	},
-	std::collections::HashMap,
+	crate::{meta::Context, tokens::*},
 	syn::export::{quote::quote, TokenStream2},
 };
 
@@ -15,7 +11,7 @@ trait ContextQuote {
 	fn quote(&self, context: &Context) -> TokenStream2;
 }
 
-impl Quote for Cwl {
+impl Quote for Website<'_> {
 	fn quote(&self) -> TokenStream2 {
 		let header = Header {}.quote();
 		let document = self.document.quote();
@@ -58,13 +54,8 @@ impl Quote for Header {
 		}
 	}
 }
-impl Quote for Document {
-	fn quote(&self, &mut Meta) -> TokenStream2 {
-		let meta = Meta {
-			title: None,
-			classes: HashMap::new(),
-		};
-
+impl Quote for Document<'_> {
+	fn quote(&self) -> TokenStream2 {
 		let dom = self.root.quote(&Context {
 			// path:,
 			// r#type:,
@@ -140,7 +131,7 @@ impl ContextQuote for Block {
 }
 
 impl ContextQuote for Rule {
-	fn quote(&self, context: &Context) -> TokenStream2 {
+	fn quote(&self, _context: &Context) -> TokenStream2 {
 		let property = &self.property.to_string();
 		let value = &self.value;
 		let at_root = true; //context.path.is_none();

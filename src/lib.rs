@@ -9,8 +9,9 @@ mod tokens;
 
 use {
 	crate::{
+		lex::Lex,
 		quote::Quote,
-		tokens::{Cwl, Document, Header},
+		tokens::{Document, Header, Website},
 	},
 	proc_macro::TokenStream,
 	std::{
@@ -25,7 +26,7 @@ use {
 
 #[proc_macro]
 pub fn cwl(input: TokenStream) -> TokenStream {
-	let mut input = TokenStream2::from(input);
+	let mut input = input.into();
 
 	// if it exists, import .cwl files from the `cwl` directory and attach them to the input
 	let path = "./cwl";
@@ -40,17 +41,19 @@ pub fn cwl(input: TokenStream) -> TokenStream {
 		}
 	}
 
-	let expanded = Cwl {
-		document: parse_macro_input!(input as Document),
-	}
-	.quote();
+	let input = input.into();
+	let mut document = parse_macro_input!(input as Document);
+	document.lex();
+	let expanded = Website { document }.quote();
 	write("target/cwl_macro_output.rs", expanded.to_string()).unwrap();
 	expanded.into()
 }
 
 #[proc_macro]
 pub fn cwl_dom(input: TokenStream) -> TokenStream {
-	parse_macro_input!(input as Document).quote().into()
+	let mut document = parse_macro_input!(input as Document);
+	document.lex();
+	document.quote().into()
 }
 
 #[proc_macro]

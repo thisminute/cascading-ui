@@ -1,18 +1,18 @@
 use std::collections::HashMap;
 
-pub struct List<'a> {
-	id: &'a str,
-	next: &'a Option<List<'a>>,
-}
+// pub struct List<'a> {
+// 	id: &'a str,
+// 	next: &'a Option<List<'a>>,
+// }
 
 pub struct Context {
-	// pub path: Option<List<'a>>,
+	// 	pub path: Option<List<'a>>,
 // pub r#type: Prefix,
 }
 
-struct Class<'a> {
-	text: &'a str,
-	styles: Vec<&'a str>,
+pub struct Class<'a> {
+	pub text: &'a str,
+	pub styles: Vec<&'a str>,
 }
 impl Default for Class<'_> {
 	fn default() -> Self {
@@ -23,6 +23,6 @@ impl Default for Class<'_> {
 	}
 }
 pub struct Meta<'a> {
-	title: Option<&'a str>,
-	classes: HashMap<&'a str, Class<'a>>,
+	pub title: Option<&'a str>,
+	pub classes: HashMap<&'a str, Class<'a>>,
 }
