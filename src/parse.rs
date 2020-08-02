@@ -1,5 +1,6 @@
 use {
-	crate::tokens::*,
+	crate::{meta::Meta, tokens::*},
+	std::collections::HashMap,
 	syn::{
 		braced,
 		export::Span,
@@ -10,7 +11,6 @@ use {
 	},
 };
 
-// can't implement Peek for some reason, so using these silly functions instead
 fn peek_rule(input: ParseStream) -> bool {
 	input.peek(Ident::peek_any) && input.peek2(Token![:])
 }
@@ -23,32 +23,51 @@ fn peek_prefixed_block(input: ParseStream) -> bool {
 		&& input.peek3(Brace)
 }
 
-impl Parse for HyphenatedIdent {
+// impl Parse for HyphenatedIdent {
+// 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
+// 		let mut parts = Vec::new();
+// 		while input.peek(Ident::peek_any) {
+// 			parts.push(input.parse()?);
+// 			match input.parse::<Token![-]>() {
+// 				Ok(_) => {
+// 					continue;
+// 				}
+// 				Err(_) => {
+// 					break;
+// 				}
+// 			}
+// 		}
+
+// 		Ok(Self { parts })
+// 	}
+// }
+
+impl Parse for Document<'_> {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		let mut parts = Vec::new();
-		while input.peek(Ident::peek_any) {
-			parts.push(input.parse()?);
-			match input.parse::<Token![-]>() {
-				Ok(_) => {
-					continue;
-				}
-				Err(_) => {
-					break;
-				}
+		let mut rules = Vec::new();
+		let mut blocks = Vec::new();
+		loop {
+			if peek_rule(&input) {
+				rules.push(input.parse()?);
+			} else if peek_block(&input) || peek_prefixed_block(&input) {
+				blocks.push(input.parse()?);
+			} else {
+				break;
 			}
 		}
 
-		Ok(Self { parts })
-	}
-}
-
-impl Parse for Rule {
-	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		let property = input.parse()?;
-		input.parse::<Token![:]>()?;
-		let value = input.parse()?;
-		input.parse::<Token![;]>()?;
-		Ok(Self { property, value })
+		Ok(Self {
+			meta: Meta {
+				title: None,
+				classes: HashMap::new(),
+			},
+			root: Block {
+				identifier: Ident::new("_", Span::call_site()),
+				prefix: Prefix::Instance,
+				rules,
+				blocks,
+			},
+		})
 	}
 }
 
@@ -93,27 +112,12 @@ impl Parse for Block {
 	}
 }
 
-impl Parse for Document {
+impl Parse for Rule {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		let mut rules = Vec::new();
-		let mut blocks = Vec::new();
-		loop {
-			if peek_rule(&input) {
-				rules.push(input.parse()?);
-			} else if peek_block(&input) || peek_prefixed_block(&input) {
-				blocks.push(input.parse()?);
-			} else {
-				break;
-			}
-		}
-
-		Ok(Self {
-			root: Block {
-				identifier: Ident::new("thing", Span::call_site()),
-				prefix: Prefix::Instance,
-				rules,
-				blocks,
-			},
-		})
+		let property = input.parse()?;
+		input.parse::<Token![:]>()?;
+		let value = input.parse()?;
+		input.parse::<Token![;]>()?;
+		Ok(Self { property, value })
 	}
 }
