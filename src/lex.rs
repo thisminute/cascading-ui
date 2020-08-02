@@ -60,6 +60,7 @@ impl ContextLex for Rule {
 	fn lex(&self, meta: &mut Meta, _context: Option<&Context>) {
 		let property = self.property.to_string();
 		let value = &self.value;
+		let span = self.value.span();
 		let at_root = true; // context.path.is_none();
 
 		match &property.to_string()[..] {
@@ -67,8 +68,8 @@ impl ContextLex for Rule {
 			"title" if at_root => {
 				meta.title = Some(match &meta.title {
 					Some(_title) => quote_spanned! {
-						self.value.span() =>
-						compile_error!("initial page title cannot be set more than once (showing last)");
+						span=>
+						compile_error!("title property cannot be set more than once")
 					},
 					None => {
 						quote! { #value }

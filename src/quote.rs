@@ -86,19 +86,19 @@ impl Quote for Document<'_> {
 				},
 			};
 
-			struct Meta {
+			struct Meta<'a> {
 				window: Window,
-				document: Document,
-				head: HtmlHeadElement,
-				style: Element,
+				document: &'a Document,
+				head: &'a HtmlHeadElement,
+				style: &'a Element,
 			}
 
 			let window = web_sys::window().expect("getting window");
-			let document = window.document().expect("getting `window.document`");
-			let head = document.head().expect("getting `window.document.head`");
+			let document = &window.document().expect("getting `window.document`");
+			let head = &document.head().expect("getting `window.document.head`");
 			let body = document.body().expect("getting `window.document.body`");
-			let style = document.create_element("style").expect("creating a `style` element");
-			head.append_child(&style).expect("appending `style` to `head`");
+			let style = &document.create_element("style").expect("creating a `style` element");
+			head.append_child(style).expect("appending `style` to `head`");
 			let current_element = &body;
 			let meta = Meta { window, document, head, style };
 			#dom;
