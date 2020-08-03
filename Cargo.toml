@@ -4,7 +4,7 @@ description = "Compiled web language based on CSS syntax"
 license = "MIT"
 name = "cascading-wasm-language"
 repository = "https://github.com/thisminute/cascading-wasm-language"
-version = "0.0.0"
+version = "0.0.1"
 
 [lib]
 proc-macro = true
