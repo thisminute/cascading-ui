@@ -10,44 +10,29 @@ use {
 };
 
 pub trait Lex {
-	fn lex(&mut self);
-}
-
-trait ContextLex {
 	fn lex(&self, meta: &mut Meta, context: Option<&Context>);
 }
 
-impl Lex for Document<'_> {
-	fn lex(&mut self) {
-		self.root.lex(&mut self.meta, None);
+impl Lex for Document {
+	fn lex(&self, meta: &mut Meta, context: Option<&Context>) {
+		self.root.lex(meta, context);
+
+		match &meta.title {
+			Some(_) => {}
+			None => meta.errors.push(quote! {
+				compile_error!("you must set a title for the page");
+			}),
+		};
 	}
 }
 
-impl ContextLex for Block {
+impl Lex for Block {
 	fn lex(&self, meta: &mut Meta, context: Option<&Context>) {
-		// let identifier = &self.identifier.to_string()[..];
-
 		match self.prefix {
 			Prefix::Instance => {
 				for rule in &self.rules {
 					rule.lex(meta, context);
 				}
-
-				// let block_quotes = self.blocks.iter().map(|block| block.lex(document, context));
-
-				// match identifier {
-				// 	_ => {
-				// 		quote! {
-				// 			let element = &create_element(meta.document, #identifier);
-				// 			current_element.append_child(element).unwrap();
-				// 			let current_element = element;
-
-				// 			#quotes
-
-				// 			let current_element = current_element.parent_element().unwrap();
-				// 		}
-				// 	}
-				// }
 			}
 			Prefix::Class => {}
 			Prefix::Action => {}
@@ -56,26 +41,20 @@ impl ContextLex for Block {
 	}
 }
 
-impl ContextLex for Rule {
+impl Lex for Rule {
 	fn lex(&self, meta: &mut Meta, _context: Option<&Context>) {
 		let property = self.property.to_string();
 		let value = &self.value;
-		let span = self.value.span();
 		let at_root = true; // context.path.is_none();
 
 		match &property.to_string()[..] {
 			// meta information for the page and/or project must be defined at the top level
-			"title" if at_root => {
-				meta.title = Some(match &meta.title {
-					Some(_title) => quote_spanned! {
-						span=>
-						compile_error!("title property cannot be set more than once")
-					},
-					None => {
-						quote! { #value }
-					}
-				})
-			}
+			"title" if at_root => match &meta.title {
+				Some(_title) => meta.errors.push(quote_spanned! {
+					value.span()=> compile_error!("title property cannot be set more than once");
+				}),
+				None => meta.title = Some(quote! { #value }),
+			},
 
 			"text" => {}
 			"link" => {}

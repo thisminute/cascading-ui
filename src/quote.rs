@@ -1,51 +1,34 @@
 use {
-	crate::{meta::Context, tokens::*},
+	crate::{
+		meta::{Context, Meta},
+		tokens::*,
+	},
 	syn::export::{quote::quote, TokenStream2},
 };
 
 pub trait Quote {
-	fn quote(&self) -> TokenStream2;
+	fn quote(&self, meta: &Meta, context: Option<&Context>) -> TokenStream2;
 }
 
-trait ContextQuote {
-	fn quote(&self, context: &Context) -> TokenStream2;
-}
-
-impl Quote for Website<'_> {
-	fn quote(&self) -> TokenStream2 {
-		let header = Header {}.quote();
-		let document = self.document.quote();
-
-		let title = match &self.document.meta.title {
-			Some(title) => {
-				quote! {
-					let element = document.create_element("title").unwrap();
-					head.append_child(&element).unwrap();
-					element.set_inner_html(#title);
-				}
-			}
-			None => {
-				quote! {
-					compile_error!("you must set a title for the page");
-				}
-			}
-		};
+impl Quote for Website {
+	fn quote(&self, meta: &Meta, context: Option<&Context>) -> TokenStream2 {
+		let lib = Lib {}.quote(meta, context);
+		let builder = self.document.quote(meta, context);
 
 		quote! {
-			#header
+			#lib
 
 			#[wasm_bindgen(start)]
 			pub fn run() -> Result<(), JsValue> {
-				#document
-				#title
+				#builder
 				Ok(())
 			}
 		}
 	}
 }
 
-impl Quote for Header {
-	fn quote(&self) -> TokenStream2 {
+impl Quote for Lib {
+	fn quote(&self, _meta: &Meta, _context: Option<&Context>) -> TokenStream2 {
 		quote! {
 			extern crate wasm_bindgen;
 			extern crate web_sys;
@@ -71,12 +54,28 @@ impl Quote for Header {
 		}
 	}
 }
-impl Quote for Document<'_> {
-	fn quote(&self) -> TokenStream2 {
-		let dom = self.root.quote(&Context {
+
+impl Quote for Document {
+	fn quote(&self, meta: &Meta, _context: Option<&Context>) -> TokenStream2 {
+		if !meta.errors.is_empty() {
+			let errors = &meta.errors;
+			return quote! { #( #errors )* };
+		}
+
+		let title = &meta.title;
+		let title = quote! {
+			let element = document.create_element("title").unwrap();
+			head.append_child(&element).unwrap();
+			element.set_inner_html(#title);
+		};
+
+		let body = self.root.quote(
+			meta,
+			Some(&Context {
 			// path:,
 			// r#type:,
-		});
+		}),
+		);
 
 		quote! {
 			use {
@@ -101,19 +100,20 @@ impl Quote for Document<'_> {
 			head.append_child(style).expect("appending `style` to `head`");
 			let current_element = &body;
 			let meta = Meta { window, document, head, style };
-			#dom;
+			#title
+			#body
 		}
 	}
 }
 
-impl ContextQuote for Block {
-	fn quote(&self, context: &Context) -> TokenStream2 {
+impl Quote for Block {
+	fn quote(&self, meta: &Meta, context: Option<&Context>) -> TokenStream2 {
 		let identifier = &self.identifier.to_string()[..];
 
 		match self.prefix {
 			Prefix::Instance => {
-				let rule_quotes = self.rules.iter().map(|rule| rule.quote(context));
-				let block_quotes = self.blocks.iter().map(|block| block.quote(context));
+				let rule_quotes = self.rules.iter().map(|rule| rule.quote(meta, context));
+				let block_quotes = self.blocks.iter().map(|block| block.quote(meta, context));
 
 				let quotes = quote! {
 					#( #rule_quotes )*
@@ -147,8 +147,8 @@ impl ContextQuote for Block {
 	}
 }
 
-impl ContextQuote for Rule {
-	fn quote(&self, _context: &Context) -> TokenStream2 {
+impl Quote for Rule {
+	fn quote(&self, _meta: &Meta, _context: Option<&Context>) -> TokenStream2 {
 		let property = &self.property.to_string();
 		let value = &self.value;
 

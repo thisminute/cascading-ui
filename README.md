@@ -20,11 +20,16 @@ rustup default stable-x86_64-pc-windows-gnu
 # Understanding the Code
 
 ## Execution Steps
-The code is divided at a high level into 4 parts:
-1. Parse
-2. Macro
-3. Page Initialization
-4. Execution
+1. lib.rs
+   - The macro code is entered through one of 3 procedural macros exported from lib.rs. `cwl` is the main one, cwl_dom and cwl_lib are helpers for writing tests.
+1. parse.rs/tokens.rs
+   - The parse trait parses the input syntax into structs defined in tokens.rs, which can be thought of as an AST with a Document as the root, Blocks as branches, and Rules as leaves.
+1. lex.rs/meta.rs
+   - The lex trait walks through the AST and fills out a struct called Meta defined in meta.rs
+1. html.rs
+   - The html trait walks through Meta and fills the html minifier, which then writes to a file
+1. quote.rs
+   - The quote trait walks through Meta and generates Rust code, after which the compiler takes over to generate the final wasm target
 
 1. First, the cwl syntax is parsed into data structures that Rust can work with. Both the data structures and the rules for parsing are in `src/tokens.rs`.
 2. Next, the data structures are turned into Rust code by the `proc_macro` defined in `src/lib.rs`. This logic is the code OUTside of `quote! {}` blocks, and the code INside of those blocks eventually runs in a browser.

@@ -15,13 +15,23 @@ pub struct Class<'a> {
 }
 impl Default for Class<'_> {
 	fn default() -> Self {
-		Class {
+		Self {
 			text: "",
 			styles: Vec::new(),
 		}
 	}
 }
 pub struct Meta<'a> {
+	pub errors: Vec<TokenStream2>,
 	pub title: Option<TokenStream2>,
 	pub classes: HashMap<&'a str, Class<'a>>,
+}
+impl Meta<'_> {
+	pub fn new() -> Self {
+		Self {
+			errors: Vec::new(),
+			title: None,
+			classes: HashMap::new(),
+		}
+	}
 }

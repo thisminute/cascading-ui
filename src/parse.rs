@@ -1,6 +1,5 @@
 use {
-	crate::{meta::Meta, tokens::*},
-	std::collections::HashMap,
+	crate::tokens::*,
 	syn::{
 		braced,
 		export::Span,
@@ -42,7 +41,7 @@ fn peek_prefixed_block(input: ParseStream) -> bool {
 // 	}
 // }
 
-impl Parse for Document<'_> {
+impl Parse for Document {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
 		let mut rules = Vec::new();
 		let mut blocks = Vec::new();
@@ -57,10 +56,6 @@ impl Parse for Document<'_> {
 		}
 
 		Ok(Self {
-			meta: Meta {
-				title: None,
-				classes: HashMap::new(),
-			},
 			root: Block {
 				identifier: Ident::new("_", Span::call_site()),
 				prefix: Prefix::Instance,

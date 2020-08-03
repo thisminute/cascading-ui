@@ -1,33 +1,25 @@
-use {
-	crate::meta::Meta,
-	syn::{Expr, Ident},
-};
+use syn::{Expr, Ident};
 
-#[derive(Debug)]
-struct HyphenatedIdent {
-	pub parts: Vec<Ident>,
+// struct HyphenatedIdent {
+// 	pub parts: Vec<Ident>,
+// }
+
+pub struct Website {
+	pub document: Document,
 }
 
-pub struct Website<'a> {
-	pub document: Document<'a>,
-}
+pub struct Lib {}
 
-#[derive(Debug)]
-pub struct Header {}
-
-pub struct Document<'a> {
-	pub meta: Meta<'a>,
+pub struct Document {
 	pub root: Block,
 }
 
-#[derive(Debug)]
 pub enum Prefix {
 	Instance,
 	Class,
 	Action,
 	Listener,
 }
-#[derive(Debug)]
 pub struct Block {
 	pub prefix: Prefix,
 	pub identifier: Ident,
@@ -35,7 +27,6 @@ pub struct Block {
 	pub blocks: Vec<Block>,
 }
 
-#[derive(Debug)]
 pub struct Rule {
 	pub property: Ident,
 	pub value: Expr,
