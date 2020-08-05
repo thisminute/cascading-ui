@@ -7,7 +7,7 @@ To install, you will need:
 
 Then:
 ```bash
-git clone --recurse-submodules https://github.com/thisminute/cascading-wasm-language.git
+git clone https://github.com/thisminute/cascading-wasm-language.git
 cd cascading-wasm-language
 ```
 
