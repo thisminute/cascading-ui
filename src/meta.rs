@@ -1,13 +1,5 @@
-use {std::collections::HashMap, syn::export::TokenStream2};
-// pub struct List<'a> {
-// 	id: &'a str,
-// 	next: &'a Option<List<'a>>,
-// }
-
-pub struct Context {
-	// 	pub path: Option<List<'a>>,
-// pub r#type: Prefix,
-}
+use {crate::tokens::Prefix, std::collections::HashMap, syn::export::TokenStream2};
+pub type Context = Vec<(Prefix, String)>;
 
 pub struct Class<'a> {
 	pub text: &'a str,

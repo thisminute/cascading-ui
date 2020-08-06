@@ -63,7 +63,7 @@ pub fn cwl(input: TokenStream) -> TokenStream {
 
 	// entry points for token traits
 	let document = parse_macro_input!(input as Document);
-	document.lex(&mut meta, None);
+	document.lex(&mut meta, &mut Vec::new());
 	document.html(&meta, &mut html_minifier).unwrap();
 	let expanded = Website { document }.quote(&meta, None);
 
@@ -82,7 +82,7 @@ pub fn cwl_dom(input: TokenStream) -> TokenStream {
 
 	// entry points for token traits
 	let document = parse_macro_input!(input as Document);
-	document.lex(&mut meta, None);
+	document.lex(&mut meta, &mut Vec::new());
 	document.html(&meta, &mut html_minifier).unwrap();
 	document.quote(&meta, None).into()
 }

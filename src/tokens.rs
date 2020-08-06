@@ -14,6 +14,7 @@ pub struct Document {
 	pub root: Block,
 }
 
+#[derive(Copy, Clone)]
 pub enum Prefix {
 	Instance,
 	Class,

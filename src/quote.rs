@@ -66,14 +66,7 @@ impl Quote for Document {
 			};
 		}
 
-		let body = self.root.quote(
-			meta,
-			Some(&Context {
-			// path:,
-			// r#type:,
-		}),
-		);
-
+		let body = self.root.quote(meta, None);
 		quote! {
 			#( #warnings )*
 

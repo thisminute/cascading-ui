@@ -10,11 +10,11 @@ use {
 };
 
 pub trait Lex {
-	fn lex(&self, meta: &mut Meta, context: Option<&Context>);
+	fn lex(&self, meta: &mut Meta, context: &mut Context);
 }
 
 impl Lex for Document {
-	fn lex(&self, meta: &mut Meta, context: Option<&Context>) {
+	fn lex(&self, meta: &mut Meta, context: &mut Context) {
 		self.root.lex(meta, context);
 
 		match &meta.title {
@@ -27,7 +27,8 @@ impl Lex for Document {
 }
 
 impl Lex for Block {
-	fn lex(&self, meta: &mut Meta, context: Option<&Context>) {
+	fn lex(&self, meta: &mut Meta, context: &mut Context) {
+		context.push((self.prefix, self.identifier.to_string()));
 		match self.prefix {
 			Prefix::Instance => {
 				for rule in &self.rules {
@@ -37,14 +38,15 @@ impl Lex for Block {
 			Prefix::Class => {}
 			Prefix::Action => {}
 		};
+		context.pop();
 	}
 }
 
 impl Lex for Rule {
-	fn lex(&self, meta: &mut Meta, _context: Option<&Context>) {
+	fn lex(&self, meta: &mut Meta, context: &mut Context) {
 		let property = self.property.to_string();
 		let value = &self.value;
-		let at_root = true; // context.path.is_none();
+		let at_root = context.is_empty();
 
 		match &property.to_string()[..] {
 			// meta information for the page and/or project must be defined at the top level
