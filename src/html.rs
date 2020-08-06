@@ -53,6 +53,7 @@ impl Html for Block {
 			Prefix::Instance => {}
 			Prefix::Class => {}
 			Prefix::Action => {}
+			Prefix::Listener => {}
 		}
 
 		Ok(())

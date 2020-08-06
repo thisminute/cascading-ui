@@ -128,6 +128,9 @@ impl Quote for Block {
 			Prefix::Action => {
 				quote! {}
 			}
+			Prefix::Listener => {
+				quote! {}
+			}
 		}
 	}
 }

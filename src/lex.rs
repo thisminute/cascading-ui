@@ -37,6 +37,7 @@ impl Lex for Block {
 			}
 			Prefix::Class => {}
 			Prefix::Action => {}
+			Prefix::Listener => {}
 		};
 		context.pop();
 	}
