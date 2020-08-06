@@ -18,7 +18,6 @@ pub enum Prefix {
 	Instance,
 	Class,
 	Action,
-	Listener,
 }
 pub struct Block {
 	pub prefix: Prefix,

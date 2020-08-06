@@ -1,6 +1,7 @@
 extern crate html_minifier;
 extern crate proc_macro;
 extern crate syn;
+extern crate yew_macro;
 mod html;
 mod lex;
 mod meta;
@@ -19,6 +20,7 @@ use {
 	html_minifier::HTMLMinifier,
 	proc_macro::TokenStream,
 	std::{
+		error::Error,
 		fs::{read_dir, read_to_string, write},
 		path::Path,
 	},
@@ -27,6 +29,8 @@ use {
 		parse_macro_input,
 	},
 };
+
+type BoxResult<T> = Result<T, Box<dyn Error>>;
 
 /// all logic follows a chain of traits with one file per trait
 /// each trait walks the AST recursively and never makes calls to the other traits
@@ -60,7 +64,7 @@ pub fn cwl(input: TokenStream) -> TokenStream {
 	// entry points for token traits
 	let document = parse_macro_input!(input as Document);
 	document.lex(&mut meta, None);
-	document.html(&mut html_minifier);
+	document.html(&meta, &mut html_minifier).unwrap();
 	let expanded = Website { document }.quote(&meta, None);
 
 	write("target/cwl.html", html_minifier.get_html()).unwrap();
@@ -79,7 +83,7 @@ pub fn cwl_dom(input: TokenStream) -> TokenStream {
 	// entry points for token traits
 	let document = parse_macro_input!(input as Document);
 	document.lex(&mut meta, None);
-	document.html(&mut html_minifier);
+	document.html(&meta, &mut html_minifier).unwrap();
 	document.quote(&meta, None).into()
 }
 

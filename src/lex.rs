@@ -19,7 +19,7 @@ impl Lex for Document {
 
 		match &meta.title {
 			Some(_) => {}
-			None => meta.errors.push(quote! {
+			None => meta.warnings.push(quote! {
 				compile_error!("you must set a title for the page");
 			}),
 		};
@@ -36,7 +36,6 @@ impl Lex for Block {
 			}
 			Prefix::Class => {}
 			Prefix::Action => {}
-			Prefix::Listener => {}
 		};
 	}
 }

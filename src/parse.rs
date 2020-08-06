@@ -74,9 +74,6 @@ impl Parse for Block {
 		} else if input.peek(Token![!]) {
 			input.parse::<Token![!]>()?;
 			Prefix::Action
-		} else if input.peek(Token![?]) {
-			input.parse::<Token![?]>()?;
-			Prefix::Listener
 		} else {
 			Prefix::Instance
 		};

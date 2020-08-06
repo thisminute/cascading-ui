@@ -57,17 +57,14 @@ impl Quote for Lib {
 
 impl Quote for Document {
 	fn quote(&self, meta: &Meta, _context: Option<&Context>) -> TokenStream2 {
+		let warnings = &meta.warnings;
 		if !meta.errors.is_empty() {
 			let errors = &meta.errors;
-			return quote! { #( #errors )* };
+			return quote! {
+				#( #warnings )*
+				#( #errors )*
+			};
 		}
-
-		let title = &meta.title;
-		let title = quote! {
-			let element = document.create_element("title").unwrap();
-			head.append_child(&element).unwrap();
-			element.set_inner_html(#title);
-		};
 
 		let body = self.root.quote(
 			meta,
@@ -78,6 +75,8 @@ impl Quote for Document {
 		);
 
 		quote! {
+			#( #warnings )*
+
 			use {
 				web_sys::{
 					Element,
@@ -100,7 +99,6 @@ impl Quote for Document {
 			head.append_child(style).expect("appending `style` to `head`");
 			let current_element = &body;
 			let meta = Meta { window, document, head, style };
-			#title
 			#body
 		}
 	}
@@ -138,9 +136,6 @@ impl Quote for Block {
 				quote! {}
 			}
 			Prefix::Action => {
-				quote! {}
-			}
-			Prefix::Listener => {
 				quote! {}
 			}
 		}
