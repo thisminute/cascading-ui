@@ -7,7 +7,7 @@ To install, you will need:
 
 Then:
 ```bash
-git clone --recurse-submodules https://github.com/thisminute/cascading-wasm-language.git
+git clone https://github.com/thisminute/cascading-wasm-language.git
 cd cascading-wasm-language
 ```
 
@@ -29,12 +29,7 @@ rustup default stable-x86_64-pc-windows-gnu
 1. html.rs
    - The html trait walks through Meta and fills the html minifier, which then writes to a file
 1. quote.rs
-   - The quote trait walks through Meta and generates Rust code, after which the compiler takes over to generate the final wasm target
-
-1. First, the cwl syntax is parsed into data structures that Rust can work with. Both the data structures and the rules for parsing are in `src/tokens.rs`.
-2. Next, the data structures are turned into Rust code by the `proc_macro` defined in `src/lib.rs`. This logic is the code OUTside of `quote! {}` blocks, and the code INside of those blocks eventually runs in a browser.
-3. Some of the code in the quote! {} blocks belongs to the 3rd group, and sets up the components and data bindings on a page when it is launched.
-4. Though not entirely distinct from the initialization step, the rest of the code can be thought of as running as the page is in use, especially code triggered by event listeners.
+   - The quote trait walks through Meta and generates Rust code that will execute at run time in a browser, after which the compiler takes over to generate the final wasm target
 
 ## Integration Tests
 `./tests` has a collection of cwl examples that render different features. Currently, they just check to see that the examples compile.
