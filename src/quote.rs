@@ -1,8 +1,5 @@
 use {
-	crate::{
-		meta::{Context, Meta},
-		tokens::*,
-	},
+	crate::{context::Context, meta::Meta, tokens::*},
 	syn::export::{quote::quote, TokenStream2},
 };
 

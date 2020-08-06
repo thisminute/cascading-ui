@@ -2,6 +2,7 @@ extern crate html_minifier;
 extern crate proc_macro;
 extern crate syn;
 extern crate yew_macro;
+mod context;
 mod html;
 mod lex;
 mod meta;

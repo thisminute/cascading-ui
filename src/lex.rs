@@ -1,12 +1,8 @@
-use {
-	crate::{
-		meta::{Context, Meta},
-		tokens::*,
-	},
-	syn::{
-		export::quote::{quote, quote_spanned},
-		spanned::Spanned,
-	},
+use crate::{
+	context::{Ancestor, Context, Info},
+	meta::Meta,
+	syn::{export::quote::quote, spanned::Spanned},
+	tokens::*,
 };
 
 pub trait Lex {
@@ -19,16 +15,20 @@ impl Lex for Document {
 
 		match &meta.title {
 			Some(_) => {}
-			None => meta.warnings.push(quote! {
-				compile_error!("you must set a title for the page");
-			}),
-		};
+			None => meta.warning(
+				self.root.identifier.span(),
+				"you must set a title for the page",
+			),
+		}
 	}
 }
 
 impl Lex for Block {
 	fn lex(&self, meta: &mut Meta, context: &mut Context) {
-		context.push((self.prefix, self.identifier.to_string()));
+		context.push(Ancestor {
+			r#type: self.prefix,
+			string: self.identifier.to_string(),
+		});
 		match self.prefix {
 			Prefix::Instance => {
 				for rule in &self.rules {
@@ -46,14 +46,12 @@ impl Lex for Rule {
 	fn lex(&self, meta: &mut Meta, context: &mut Context) {
 		let property = self.property.to_string();
 		let value = &self.value;
-		let at_root = context.is_empty();
+		let at_root = context.is_root();
 
 		match &property.to_string()[..] {
 			// meta information for the page and/or project must be defined at the top level
 			"title" if at_root => match &meta.title {
-				Some(_title) => meta.errors.push(quote_spanned! {
-					value.span()=> compile_error!("title property cannot be set more than once");
-				}),
+				Some(_title) => meta.error(value.span(), "title property cannot be set more than once"),
 				None => meta.title = Some(quote! { #value }),
 			},
 
