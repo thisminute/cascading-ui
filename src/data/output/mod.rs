@@ -1,5 +1,5 @@
 pub mod html;
-pub mod quote;
+pub mod wasm;
 
 pub use self::html::*;
-pub use self::quote::*;
+pub use self::wasm::*;

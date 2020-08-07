@@ -7,14 +7,14 @@ use {
 	syn::export::{quote::quote, TokenStream2},
 };
 
-pub trait Quote {
-	fn quote(&self, meta: &Meta, context: Option<&Context>) -> TokenStream2;
+pub trait Wasm {
+	fn wasm(&self, meta: &Meta, context: Option<&Context>) -> TokenStream2;
 }
 
-impl Quote for Website {
-	fn quote(&self, meta: &Meta, context: Option<&Context>) -> TokenStream2 {
-		let lib = Lib {}.quote(meta, context);
-		let builder = self.document.quote(meta, context);
+impl Wasm for Website {
+	fn wasm(&self, meta: &Meta, context: Option<&Context>) -> TokenStream2 {
+		let lib = Lib {}.wasm(meta, context);
+		let builder = self.document.wasm(meta, context);
 
 		quote! {
 			#lib
@@ -28,8 +28,8 @@ impl Quote for Website {
 	}
 }
 
-impl Quote for Lib {
-	fn quote(&self, _meta: &Meta, _context: Option<&Context>) -> TokenStream2 {
+impl Wasm for Lib {
+	fn wasm(&self, _meta: &Meta, _context: Option<&Context>) -> TokenStream2 {
 		quote! {
 			extern crate wasm_bindgen;
 			extern crate web_sys;
@@ -56,8 +56,8 @@ impl Quote for Lib {
 	}
 }
 
-impl Quote for Document {
-	fn quote(&self, meta: &Meta, _context: Option<&Context>) -> TokenStream2 {
+impl Wasm for Document {
+	fn wasm(&self, meta: &Meta, _context: Option<&Context>) -> TokenStream2 {
 		let warnings = &meta.warnings;
 		if !meta.errors.is_empty() {
 			let errors = &meta.errors;
@@ -67,7 +67,7 @@ impl Quote for Document {
 			};
 		}
 
-		let body = self.root.quote(meta, None);
+		let body = self.root.wasm(meta, None);
 		quote! {
 			#( #warnings )*
 
@@ -98,14 +98,14 @@ impl Quote for Document {
 	}
 }
 
-impl Quote for Block {
-	fn quote(&self, meta: &Meta, context: Option<&Context>) -> TokenStream2 {
+impl Wasm for Block {
+	fn wasm(&self, meta: &Meta, context: Option<&Context>) -> TokenStream2 {
 		let identifier = &self.identifier.to_string()[..];
 
 		match self.prefix {
 			Prefix::Instance => {
-				let rule_quotes = self.rules.iter().map(|rule| rule.quote(meta, context));
-				let block_quotes = self.blocks.iter().map(|block| block.quote(meta, context));
+				let rule_quotes = self.rules.iter().map(|rule| rule.wasm(meta, context));
+				let block_quotes = self.blocks.iter().map(|block| block.wasm(meta, context));
 
 				let quotes = quote! {
 					#( #rule_quotes )*
@@ -139,8 +139,8 @@ impl Quote for Block {
 	}
 }
 
-impl Quote for Rule {
-	fn quote(&self, _meta: &Meta, _context: Option<&Context>) -> TokenStream2 {
+impl Wasm for Rule {
+	fn wasm(&self, _meta: &Meta, _context: Option<&Context>) -> TokenStream2 {
 		let property = &self.property.to_string();
 		let value = &self.value;
 

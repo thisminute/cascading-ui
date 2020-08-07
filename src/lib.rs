@@ -8,7 +8,7 @@ use {
 	data::{
 		input::Lex,
 		meta::Meta,
-		output::{Html, Quote},
+		output::{Html, Wasm},
 		tokens::{Document, Lib, Website},
 	},
 	html_minifier::HTMLMinifier,
@@ -59,7 +59,7 @@ pub fn cwl(input: TokenStream) -> TokenStream {
 	let document = parse_macro_input!(input as Document);
 	document.lex(&mut meta, &mut Vec::new());
 	document.html(&meta, &mut html_minifier).unwrap();
-	let expanded = Website { document }.quote(&meta, None);
+	let expanded = Website { document }.wasm(&meta, None);
 
 	write("target/cwl.html", html_minifier.get_html()).unwrap();
 
@@ -78,10 +78,10 @@ pub fn cwl_dom(input: TokenStream) -> TokenStream {
 	let document = parse_macro_input!(input as Document);
 	document.lex(&mut meta, &mut Vec::new());
 	document.html(&meta, &mut html_minifier).unwrap();
-	document.quote(&meta, None).into()
+	document.wasm(&meta, None).into()
 }
 
 #[proc_macro]
 pub fn cwl_lib(_input: TokenStream) -> TokenStream {
-	Lib {}.quote(&Meta::new(), None).into()
+	Lib {}.wasm(&Meta::new(), None).into()
 }
