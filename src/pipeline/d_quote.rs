@@ -1,5 +1,9 @@
 use {
-	crate::{context::Context, meta::Meta, tokens::*},
+	super::data::{
+		context::Context,
+		meta::Meta,
+		tokens::{Block, Document, Lib, Prefix, Rule, Website},
+	},
 	syn::export::{quote::quote, TokenStream2},
 };
 

@@ -1,4 +1,11 @@
-use {crate::BoxResult, html_minifier::HTMLMinifier, meta::Meta, tokens::*};
+use {
+	super::data::{
+		meta::Meta,
+		tokens::{Block, Document, Prefix},
+	},
+	crate::BoxResult,
+	html_minifier::HTMLMinifier,
+};
 
 pub trait Html {
 	fn html(&self, meta: &Meta, minifier: &mut HTMLMinifier) -> BoxResult<()>;

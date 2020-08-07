@@ -1,5 +1,5 @@
 use {
-	crate::tokens::*,
+	super::data::tokens::{Block, Document, Prefix, Rule},
 	syn::{
 		braced,
 		export::Span,

@@ -1,8 +1,10 @@
-use crate::{
-	context::{Ancestor, Context, Info},
-	meta::Meta,
+use {
+	super::data::{
+		context::{Ancestor, Context, Info},
+		meta::Meta,
+		tokens::{Block, Document, Prefix, Rule},
+	},
 	syn::{export::quote::quote, spanned::Spanned},
-	tokens::*,
 };
 
 pub trait Lex {
@@ -26,8 +28,8 @@ impl Lex for Document {
 impl Lex for Block {
 	fn lex(&self, meta: &mut Meta, context: &mut Context) {
 		context.push(Ancestor {
-			r#type: self.prefix,
-			string: self.identifier.to_string(),
+			prefix: self.prefix,
+			identifier: self.identifier.to_string(),
 		});
 		match self.prefix {
 			Prefix::Instance => {
@@ -37,7 +39,9 @@ impl Lex for Block {
 			}
 			Prefix::Class => {}
 			Prefix::Action => {}
-			Prefix::Listener => {}
+			Prefix::Listener => {
+				meta.element(context);
+			}
 		};
 		context.pop();
 	}

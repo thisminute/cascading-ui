@@ -1,4 +1,5 @@
 use {
+	super::context::{Context, Info},
 	std::collections::HashMap,
 	syn::export::{quote::quote_spanned, Span, TokenStream2},
 };
@@ -15,12 +16,15 @@ impl Default for Class<'_> {
 		}
 	}
 }
+
+pub struct Element {}
+
 pub struct Meta<'a> {
 	pub errors: Vec<TokenStream2>,
 	pub warnings: Vec<TokenStream2>,
 	pub title: Option<TokenStream2>,
 	pub classes: HashMap<&'a str, Class<'a>>,
-	pub elements: HashMap<&'a str, Class<'a>>,
+	pub elements: HashMap<String, Element>,
 }
 impl Meta<'_> {
 	pub fn new() -> Self {
@@ -31,6 +35,10 @@ impl Meta<'_> {
 			classes: HashMap::new(),
 			elements: HashMap::new(),
 		}
+	}
+
+	pub fn element(&self, context: &Context) -> &Element {
+		&self.elements[&context.to_string()]
 	}
 
 	pub fn error(&mut self, span: Span, message: &str) {
