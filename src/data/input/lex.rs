@@ -1,5 +1,5 @@
 use {
-	super::data::{
+	data::{
 		context::{Ancestor, Context, Info},
 		meta::Meta,
 		tokens::{Block, Document, Prefix, Rule},
@@ -31,18 +31,22 @@ impl Lex for Block {
 			prefix: self.prefix,
 			identifier: self.identifier.to_string(),
 		});
-		match self.prefix {
-			Prefix::Instance => {
-				for rule in &self.rules {
-					rule.lex(meta, context);
+		if context.is_static() {
+			let element = meta.element(context);
+
+			match self.prefix {
+				Prefix::Instance => {
+					for rule in &self.rules {
+						rule.lex(meta, context);
+					}
+				}
+				Prefix::Class => {}
+				Prefix::Action => {}
+				Prefix::Listener => {
+					meta.element(context);
 				}
 			}
-			Prefix::Class => {}
-			Prefix::Action => {}
-			Prefix::Listener => {
-				meta.element(context);
-			}
-		};
+		}
 		context.pop();
 	}
 }

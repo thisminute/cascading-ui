@@ -1,5 +1,5 @@
 use {
-	super::data::{
+	data::{
 		context::Context,
 		meta::Meta,
 		tokens::{Block, Document, Lib, Prefix, Rule, Website},

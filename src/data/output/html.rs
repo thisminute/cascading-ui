@@ -1,9 +1,9 @@
 use {
-	super::data::{
+	crate::BoxResult,
+	data::{
 		meta::Meta,
 		tokens::{Block, Document, Prefix},
 	},
-	crate::BoxResult,
 	html_minifier::HTMLMinifier,
 };
 

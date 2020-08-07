@@ -1,13 +1,6 @@
 use {
-	super::data::tokens::{Block, Document, Prefix, Rule},
-	syn::{
-		braced,
-		export::Span,
-		ext::IdentExt,
-		parse::{Parse, ParseStream},
-		token::Brace,
-		Ident, Token,
-	},
+	data::tokens::{Block, Document, Prefix, Rule},
+	syn::{braced, export::Span, ext::IdentExt, parse::ParseStream, token::Brace, Ident, Token},
 };
 
 fn peek_rule(input: ParseStream) -> bool {
@@ -40,6 +33,8 @@ fn peek_prefixed_block(input: ParseStream) -> bool {
 // 		Ok(Self { parts })
 // 	}
 // }
+
+pub use syn::parse::Parse;
 
 impl Parse for Document {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {

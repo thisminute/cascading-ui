@@ -2,17 +2,16 @@ extern crate html_minifier;
 extern crate proc_macro;
 extern crate syn;
 extern crate yew_macro;
-mod pipeline;
+mod data;
 
 use {
-	html_minifier::HTMLMinifier,
-	pipeline::{
-		data::{
-			meta::Meta,
-			tokens::{Document, Lib, Website},
-		},
-		Html, Lex, Quote,
+	data::{
+		input::Lex,
+		meta::Meta,
+		output::{Html, Quote},
+		tokens::{Document, Lib, Website},
 	},
+	html_minifier::HTMLMinifier,
 	proc_macro::TokenStream,
 	std::{
 		error::Error,
