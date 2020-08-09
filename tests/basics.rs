@@ -10,12 +10,15 @@ cwl_lib!();
 
 #[wasm_bindgen_test]
 fn empty() {
-	cwl_dom! {}
+	cwl_dom! {
+		title: "test";
+	}
 }
 
 #[wasm_bindgen_test]
 fn instance() {
 	cwl_dom! {
+		title: "test";
 		thingy {}
 	}
 }
@@ -23,6 +26,7 @@ fn instance() {
 #[wasm_bindgen_test]
 fn class() {
 	cwl_dom! {
+		title: "test";
 		.thingy {}
 		thingy {}
 	}
@@ -31,6 +35,7 @@ fn class() {
 #[wasm_bindgen_test]
 fn class2() {
 	cwl_dom! {
+		title: "test";
 		thingy {}
 		.thingy {}
 	}

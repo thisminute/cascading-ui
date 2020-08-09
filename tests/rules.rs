@@ -11,13 +11,14 @@ cwl_lib!();
 #[wasm_bindgen_test]
 fn title() {
 	cwl_dom! {
-		title: "hello";
+		title: "test";
 	}
 }
 
 #[wasm_bindgen_test]
 fn text() {
 	cwl_dom! {
+		title: "test";
 		// cannot set text of body in tests: https://github.com/rustwasm/wasm-bindgen/issues/2235
 		// text: "hello";
 
@@ -30,6 +31,7 @@ fn text() {
 #[wasm_bindgen_test]
 fn link() {
 	cwl_dom! {
+		title: "test";
 		link: "hello";
 	}
 }
