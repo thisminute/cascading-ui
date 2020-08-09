@@ -19,7 +19,7 @@ impl Context<'_> {
 	// }
 
 	pub fn is_root(&self) -> bool {
-		true
+		self.string == "_"
 	}
 
 	// pub fn static_context(&self) -> String {
