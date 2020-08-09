@@ -1,34 +1,38 @@
-use super::tokens::Prefix;
+use super::tokens::Block;
 
-pub struct Ancestor {
-	pub prefix: Prefix,
-	pub identifier: String,
+// Blocks should live as long as the Document struct that owns them and outlives Contexts
+#[derive(Clone)]
+pub struct Context<'a> {
+	pub block: &'a Block,
+	pub is_static: bool,
+	pub string: &'a str,
 }
 
-pub type Context = Vec<Ancestor>;
+impl Context<'_> {
+	// pub fn new(&self) -> Self {
+	// 	Self {
+	// 		block: None,
+	// 		path: Vec::new(),
+	// 		is_static: true,
+	// 		string: "",
+	// 	}
+	// }
 
-pub trait Info {
-	fn is_root(&self) -> bool;
-	fn is_static(&self) -> bool;
-	fn to_string(&self) -> String;
-}
-
-impl Info for Context {
-	fn is_root(&self) -> bool {
-		self.len() == 1
+	pub fn is_root(&self) -> bool {
+		true
 	}
 
-	fn is_static(&self) -> bool {
-		self
-			.iter()
-			.all(|ancestor| Prefix::Instance == ancestor.prefix)
-	}
-
-	fn to_string(&self) -> String {
-		self
-			.iter()
-			.map(|ancestor| &ancestor.identifier[..])
-			.collect::<Vec<&str>>()
-			.join("-")
-	}
+	// pub fn static_context(&self) -> String {
+	// 	let mut static_ancestors = Vec::new();
+	// 	for i in self.path {
+	// 		let ancestor =
+	// 		match ancestor {
+	// 			 if *prefix == Prefix::Instance => {
+	// 				static_ancestors.push(identifier.to_string().clone());
+	// 			}
+	// 			_ => break,
+	// 		}
+	// 	}
+	// 	static_ancestors.join("-")
+	// }
 }

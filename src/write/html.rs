@@ -1,19 +1,20 @@
 use {
 	crate::BoxResult,
 	data::{
-		meta::Meta,
 		tokens::{Block, Document, Prefix},
+		Semantics,
 	},
 	html_minifier::HTMLMinifier,
 };
 
 pub trait Html {
-	fn html(&self, meta: &Meta, minifier: &mut HTMLMinifier) -> BoxResult<()>;
+	fn html(&self, semantics: &Semantics, minifier: &mut HTMLMinifier) -> BoxResult<()>;
 }
 
 impl Html for Document {
-	fn html(&self, meta: &Meta, minifier: &mut HTMLMinifier) -> BoxResult<()> {
+	fn html(&self, semantics: &Semantics, minifier: &mut HTMLMinifier) -> BoxResult<()> {
 		let mut h = |s: &str| minifier.digest(s).unwrap();
+
 		h("
 		<!DOCTYPE html>
 		<html>
@@ -21,7 +22,7 @@ impl Html for Document {
 				<meta charset='utf-8'>
 		");
 
-		match &meta.title {
+		match &semantics.title {
 			Some(title) => {
 				let title = title.to_string();
 				let length = title.len() - 1;
@@ -53,7 +54,7 @@ impl Html for Document {
 }
 
 impl Html for Block {
-	fn html(&self, _meta: &Meta, minifier: &mut HTMLMinifier) -> BoxResult<()> {
+	fn html(&self, _semantics: &Semantics, minifier: &mut HTMLMinifier) -> BoxResult<()> {
 		let mut _h = |s: &str| minifier.digest(s).unwrap();
 
 		match self.prefix {
@@ -68,7 +69,7 @@ impl Html for Block {
 }
 
 // impl Html for Rule {
-//		fn html(&self, meta: &Meta, minifier: &mut HTMLMinifier) -> BoxResult<()> {
+//		fn html(&self, semantics: &Semantics, minifier: &mut HTMLMinifier) -> BoxResult<()> {
 // 		minifier.digest("<body>hello world</body>");
 // 		minifier.get_html()
 // 	}

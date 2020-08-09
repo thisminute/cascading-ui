@@ -1,5 +1,5 @@
 use {
-	super::context::{Context, Info},
+	super::dom::Element,
 	std::collections::HashMap,
 	syn::export::{quote::quote_spanned, Span, TokenStream2},
 };
@@ -17,47 +17,48 @@ impl Default for Class<'_> {
 	}
 }
 
-pub struct Element<'a> {
-	pub tag: &'a str,
-	pub children: HashMap<String, Element<'a>>,
-}
-
-pub struct Meta<'a> {
+pub struct Semantics<'a> {
 	pub errors: Vec<TokenStream2>,
 	pub warnings: Vec<TokenStream2>,
+
 	pub title: Option<TokenStream2>,
+	pub dom: Element,
+
 	pub classes: HashMap<&'a str, Class<'a>>,
-	pub elements: HashMap<String, Element<'a>>,
+	pub elements: HashMap<String, &'a Element>,
 }
-impl Meta<'_> {
+impl<'a> Semantics<'a> {
 	pub fn new() -> Self {
 		Self {
 			errors: Vec::new(),
 			warnings: Vec::new(),
+
 			title: None,
+			dom: Element {
+				children: Vec::new(),
+			},
+
 			classes: HashMap::new(),
 			elements: HashMap::new(),
 		}
 	}
 
-	pub fn element(&mut self, context: &Context) -> &Element {
-		self
-			.elements
-			.entry(context.to_string().clone())
-			.or_insert(Element {
-				tag: "div",
-				children: HashMap::new(),
-			})
-	}
+	// pub fn element(&'a mut self, context: &Context) -> &'a Element {
+	// 	let mut parent = self.dom;
+	// 	for i in context.path {
+	// 		parent = parent.children[i];
+	// 	}
+	// 	&parent
+	// }
 
-	pub fn error(&mut self, span: Span, message: &str) {
-		self.errors.push(quote_spanned! {span=>
+	pub fn error(&mut self, message: &str) {
+		self.errors.push(quote_spanned! {Span::call_site()=>
 			compile_error!(#message);
 		});
 	}
 
-	pub fn warning(&mut self, span: Span, message: &str) {
-		self.warnings.push(quote_spanned! {span=>
+	pub fn warning(&mut self, message: &str) {
+		self.warnings.push(quote_spanned! {Span::call_site()=>
 			compile_error!(#message);
 		});
 	}

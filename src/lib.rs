@@ -3,13 +3,13 @@ extern crate proc_macro;
 extern crate syn;
 extern crate yew_macro;
 mod data;
+mod transform;
+mod write;
 
 use {
 	data::{
-		input::Lex,
-		meta::Meta,
-		output::{Html, Wasm},
 		tokens::{Document, Lib, Website},
+		Context, Semantics,
 	},
 	html_minifier::HTMLMinifier,
 	proc_macro::TokenStream,
@@ -22,16 +22,41 @@ use {
 		export::{ToTokens, TokenStream2},
 		parse_macro_input,
 	},
+	transform::Analyze,
+	write::{Html, Wasm},
 };
 
 type BoxResult<T> = Result<T, Box<dyn Error>>;
+
+fn pipeline(document: Document, bindgen_start: bool) -> (HTMLMinifier, TokenStream2) {
+	let mut semantics = Semantics::new();
+	document.analyze(
+		&mut semantics,
+		&Context {
+			block: &document.root,
+			is_static: true,
+			string: "",
+		},
+	);
+
+	let mut html_minifier = HTMLMinifier::new();
+	document.html(&semantics, &mut html_minifier).unwrap();
+
+	let wasm = if bindgen_start {
+		Website { document }.wasm(&semantics, None)
+	} else {
+		document.wasm(&semantics, None)
+	};
+
+	(html_minifier, wasm)
+}
 
 /// all logic follows a chain of traits with one file per trait
 /// each trait walks the AST recursively and never makes calls to the other traits
 /// at the end of each trait execution, some new data structure is completely filled out for the next steps
 /// not all traits
 /// parse.rs -> tokens (see tokens.rs)
-/// lex.rs   -> metadata (see meta.rs)
+/// lex.rs   -> metadata (see semantics.rs)
 /// html.rs  -> target/cwl.html
 /// quote.rs -> src/lib.rs
 #[proc_macro]
@@ -52,36 +77,21 @@ pub fn cwl(input: TokenStream) -> TokenStream {
 	}
 
 	let input = input.into();
-	let mut html_minifier = HTMLMinifier::new();
-	let mut meta = Meta::new();
+	let (mut index, runtime) = pipeline(parse_macro_input!(input as Document), true);
 
-	// entry points for token traits
-	let document = parse_macro_input!(input as Document);
-	document.lex(&mut meta, &mut Vec::new());
-	document.html(&meta, &mut html_minifier).unwrap();
-	let expanded = Website { document }.wasm(&meta, None);
+	write("target/index.html", index.get_html()).unwrap();
+	write("target/cwl_macro_output.rs", runtime.to_string()).unwrap();
 
-	write("target/cwl.html", html_minifier.get_html()).unwrap();
-
-	write("target/cwl_macro_output.rs", expanded.to_string()).unwrap();
-
-	expanded.into()
+	runtime.into()
 }
 
 #[proc_macro]
 pub fn cwl_dom(input: TokenStream) -> TokenStream {
-	let input = input.into();
-	let mut html_minifier = HTMLMinifier::new();
-	let mut meta = Meta::new();
-
-	// entry points for token traits
-	let document = parse_macro_input!(input as Document);
-	document.lex(&mut meta, &mut Vec::new());
-	document.html(&meta, &mut html_minifier).unwrap();
-	document.wasm(&meta, None).into()
+	let (_index, runtime) = pipeline(parse_macro_input!(input as Document), true);
+	runtime.into()
 }
 
 #[proc_macro]
 pub fn cwl_lib(_input: TokenStream) -> TokenStream {
-	Lib {}.wasm(&Meta::new(), None).into()
+	Lib {}.wasm(&Semantics::new(), None).into()
 }
