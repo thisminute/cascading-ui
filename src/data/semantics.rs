@@ -22,33 +22,27 @@ pub struct Semantics<'a> {
 	pub warnings: Vec<TokenStream2>,
 
 	pub title: Option<TokenStream2>,
-	pub dom: Element,
+	pub dom: Option<Element<'a>>,
 
 	pub classes: HashMap<&'a str, Class<'a>>,
-	pub elements: HashMap<String, &'a Element>,
+	pub elements: HashMap<&'a str, &'a Element<'a>>,
 }
-impl<'a> Semantics<'a> {
+impl Semantics<'_> {
 	pub fn new() -> Self {
 		Self {
 			errors: Vec::new(),
 			warnings: Vec::new(),
 
 			title: None,
-			dom: Element {
-				children: Vec::new(),
-			},
+			dom: None,
 
 			classes: HashMap::new(),
 			elements: HashMap::new(),
 		}
 	}
 
-	// pub fn element(&'a mut self, context: &Context) -> &'a Element {
-	// 	let mut parent = self.dom;
-	// 	for i in context.path {
-	// 		parent = parent.children[i];
-	// 	}
-	// 	&parent
+	// pub fn get_element(&mut self, context: &Context) -> &Element {
+	// 	self.elements[context.string]
 	// }
 
 	pub fn error(&mut self, message: &str) {

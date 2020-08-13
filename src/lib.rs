@@ -1,7 +1,6 @@
 extern crate html_minifier;
 extern crate proc_macro;
 extern crate syn;
-extern crate yew_macro;
 mod data;
 mod transform;
 mod write;
@@ -35,12 +34,13 @@ fn pipeline(document: Document, bindgen_start: bool) -> (HTMLMinifier, TokenStre
 		&Context {
 			block: &document.root,
 			is_static: true,
+			path: Vec::new(),
 			string: "",
 		},
 	);
 
 	let mut html_minifier = HTMLMinifier::new();
-	document.html(&semantics, &mut html_minifier).unwrap();
+	semantics.html(&mut html_minifier).unwrap();
 
 	let wasm = if bindgen_start {
 		Website { document }.wasm(&semantics, None)

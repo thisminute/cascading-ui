@@ -1,76 +1,59 @@
 use {
 	crate::BoxResult,
-	data::{
-		tokens::{Block, Document, Prefix},
-		Semantics,
-	},
+	data::{dom::Element, Semantics},
 	html_minifier::HTMLMinifier,
 };
 
 pub trait Html {
-	fn html(&self, semantics: &Semantics, minifier: &mut HTMLMinifier) -> BoxResult<()>;
+	fn html(&self, minifier: &mut HTMLMinifier) -> BoxResult<()>;
 }
 
-impl Html for Document {
-	fn html(&self, semantics: &Semantics, minifier: &mut HTMLMinifier) -> BoxResult<()> {
-		let mut h = |s: &str| minifier.digest(s).unwrap();
+fn recurse(element: &Element, minifier: &mut HTMLMinifier) -> BoxResult<()> {
+	minifier.digest("<div>")?;
+	minifier.digest(element.text)?;
+	minifier.digest("</div>")?;
+	for child in &element.children {
+		recurse(&child, minifier)?;
+	}
+	Ok(())
+}
 
-		h("
+impl Html for Semantics<'_> {
+	fn html(&self, minifier: &mut HTMLMinifier) -> BoxResult<()> {
+		minifier.digest(
+			"
 		<!DOCTYPE html>
 		<html>
 			<head>
 				<meta charset='utf-8'>
-		");
-
-		match &semantics.title {
+		",
+		)?;
+		match &self.title {
 			Some(title) => {
 				let title = title.to_string();
 				let length = title.len() - 1;
-				h("<title>");
-				h(&title[1..length]);
-				h("</title>");
+				minifier.digest("<title>")?;
+				minifier.digest(&title[1..length])?;
+				minifier.digest("</title>")?;
 			}
 			None => {}
 		}
-
-		// yew_macro::html!(
-		// 	<html>
-		// 		<head>
-
-		// 		<head>
-		// 	</body>
-		// );
-
-		h("
+		minifier.digest("
 			</head>
 			<body>
 				<noscript>This page contains webassembly and javascript content, please enable javascript in your browser and make sure you are using the latest version of a popular modern browser.</noscript>
+		")?;
+		match &self.dom {
+			Some(dom) => recurse(dom, minifier)?,
+			None => {}
+		}
+		minifier.digest(
+			"
 				<script src='./bootstrap.js'></script>
 			</body>
 		</html>
-		");
+		",
+		)?;
 		Ok(())
 	}
 }
-
-impl Html for Block {
-	fn html(&self, _semantics: &Semantics, minifier: &mut HTMLMinifier) -> BoxResult<()> {
-		let mut _h = |s: &str| minifier.digest(s).unwrap();
-
-		match self.prefix {
-			Prefix::Instance => {}
-			Prefix::Class => {}
-			Prefix::Action => {}
-			Prefix::Listener => {}
-		}
-
-		Ok(())
-	}
-}
-
-// impl Html for Rule {
-//		fn html(&self, semantics: &Semantics, minifier: &mut HTMLMinifier) -> BoxResult<()> {
-// 		minifier.digest("<body>hello world</body>");
-// 		minifier.get_html()
-// 	}
-// }

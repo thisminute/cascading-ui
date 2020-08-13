@@ -1,5 +1,5 @@
 pub mod context;
-mod dom;
+pub mod dom;
 pub mod semantics;
 pub mod tokens;
 

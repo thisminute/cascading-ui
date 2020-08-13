@@ -6,6 +6,8 @@ pub struct Context<'a> {
 	pub block: &'a Block,
 	pub is_static: bool,
 	pub string: &'a str,
+	pub path: Vec<usize>,
+	// pub events: Vec<Event>,
 }
 
 impl Context<'_> {
@@ -19,7 +21,7 @@ impl Context<'_> {
 	// }
 
 	pub fn is_root(&self) -> bool {
-		self.string == "_"
+		self.block.identifier.to_string() == "_"
 	}
 
 	// pub fn static_context(&self) -> String {
