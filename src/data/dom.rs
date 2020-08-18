@@ -5,8 +5,10 @@
 
 pub struct Element<'a> {
 	// pub classes: Vec<Class>,
-	pub text: &'a str,
+	pub active: bool,
 	pub children: Vec<Element<'a>>,
+	pub text: &'a str,
+	pub link: bool,
 }
 // impl Default for Element {
 // 	fn default() -> Self {
@@ -18,12 +20,13 @@ pub struct Element<'a> {
 // 		}
 // 	}
 // }
-// impl Element {
-// 	// pub fn get_element_at_path(&self, path: Vec<usize>) -> &Element {
-// 	// 	let mut current = self;
-// 	// 	for index in path {
-// 	// 		current = &current.children[index];
-// 	// 	}
-// 	// 	current
-// 	// }
-// }
+impl Element<'_> {
+	pub fn new() -> Self {
+		Self {
+			active: false,
+			children: Vec::new(),
+			text: "",
+			link: false,
+		}
+	}
+}

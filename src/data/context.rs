@@ -3,6 +3,7 @@ use super::tokens::Block;
 // Blocks should live as long as the Document struct that owns them and outlives Contexts
 #[derive(Clone)]
 pub struct Context<'a> {
+	pub index: usize,
 	pub block: &'a Block,
 	pub is_static: bool,
 	pub string: &'a str,

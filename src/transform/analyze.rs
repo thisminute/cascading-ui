@@ -18,28 +18,13 @@ impl Analyze for Document {
 			Some(_) => {}
 			None => semantics.warning("you must set a title for the page"),
 		}
-		match &semantics.dom {
-			Some(_) => {}
-			None => semantics.warning("you must actually write a dom......."),
-		}
 	}
 }
 
 impl Analyze for Block {
 	fn analyze(&self, semantics: &mut Semantics, context: &Context) {
-		if context.is_static {
-			match self.prefix {
-				Prefix::Instance => {
-					// semantics.element(context);
-				}
-				Prefix::Class => {}
-				Prefix::Action => {}
-				Prefix::Listener => {}
-			}
-		}
-
-		let identifier = &self.identifier.to_string();
 		let mut context_vec = Vec::new();
+		let identifier = &self.identifier.to_string();
 		if context.string.len() > 0 {
 			context_vec.push(context.string);
 			context_vec.push(identifier);
@@ -47,16 +32,51 @@ impl Analyze for Block {
 			context_vec.push(identifier);
 		}
 
-		let context = Context {
-			block: self,
-			string: &context_vec.join("-"),
-			is_static: context.is_static && self.prefix == Prefix::Instance,
-			path: Vec::new(),
-		};
+		if context.is_static {
+			match self.prefix {
+				Prefix::Instance => {
+					semantics.create_element_at_context(&context, self.blocks.len());
+
+					for rule in &self.rules {
+						let context = Context {
+							block: self,
+							string: &context_vec.join("-"),
+							is_static: context.is_static && self.prefix == Prefix::Instance,
+							path: context.path.to_vec(),
+							index: context.index,
+						};
+						rule.analyze(semantics, &context);
+					}
+				}
+				Prefix::Class => {}
+				Prefix::Action => {}
+				Prefix::Listener => {}
+			}
+		}
+
+		let mut i = 0;
 		for rule in &self.rules {
+			let context = Context {
+				block: self,
+				string: &context_vec.join("-"),
+				is_static: context.is_static && self.prefix == Prefix::Instance,
+				path: context.path.to_vec(),
+				index: i,
+			};
 			rule.analyze(semantics, &context);
 		}
 		for block in &self.blocks {
+			let mut path = context.path.to_vec();
+			path.push(context.index);
+
+			let context = Context {
+				block: self,
+				string: &context_vec.join("-"),
+				is_static: context.is_static && self.prefix == Prefix::Instance,
+				path,
+				index: i,
+			};
+			i += 1;
 			block.analyze(semantics, &context);
 		}
 	}

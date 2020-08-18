@@ -6,10 +6,7 @@ mod transform;
 mod write;
 
 use {
-	data::{
-		tokens::{Document, Lib, Website},
-		Context, Semantics,
-	},
+	data::{tokens::Document, Context, Semantics},
 	html_minifier::HTMLMinifier,
 	proc_macro::TokenStream,
 	std::{
@@ -33,20 +30,19 @@ fn pipeline(document: Document, bindgen_start: bool) -> (HTMLMinifier, TokenStre
 		&mut semantics,
 		&Context {
 			block: &document.root,
+			index: 0,
 			is_static: true,
 			path: Vec::new(),
 			string: "",
 		},
 	);
+	if bindgen_start {
+		semantics.bindgen = true;
+	}
 
 	let mut html_minifier = HTMLMinifier::new();
 	semantics.html(&mut html_minifier).unwrap();
-
-	let wasm = if bindgen_start {
-		Website { document }.wasm(&semantics, None)
-	} else {
-		document.wasm(&semantics, None)
-	};
+	let wasm = semantics.wasm();
 
 	(html_minifier, wasm)
 }
@@ -93,5 +89,7 @@ pub fn cwl_dom(input: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn cwl_lib(_input: TokenStream) -> TokenStream {
-	Lib {}.wasm(&Semantics::new(), None).into()
+	let mut semantics = Semantics::new();
+	semantics.only_header_wasm = true;
+	semantics.wasm().into()
 }

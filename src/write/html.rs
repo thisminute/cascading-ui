@@ -11,10 +11,12 @@ pub trait Html {
 fn recurse(element: &Element, minifier: &mut HTMLMinifier) -> BoxResult<()> {
 	minifier.digest("<div>")?;
 	minifier.digest(element.text)?;
-	minifier.digest("</div>")?;
 	for child in &element.children {
-		recurse(&child, minifier)?;
+		if child.active {
+			recurse(child, minifier)?;
+		}
 	}
+	minifier.digest("</div>")?;
 	Ok(())
 }
 
@@ -43,10 +45,7 @@ impl Html for Semantics<'_> {
 			<body>
 				<noscript>This page contains webassembly and javascript content, please enable javascript in your browser and make sure you are using the latest version of a popular modern browser.</noscript>
 		")?;
-		match &self.dom {
-			Some(dom) => recurse(dom, minifier)?,
-			None => {}
-		}
+		recurse(&self.dom, minifier)?;
 		minifier.digest(
 			"
 				<script src='./bootstrap.js'></script>

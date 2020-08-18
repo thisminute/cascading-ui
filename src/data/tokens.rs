@@ -4,12 +4,6 @@ use syn::{Expr, Ident};
 // 	pub parts: Vec<Ident>,
 // }
 
-pub struct Website {
-	pub document: Document,
-}
-
-pub struct Lib {}
-
 pub struct Document {
 	pub root: Block,
 }
