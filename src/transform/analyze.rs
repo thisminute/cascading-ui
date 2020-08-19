@@ -1,5 +1,6 @@
 use {
 	data::{
+		dom::Event,
 		tokens::{Block, Document, Prefix, Rule},
 		Context, Semantics,
 	},
@@ -32,42 +33,38 @@ impl Analyze for Block {
 			context_vec.push(identifier);
 		}
 
+		let mut child_context = Context {
+			block: self,
+			string: &context_vec.join("-"),
+			is_static: context.is_static && self.prefix == Prefix::Instance,
+			path: context.path.to_vec(),
+			index: context.index,
+		};
+
 		if context.is_static {
 			match self.prefix {
 				Prefix::Instance => {
 					semantics.activate_element(&context, self.blocks.len());
 
 					for rule in &self.rules {
-						let context = Context {
-							block: self,
-							string: &context_vec.join("-"),
-							is_static: context.is_static && self.prefix == Prefix::Instance,
-							path: context.path.to_vec(),
-							index: context.index,
-						};
-						rule.analyze(semantics, &context);
+						rule.analyze(semantics, &child_context);
 					}
 				}
 				Prefix::Class => {}
 				Prefix::Action => {}
-				Prefix::Listener => {}
+				Prefix::Listener => {
+					let element = semantics.get_element(&context);
+					element.listeners.push(Event::Click);
+				}
 			}
 		}
 
-		let mut i = 0;
-		for block in &self.blocks {
+		for (i, block) in self.blocks.iter().enumerate() {
 			let mut path = context.path.to_vec();
 			path.push(context.index);
-
-			let context = Context {
-				block: self,
-				string: &context_vec.join("-"),
-				is_static: context.is_static && self.prefix == Prefix::Instance,
-				path,
-				index: i,
-			};
-			i += 1;
-			block.analyze(semantics, &context);
+			child_context.path = path;
+			child_context.index = i;
+			block.analyze(semantics, &child_context);
 		}
 	}
 }
@@ -85,16 +82,9 @@ impl Analyze for Rule {
 					Some(_title) => semantics.error("title property cannot be set more than once"),
 					None => semantics.title = Some(value),
 				},
-
-				"text" => {
-					element.text = value.clone();
-				}
-				"link" => {
-					// element.link = Some(expr_to_str(value));
-				}
-				"tooltip" => {
-					// element.link = Some(expr_to_str(value));
-				}
+				"text" => element.text = value.clone(),
+				"link" => element.link = Some(value.clone()),
+				"tooltip" => element.tooltip = Some(value.clone()),
 				_ => {}
 			},
 			Prefix::Class => {}
