@@ -1,7 +1,6 @@
 use {
 	super::{dom::Element, Context},
 	std::{collections::HashMap, error::Error, fmt},
-	syn::export::{quote::quote_spanned, Span, TokenStream2},
 };
 
 #[derive(Debug)]
@@ -30,10 +29,10 @@ pub struct Semantics<'a> {
 	pub only_header_wasm: bool,
 	pub bindgen: bool,
 
-	pub errors: Vec<TokenStream2>,
-	pub warnings: Vec<TokenStream2>,
+	pub errors: Vec<&'a str>,
+	pub warnings: Vec<&'a str>,
 
-	pub title: Option<TokenStream2>,
+	pub title: Option<String>,
 	pub dom: Element<'a>,
 
 	pub classes: HashMap<&'a str, Class<'a>>,
@@ -57,7 +56,7 @@ impl Semantics<'_> {
 		}
 	}
 
-	pub fn create_element_at_context(&mut self, context: &Context, size: usize) -> &Element {
+	pub fn activate_element(&mut self, context: &Context, size: usize) -> &Element {
 		let mut current = &mut self.dom;
 		for i in &context.path {
 			current = &mut current.children[*i];
@@ -70,7 +69,7 @@ impl Semantics<'_> {
 		current
 	}
 
-	pub fn _get_element_by_context(&mut self, context: &Context) -> &Element {
+	pub fn get_element(&mut self, context: &Context) -> &Element {
 		let mut current = &mut self.dom;
 		for i in &context.path {
 			current = &mut current.children[*i];
@@ -79,15 +78,11 @@ impl Semantics<'_> {
 		current
 	}
 
-	pub fn error(&mut self, message: &str) {
-		self.errors.push(quote_spanned! {Span::call_site()=>
-			compile_error!(#message);
-		});
+	pub fn error(&mut self, message: &'static str) {
+		self.errors.push(message);
 	}
 
-	pub fn warning(&mut self, message: &str) {
-		self.warnings.push(quote_spanned! {Span::call_site()=>
-			compile_error!(#message);
-		});
+	pub fn warning(&mut self, message: &'static str) {
+		self.warnings.push(message);
 	}
 }

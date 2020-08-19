@@ -3,7 +3,7 @@ use {
 		tokens::{Block, Document, Prefix, Rule},
 		Context, Semantics,
 	},
-	syn::export::quote::quote,
+	syn::export::ToTokens,
 };
 
 pub trait Analyze {
@@ -35,7 +35,7 @@ impl Analyze for Block {
 		if context.is_static {
 			match self.prefix {
 				Prefix::Instance => {
-					semantics.create_element_at_context(&context, self.blocks.len());
+					let element = &mut semantics.activate_element(&context, self.blocks.len());
 
 					for rule in &self.rules {
 						let context = Context {
@@ -55,16 +55,6 @@ impl Analyze for Block {
 		}
 
 		let mut i = 0;
-		for rule in &self.rules {
-			let context = Context {
-				block: self,
-				string: &context_vec.join("-"),
-				is_static: context.is_static && self.prefix == Prefix::Instance,
-				path: context.path.to_vec(),
-				index: i,
-			};
-			rule.analyze(semantics, &context);
-		}
 		for block in &self.blocks {
 			let mut path = context.path.to_vec();
 			path.push(context.index);
@@ -84,19 +74,27 @@ impl Analyze for Block {
 
 impl Analyze for Rule {
 	fn analyze(&self, semantics: &mut Semantics, context: &Context) {
+		let element = &mut semantics.get_element(&context);
 		let property = &self.property.to_string()[..];
-		let value = &self.value;
+		let value = self.value.to_token_stream().to_string();
+		let value = value[1..value.len() - 1].to_string();
 
 		match context.block.prefix {
 			Prefix::Instance => match property {
 				"title" if context.is_root() => match &semantics.title {
 					Some(_title) => semantics.error("title property cannot be set more than once"),
-					None => semantics.title = Some(quote! { #value }),
+					None => semantics.title = Some(value),
 				},
 
-				"text" => {}
-				"link" => {}
-				"tip" => {}
+				"text" => {
+					// element.text = expr_to_str(value);
+				}
+				"link" => {
+					// element.link = Some(expr_to_str(value));
+				}
+				"tooltip" => {
+					// element.link = Some(expr_to_str(value));
+				}
 				_ => {}
 			},
 			Prefix::Class => {}

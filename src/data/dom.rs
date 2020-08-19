@@ -8,7 +8,7 @@ pub struct Element<'a> {
 	pub active: bool,
 	pub children: Vec<Element<'a>>,
 	pub text: &'a str,
-	pub link: bool,
+	pub link: Option<&'a str>,
 }
 // impl Default for Element {
 // 	fn default() -> Self {
@@ -26,7 +26,7 @@ impl Element<'_> {
 			active: false,
 			children: Vec::new(),
 			text: "",
-			link: false,
+			link: None,
 		}
 	}
 }

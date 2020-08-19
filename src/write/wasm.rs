@@ -1,6 +1,6 @@
 use {
 	data::{dom::Element, Semantics},
-	syn::export::{quote::quote, TokenStream2},
+	syn::export::{quote::quote, quote::quote_spanned, Span, TokenStream2},
 };
 
 pub trait Wasm {
@@ -54,9 +54,18 @@ impl Wasm for Semantics<'_> {
 	}
 
 	fn document(&self) -> TokenStream2 {
-		let warnings = &self.warnings;
+		let warnings = &self.warnings.iter().map(|error| {
+			quote_spanned! {Span::call_site()=>
+				compile_error!(#error);
+			}
+		});
 		if !self.errors.is_empty() {
-			let errors = &self.errors;
+			let errors = &self.errors.iter().map(|error| {
+				quote_spanned! {Span::call_site()=>
+					compile_error!(#error);
+				}
+			});
+
 			return quote! {
 				#( #warnings )*
 				#( #errors )*
