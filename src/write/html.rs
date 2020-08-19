@@ -10,7 +10,7 @@ pub trait Html {
 
 fn recurse(element: &Element, minifier: &mut HTMLMinifier) -> BoxResult<()> {
 	minifier.digest("<div>")?;
-	minifier.digest(element.text)?;
+	minifier.digest(element.text.clone())?;
 	for child in &element.children {
 		if child.active {
 			recurse(child, minifier)?;
@@ -32,10 +32,8 @@ impl Html for Semantics<'_> {
 		)?;
 		match &self.title {
 			Some(title) => {
-				let title = title.to_string();
-				let length = title.len() - 1;
 				minifier.digest("<title>")?;
-				minifier.digest(&title[1..length])?;
+				minifier.digest(title.clone())?;
 				minifier.digest("</title>")?;
 			}
 			None => {}

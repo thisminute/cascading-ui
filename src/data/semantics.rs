@@ -33,10 +33,10 @@ pub struct Semantics<'a> {
 	pub warnings: Vec<&'a str>,
 
 	pub title: Option<String>,
-	pub dom: Element<'a>,
+	pub dom: Element,
 
 	pub classes: HashMap<&'a str, Class<'a>>,
-	pub elements: HashMap<&'a str, &'a Element<'a>>,
+	pub elements: HashMap<&'a str, &'a Element>,
 }
 impl Semantics<'_> {
 	pub fn new() -> Self {
@@ -69,7 +69,7 @@ impl Semantics<'_> {
 		current
 	}
 
-	pub fn get_element(&mut self, context: &Context) -> &Element {
+	pub fn get_element(&mut self, context: &Context) -> &mut Element {
 		let mut current = &mut self.dom;
 		for i in &context.path {
 			current = &mut current.children[*i];

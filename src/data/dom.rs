@@ -3,12 +3,12 @@
 // 	values: Vec<&'a str>,
 // }
 
-pub struct Element<'a> {
+pub struct Element {
 	// pub classes: Vec<Class>,
 	pub active: bool,
-	pub children: Vec<Element<'a>>,
-	pub text: &'a str,
-	pub link: Option<&'a str>,
+	pub children: Vec<Element>,
+	pub text: String,
+	pub link: Option<String>,
 }
 // impl Default for Element {
 // 	fn default() -> Self {
@@ -20,12 +20,12 @@ pub struct Element<'a> {
 // 		}
 // 	}
 // }
-impl Element<'_> {
+impl Element {
 	pub fn new() -> Self {
 		Self {
 			active: false,
 			children: Vec::new(),
-			text: "",
+			text: "".to_string(),
 			link: None,
 		}
 	}

@@ -54,13 +54,13 @@ impl Wasm for Semantics<'_> {
 	}
 
 	fn document(&self) -> TokenStream2 {
-		let warnings = &self.warnings.iter().map(|error| {
+		let warnings = self.warnings.iter().map(|error| {
 			quote_spanned! {Span::call_site()=>
 				compile_error!(#error);
 			}
 		});
 		if !self.errors.is_empty() {
-			let errors = &self.errors.iter().map(|error| {
+			let errors = self.errors.iter().map(|error| {
 				quote_spanned! {Span::call_site()=>
 					compile_error!(#error);
 				}

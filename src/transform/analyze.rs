@@ -35,7 +35,7 @@ impl Analyze for Block {
 		if context.is_static {
 			match self.prefix {
 				Prefix::Instance => {
-					let element = &mut semantics.activate_element(&context, self.blocks.len());
+					semantics.activate_element(&context, self.blocks.len());
 
 					for rule in &self.rules {
 						let context = Context {
@@ -87,7 +87,7 @@ impl Analyze for Rule {
 				},
 
 				"text" => {
-					// element.text = expr_to_str(value);
+					element.text = value.clone();
 				}
 				"link" => {
 					// element.link = Some(expr_to_str(value));
