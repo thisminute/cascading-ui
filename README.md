@@ -22,14 +22,13 @@ rustup default stable-x86_64-pc-windows-gnu
 ## Execution Steps
 
 ### Rust folder structure
-
-lib.rs and mod.rs are special names (as well as main.rs, though we don't have any of those here) that are entry points for the folders they are in. So, `src/lib.rs` includes `src/data/mod.rs` with the line `mod data;`. The top level is `lib.rs` because the whole project is a library, but every subsequent folder is just a private module for this library, for organizational purposes.
+"lib.rs" and "mod.rs" are special names that are entry points for the folders they are in. The top level is `lib.rs` because the whole project is a library, and every subsequent folder contains a private module included from there.
 
 ### src/lib.rs
 The macro starts in one of 3 procedural macros exported from lib.rs. `cwl` is the main one, `cwl_dom` and `cwl_lib` are helpers for writing tests.
 
 ### Data flow
-Data flows between data structures by way of transformations between those structures. We start with the cwl input tokens themselves, as lexed by Rust, in `src/lib.rs`. You can see some valid cwl in the `tests` directory - the stuff inside of the `cwl_dom! {}` blocks are the tokens.
+Data flows between data structures (in the data module) by way of transformations between those structures (in the transform module). We start with the cwl input tokens themselves, as lexed by Rust, in `src/lib.rs`. You can see some valid cwl in the `tests` directory - the stuff inside of the `cwl_dom! {}` blocks are the tokens.
 
 So, starting with cwl tokens:
 ```
@@ -38,7 +37,7 @@ ast       -> analyze ->
 semantics -> write   ->
 compiled code!
 ```
-The `write` transformation is defined in several parts, one for each of several outputs that don't resemble each other - html, css, and Rust code that is compiled later into a wasm binary.
+The `write` transformation is defined in several parts, one for each of several outputs that don't resemble each other - HML, CSS, and Rust code that is compiled later into a Wasm binary.
 
 In terms of file paths, this translates to:
 `src/lib.rs` - tokens already provided as a TokenStream
@@ -48,7 +47,7 @@ In terms of file paths, this translates to:
 `src/data/semantics.rs`
 `src/transform/write/*.rs` - the order we write the outputs in shouldn't matter
 
-This is the core of CWL (reuse this if you want a custom syntax that compiles to Rust!). In `src/misc` are files outside of this core flow, such as the helper `context` which is used during semantic analysis.
+This is the core of CWL (Reuse this if you want a custom syntax that compiles to Rust!). In `src/misc` are files outside of this core flow, such as the helper `context` which is used during semantic analysis.
 
 ## Integration tests
 `./tests` has a collection of cwl examples that render different features. Currently, they just check to see that the examples compile. Run them with `wasm-pack test --headless --chrome`. `--firefox` works too, and you'll have to have whichever browser you're using installed.
