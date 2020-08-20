@@ -42,8 +42,8 @@ The `write` transformation is defined in several parts, one for each of several 
 In terms of file paths, this translates to:
 1. `src/lib.rs` - tokens already provided as a TokenStream
 1. `src/transform/parse.rs`
-1. `src/data/ast.rs`- (Abstract Syntax Tree)[https://en.wikipedia.org/wiki/Abstract_syntax_tree]
-1. `src/transform/analyze.rs` - (semantic analysis)[https://en.wikipedia.org/wiki/Semantic_analysis_(compilers)]
+1. `src/data/ast.rs`- [Abstract Syntax Tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree)
+1. `src/transform/analyze.rs` - [semantic analysis](https://en.wikipedia.org/wiki/Semantic_analysis_(compilers))
 1. `src/data/semantics.rs`
 1. `src/transform/write/*.rs` - the order we write the outputs in shouldn't matter
 
