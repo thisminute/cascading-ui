@@ -1,5 +1,5 @@
 use {
-	data::tokens::{Block, Document, Prefix, Rule},
+	data::ast::{Block, Document, Prefix, Rule},
 	syn::{braced, export::Span, ext::IdentExt, parse::ParseStream, token::Brace, Ident, Token},
 };
 

@@ -1,19 +1,33 @@
 use {
 	data::{
+		ast::{Block, Document, Prefix, Rule},
 		dom::Event,
-		tokens::{Block, Document, Prefix, Rule},
-		Context, Semantics,
+		Semantics,
 	},
+	misc::Context,
 	syn::export::ToTokens,
 };
 
-pub trait Analyze {
+pub fn semantic_analysis(document: &Document, semantics: &mut Semantics) {
+	document.analyze(
+		semantics,
+		&Context {
+			block: &document.root,
+			index: 0,
+			is_static: true,
+			path: Vec::new(),
+			string: "",
+		},
+	)
+}
+
+trait Analyze {
 	fn analyze(&self, semantics: &mut Semantics, context: &Context);
 }
 
 impl Analyze for Document {
 	fn analyze(&self, semantics: &mut Semantics, context: &Context) {
-		self.root.analyze(semantics, context);
+		self.root.analyze(semantics, &context);
 
 		match &semantics.title {
 			Some(_) => {}

@@ -1,4 +1,4 @@
-use super::tokens::Block;
+use data::ast::Block;
 
 // Blocks should live as long as the Document struct that owns them and outlives Contexts
 #[derive(Clone)]
@@ -12,15 +12,6 @@ pub struct Context<'a> {
 }
 
 impl Context<'_> {
-	// pub fn new(&self) -> Self {
-	// 	Self {
-	// 		block: None,
-	// 		path: Vec::new(),
-	// 		is_static: true,
-	// 		string: "",
-	// 	}
-	// }
-
 	pub fn is_root(&self) -> bool {
 		self.block.identifier.to_string() == "_"
 	}

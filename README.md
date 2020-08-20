@@ -20,16 +20,33 @@ rustup default stable-x86_64-pc-windows-gnu
 # Understanding the Code
 
 ## Execution Steps
-1. lib.rs
-   - The macro code is entered through one of 3 procedural macros exported from lib.rs. `cwl` is the main one, cwl_dom and cwl_lib are helpers for writing tests.
-1. parse.rs/tokens.rs
-   - The parse trait parses the input syntax into structs defined in tokens.rs, which can be thought of as an AST with a Document as the root, Blocks as branches, and Rules as leaves.
-1. lex.rs/meta.rs
-   - The lex trait walks through the AST and fills out a struct called Meta defined in meta.rs
-1. html.rs
-   - The html trait walks through Meta and fills the html minifier, which then writes to a file
-1. quote.rs
-   - The quote trait walks through Meta and generates Rust code that will execute at run time in a browser, after which the compiler takes over to generate the final wasm target
 
-## Integration Tests
-`./tests` has a collection of cwl examples that render different features. Currently, they just check to see that the examples compile.
+### Rust folder structure
+
+lib.rs and mod.rs are special names (as well as main.rs, though we don't have any of those here) that are entry points for the folders they are in. So, `src/lib.rs` includes `src/data/mod.rs` with the line `mod data;`. The top level is `lib.rs` because the whole project is a library, but every subsequent folder is just a private module for this library, for organizational purposes.
+
+### src/lib.rs
+The macro starts in one of 3 procedural macros exported from lib.rs. `cwl` is the main one, `cwl_dom` and `cwl_lib` are helpers for writing tests.
+
+### Data flow
+Data flows between data structures by way of transformations between those structures. The first structure is the cwl input tokens themselves, as lexed by Rust, so that is what we start with from the very beginning in `src/lib.rs`. You can see some valid cwl in the `tests` directory - the stuff inside of the `cwl_dom! {}` blocks. We parse these tokens into an (AST)[https://en.wikipedia.org/wiki/Abstract_syntax_tree], then feed the AST into another transformation, and so on.
+
+So, starting with cwl tokens:
+```
+tokens    -> parse   ->
+ast       -> analyze ->
+semantics -> write   ->
+compiled code!
+```
+The `write` transformation is defined in several parts, one for each of several outputs that don't resemble each other - html, css, and the wasm binary.
+
+In terms of file paths, this translates to
+`src/lib.rs` - tokens already provided as a TokenStream
+`src/transform/parse.rs`
+`src/data/ast.rs`- (Abstract Syntax Tree)[https://en.wikipedia.org/wiki/Abstract_syntax_tree]
+`src/transform/analyze.rs` - (semantic analysis)[https://en.wikipedia.org/wiki/Semantic_analysis_(compilers)]
+`src/data/semantics.rs`
+`src/transform/write/*.rs` - the order we write the outputs in shouldn't matter
+
+## Integration tests
+`./tests` has a collection of cwl examples that render different features. Currently, they just check to see that the examples compile. Run them with `wasm-pack test --headless --chrome`. `--firefox` works too, and you'll have to have whichever browser you're using installed.

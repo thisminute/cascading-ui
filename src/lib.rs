@@ -2,11 +2,11 @@ extern crate html_minifier;
 extern crate proc_macro;
 extern crate syn;
 mod data;
+mod misc;
 mod transform;
-mod write;
 
 use {
-	data::{tokens::Document, Context, Semantics},
+	data::{ast::Document, Semantics},
 	html_minifier::HTMLMinifier,
 	proc_macro::TokenStream,
 	std::{
@@ -18,24 +18,17 @@ use {
 		export::{ToTokens, TokenStream2},
 		parse_macro_input,
 	},
-	transform::Analyze,
-	write::{Html, Wasm},
+	transform::{
+		semantic_analysis,
+		write::{Html, Wasm},
+	},
 };
 
 type BoxResult<T> = Result<T, Box<dyn Error>>;
 
 fn pipeline(document: Document, bindgen_start: bool) -> (HTMLMinifier, TokenStream2) {
 	let mut semantics = Semantics::new();
-	document.analyze(
-		&mut semantics,
-		&Context {
-			block: &document.root,
-			index: 0,
-			is_static: true,
-			path: Vec::new(),
-			string: "",
-		},
-	);
+	semantic_analysis(&document, &mut semantics);
 	if bindgen_start {
 		semantics.bindgen = true;
 	}

@@ -1,5 +1,6 @@
 use {
-	super::{dom::Element, Context},
+	super::dom::Element,
+	misc::Context,
 	std::{collections::HashMap, error::Error, fmt},
 };
 
