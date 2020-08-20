@@ -50,7 +50,5 @@ In terms of file paths, this translates to:
 
 This is the core of CWL (reuse this if you want a custom syntax that compiles to Rust!). In `src/misc` are files outside of this core flow, such as the helper `context` which is used during semantic analysis.
 
-`src
-
 ## Integration tests
 `./tests` has a collection of cwl examples that render different features. Currently, they just check to see that the examples compile. Run them with `wasm-pack test --headless --chrome`. `--firefox` works too, and you'll have to have whichever browser you're using installed.
