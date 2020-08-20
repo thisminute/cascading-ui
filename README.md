@@ -40,12 +40,12 @@ compiled code!
 The `write` transformation is defined in several parts, one for each of several outputs that don't resemble each other - HML, CSS, and Rust code that is compiled later into a Wasm binary.
 
 In terms of file paths, this translates to:
-`src/lib.rs` - tokens already provided as a TokenStream
-`src/transform/parse.rs`
-`src/data/ast.rs`- (Abstract Syntax Tree)[https://en.wikipedia.org/wiki/Abstract_syntax_tree]
-`src/transform/analyze.rs` - (semantic analysis)[https://en.wikipedia.org/wiki/Semantic_analysis_(compilers)]
-`src/data/semantics.rs`
-`src/transform/write/*.rs` - the order we write the outputs in shouldn't matter
+0. `src/lib.rs` - tokens already provided as a TokenStream
+0. `src/transform/parse.rs`
+0. `src/data/ast.rs`- (Abstract Syntax Tree)[https://en.wikipedia.org/wiki/Abstract_syntax_tree]
+0. `src/transform/analyze.rs` - (semantic analysis)[https://en.wikipedia.org/wiki/Semantic_analysis_(compilers)]
+0. `src/data/semantics.rs`
+0. `src/transform/write/*.rs` - the order we write the outputs in shouldn't matter
 
 This is the core of CWL (Reuse this if you want a custom syntax that compiles to Rust!). In `src/misc` are files outside of this core flow, such as the helper `context` which is used during semantic analysis.
 
