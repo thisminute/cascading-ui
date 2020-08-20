@@ -1,7 +1,3 @@
-// struct Attribute<'a> {
-// 	name: &'a str,
-// 	values: Vec<&'a str>,
-// }
 pub enum Event {
 	Click,
 }
@@ -15,16 +11,7 @@ pub struct Element {
 	pub text: String,
 	pub tooltip: Option<String>,
 }
-// impl Default for Element {
-// 	fn default() -> Self {
-// 		Self {
-// 			// tag: "div",
-// 			// attributes: Vec::new(),
-// 			children: Vec::new(),
-// 			// classes: Vec::new(),
-// 		}
-// 	}
-// }
+
 impl Element {
 	pub fn new() -> Self {
 		Self {
