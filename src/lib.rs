@@ -40,14 +40,6 @@ fn pipeline(document: Document, bindgen_start: bool) -> (HTMLMinifier, TokenStre
 	(html_minifier, wasm)
 }
 
-/// all logic follows a chain of traits with one file per trait
-/// each trait walks the AST recursively and never makes calls to the other traits
-/// at the end of each trait execution, some new data structure is completely filled out for the next steps
-/// not all traits
-/// parse.rs -> tokens (see tokens.rs)
-/// lex.rs   -> metadata (see semantics.rs)
-/// html.rs  -> target/cwl.html
-/// quote.rs -> src/lib.rs
 #[proc_macro]
 pub fn cwl(input: TokenStream) -> TokenStream {
 	let mut input = input.into();
@@ -75,14 +67,15 @@ pub fn cwl(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn cwl_dom(input: TokenStream) -> TokenStream {
-	let (_index, runtime) = pipeline(parse_macro_input!(input as Document), true);
+pub fn cwl_document(input: TokenStream) -> TokenStream {
+	let (_index, runtime) = pipeline(parse_macro_input!(input as Document), false);
 	runtime.into()
 }
 
 #[proc_macro]
-pub fn cwl_lib(_input: TokenStream) -> TokenStream {
+pub fn cwl_header(_input: TokenStream) -> TokenStream {
 	let mut semantics = Semantics::new();
 	semantics.only_header_wasm = true;
+	eprintln!("{}", semantics.wasm().to_string());
 	semantics.wasm().into()
 }

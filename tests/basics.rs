@@ -1,23 +1,23 @@
 extern crate cascading_wasm_language;
-use cascading_wasm_language::{cwl_dom, cwl_lib};
+use cascading_wasm_language::{cwl_document, cwl_header};
 
 extern crate wasm_bindgen_test;
 use wasm_bindgen_test::*;
 
 wasm_bindgen_test_configure!(run_in_browser);
 
-cwl_lib!();
+cwl_header!();
 
 #[wasm_bindgen_test]
 fn empty() {
-	cwl_dom! {
+	cwl_document! {
 		title: "test";
 	}
 }
 
 #[wasm_bindgen_test]
 fn instance() {
-	cwl_dom! {
+	cwl_document! {
 		title: "test";
 		thingy {}
 	}
@@ -25,7 +25,7 @@ fn instance() {
 
 #[wasm_bindgen_test]
 fn class() {
-	cwl_dom! {
+	cwl_document! {
 		title: "test";
 		.thingy {}
 		thingy {}
@@ -34,7 +34,7 @@ fn class() {
 
 #[wasm_bindgen_test]
 fn class2() {
-	cwl_dom! {
+	cwl_document! {
 		title: "test";
 		thingy {}
 		.thingy {}

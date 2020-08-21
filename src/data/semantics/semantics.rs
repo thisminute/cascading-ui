@@ -32,7 +32,7 @@ pub struct Semantics<'a> {
 
 	pub errors: Vec<&'a str>,
 	pub warnings: Vec<&'a str>,
-
+	// pub includes: Vec<bool>,
 	pub title: Option<String>,
 	pub dom: Element,
 
@@ -43,6 +43,7 @@ impl Semantics<'_> {
 	pub fn new() -> Self {
 		Self {
 			only_header_wasm: false,
+			bindgen: false,
 
 			errors: Vec::new(),
 			warnings: Vec::new(),
@@ -52,22 +53,21 @@ impl Semantics<'_> {
 
 			classes: HashMap::new(),
 			elements: HashMap::new(),
-
-			bindgen: false,
 		}
 	}
 
-	pub fn activate_element(&mut self, context: &Context, size: usize) -> &Element {
+	pub fn activate_element(&mut self, context: &Context, size: usize) {
 		let mut current = &mut self.dom;
 		for i in &context.path {
-			current = &mut current.children[*i];
 			current.active = true;
+			current = &mut current.children[*i];
 		}
+
+		current.active = true;
 		current.children.reserve_exact(size);
 		for _ in 0..size {
 			current.children.push(Element::new());
 		}
-		current
 	}
 
 	pub fn get_element(&mut self, context: &Context) -> &mut Element {

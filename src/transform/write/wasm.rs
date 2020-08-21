@@ -1,33 +1,55 @@
 use {
-	data::{dom::Element, Semantics},
+	data::{
+		dom::{Element, Event},
+		Semantics,
+	},
 	syn::export::{quote::quote, quote::quote_spanned, Span, TokenStream2},
 };
 
 pub trait Wasm {
 	fn wasm(&self) -> TokenStream2;
-	fn website(lib: TokenStream2, builder: TokenStream2) -> TokenStream2;
-	fn header() -> TokenStream2;
+	fn website(&self, header: TokenStream2, document: TokenStream2) -> TokenStream2;
+	fn header(&self) -> TokenStream2;
 	fn document(&self) -> TokenStream2;
 	fn element(&self, element: &Element) -> TokenStream2;
 }
 
 impl Wasm for Semantics<'_> {
 	fn wasm(&self) -> TokenStream2 {
-		quote! {}
+		if self.only_header_wasm {
+			self.header()
+		} else if self.bindgen {
+			self.website(self.header(), self.document())
+		} else {
+			self.document()
+		}
 	}
-	fn website(lib: TokenStream2, builder: TokenStream2) -> TokenStream2 {
+
+	fn website(&self, header: TokenStream2, document: TokenStream2) -> TokenStream2 {
 		quote! {
-			#lib
+			#header
 
 			#[wasm_bindgen(start)]
 			pub fn run() -> Result<(), JsValue> {
-				#builder
+				#document
 				Ok(())
 			}
 		}
 	}
 
-	fn header() -> TokenStream2 {
+	fn header(&self) -> TokenStream2 {
+		let includes = vec![
+			quote! { console },
+			// quote! { Document },
+			// quote! { Element },
+			quote! { Event },
+			quote! { EventListener },
+			quote! { EventTarget },
+			quote! { HtmlElement },
+			// quote! { HtmlHeadElement },
+			// quote! { Window },
+		];
+
 		quote! {
 			extern crate wasm_bindgen;
 			extern crate web_sys;
@@ -37,10 +59,7 @@ impl Wasm for Semantics<'_> {
 					JsCast,
 				},
 				web_sys::{
-					Document,
-					Event,
-					HtmlElement,
-					Window,
+					#( #includes ),*
 				},
 			};
 			// fn create_element(document: &Document, name: &str) -> HtmlElement {
@@ -76,38 +95,53 @@ impl Wasm for Semantics<'_> {
 		quote! {
 			#( #warnings )*
 
-			use {
-				web_sys::{
-					Element,
-					HtmlHeadElement,
-				},
-			};
-
 			let window = web_sys::window().expect("getting window");
 			let document = &window.document().expect("getting `window.document`");
 			let head = &document.head().expect("getting `window.document.head`");
-			let body = document.body().expect("getting `window.document.body`");
+			let body = &document.body().expect("getting `window.document.body`");
 			#body
 		}
 	}
 
-	fn element(&self, _element: &Element) -> TokenStream2 {
-		// if element.link
-		quote! {}
-		// let identifier = "div";
+	fn element(&self, element: &Element) -> TokenStream2 {
+		if element.active {
+			let id = &element.id;
+			let events = element.listeners.iter().map(|event| {
+				let event = match event {
+					Event::Click => quote! { set_onclick },
+				};
 
-		// if element.active {
-		// 	let rule_quotes = self.rules.iter().map(|rule| rule.wasm(semantics, context));
-		// 	let block_quotes = self
-		// 		.blocks
-		// 		.iter()
-		// 		.map(|block| block.wasm(semantics, context));
+				quote! {
+					EventTarget::new();
 
-		// 	let quotes = quote! {
-		// 		#( #rule_quotes )*
-		// 		#( #block_quotes )*
-		// 	};
-		// }
+					let element = &document.get_element_by_id(#id).unwrap().dyn_into::<web_sys::HtmlElement>().unwrap();
+					let forever_element = element.clone();
+					// EventListener::new(element, #event, move |_event| {
+					// 	console::log_1(&"bbbbbbbbb".into());
+					// 	element.set_inner_html("Hello World");
+					// }).forget();
+
+					let on_click = Closure::wrap(Box::new(move |_e: Event| {
+						let window = web_sys::window().expect("getting window");
+						let document = window.document().expect("getting `window.document`");
+						forever_element.set_inner_html("Hello World");
+						// document.location().unwrap().assign(#value).unwrap();
+					}) as Box<dyn FnMut(Event)>);
+					element.#event(Some(on_click.as_ref().unchecked_ref()));
+					element.style().set_property("cursor", "pointer").unwrap();
+					on_click.forget();
+				}
+			});
+
+			let children = element.children.iter().map(|child| self.element(child));
+
+			quote! {
+				#( #events )*
+				#( #children )*
+			}
+		} else {
+			quote! {}
+		}
 	}
 
 	// fn rule(&self) -> TokenStream2 {

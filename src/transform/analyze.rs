@@ -55,30 +55,43 @@ impl Analyze for Block {
 			index: context.index,
 		};
 
-		if context.is_static {
-			match self.prefix {
-				Prefix::Instance => {
-					semantics.activate_element(&context, self.blocks.len());
+		match self.prefix {
+			Prefix::Instance => semantics.activate_element(&context, self.blocks.len()),
+			Prefix::Class => {}
+			Prefix::Action => {}
+			Prefix::Listener => {}
+		}
 
-					for rule in &self.rules {
-						rule.analyze(semantics, &child_context);
-					}
+		for rule in &self.rules {
+			match self.prefix {
+				Prefix::Instance => rule.analyze(semantics, &child_context),
+				Prefix::Class => {}
+				Prefix::Action => {}
+				Prefix::Listener => {
+					let element = semantics.get_element(&context);
+					element.listeners.push(Event::Click);
+					element.id = Some("myid".to_string());
+				}
+			}
+		}
+
+		for (i, block) in self.blocks.iter().enumerate() {
+			match block.prefix {
+				Prefix::Instance => {
+					let mut path = context.path.to_vec();
+					path.push(context.index);
+					child_context.path = path;
+					child_context.index = i;
+					block.analyze(semantics, &child_context);
 				}
 				Prefix::Class => {}
 				Prefix::Action => {}
 				Prefix::Listener => {
 					let element = semantics.get_element(&context);
 					element.listeners.push(Event::Click);
+					element.id = Some("myid".to_string());
 				}
 			}
-		}
-
-		for (i, block) in self.blocks.iter().enumerate() {
-			let mut path = context.path.to_vec();
-			path.push(context.index);
-			child_context.path = path;
-			child_context.index = i;
-			block.analyze(semantics, &child_context);
 		}
 	}
 }

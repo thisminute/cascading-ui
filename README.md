@@ -25,7 +25,7 @@ rustup default stable-x86_64-pc-windows-gnu
 "lib.rs" and "mod.rs" are special names that are entry points for the folders they are in. The top level is `lib.rs` because the whole project is a library, and every subsequent folder contains a private module included from there.
 
 ### src/lib.rs
-The macro starts in one of 3 procedural macros exported from lib.rs. `cwl` is the main one, `cwl_dom` and `cwl_lib` are helpers for writing tests.
+The macro starts in one of 3 procedural macros exported from lib.rs. `cwl` is the main one, `cwl_document` and `cwl_header` are helpers for writing tests.
 
 ### Data flow
 Data flows between data structures (in the data module) by way of transformations between those structures (in the transform module). We start with the cwl input tokens themselves, as lexed by Rust, in `src/lib.rs`. You can see some valid cwl in the `tests` directory - the stuff inside of the `cwl_dom! {}` blocks are the tokens.
@@ -37,14 +37,14 @@ ast       -> analyze ->
 semantics -> write   ->
 compiled code!
 ```
-The `write` transformation is defined in several parts, one for each of several outputs that don't resemble each other - HML, CSS, and Rust code that is compiled later into a Wasm binary.
+The `write` transformation is defined in several parts, one for each of several outputs that don't resemble each other - HML, CSS, and Rust code that is compiled later into a Wasm binary. Each output is generated with a different trait implemented on the Semantics struct.
 
 In terms of file paths, this translates to:
 1. `src/lib.rs` - tokens already provided as a TokenStream
 1. `src/transform/parse.rs`
 1. `src/data/ast.rs`- [Abstract Syntax Tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree)
 1. `src/transform/analyze.rs` - [semantic analysis](https://en.wikipedia.org/wiki/Semantic_analysis_(compilers))
-1. `src/data/semantics.rs`
+1. `src/data/semantics/semantics.rs` - this directory also contains other components of semantics
 1. `src/transform/write/*.rs` - the order we write the outputs in shouldn't matter
 
 This is the core of CWL (Reuse this if you want a custom syntax that compiles to Rust!). In `src/misc` are files outside of this core flow, such as the helper `context` which is used during semantic analysis.

@@ -1,16 +1,16 @@
 extern crate cascading_wasm_language;
-use cascading_wasm_language::{cwl_dom, cwl_lib};
+use cascading_wasm_language::{cwl_document, cwl_header};
 
 extern crate wasm_bindgen_test;
 use wasm_bindgen_test::*;
 
 wasm_bindgen_test_configure!(run_in_browser);
 
-cwl_lib!();
+cwl_header!();
 
 #[wasm_bindgen_test]
 fn compile() {
-	cwl_dom! {
+	cwl_document! {
 		title: "Stack Overflow";
 
 		header {

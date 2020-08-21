@@ -9,7 +9,13 @@ pub trait Html {
 }
 
 fn recurse(element: &Element, minifier: &mut HTMLMinifier) -> BoxResult<()> {
-	minifier.digest("<div>")?;
+	minifier.digest("<div ")?;
+	if element.id.is_some() {
+		minifier.digest("id='")?;
+		minifier.digest(element.id.as_ref().unwrap())?;
+		minifier.digest("'")?;
+	}
+	minifier.digest(">")?;
 	minifier.digest(element.text.clone())?;
 	for child in &element.children {
 		if child.active {
