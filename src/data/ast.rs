@@ -10,6 +10,7 @@ pub struct Document {
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum Prefix {
+	Page,
 	Instance,
 	Class,
 	Action,

@@ -1,19 +1,16 @@
 use data::ast::Block;
 
-// Blocks should live as long as the Document struct that owns them and outlives Contexts
-#[derive(Clone)]
+// Blocks should live as long as the Document struct that owns them and which outlives Contexts
 pub struct Context<'a> {
-	pub index: usize,
 	pub block: &'a Block,
-	pub is_static: bool,
-	pub string: &'a str,
 	pub path: Vec<usize>,
+	pub root: usize,
 	// pub events: Vec<Event>,
 }
 
 impl Context<'_> {
 	pub fn is_root(&self) -> bool {
-		self.block.identifier.to_string() == "_"
+		self.block.identifier == "_"
 	}
 
 	// pub fn static_context(&self) -> String {
