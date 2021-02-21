@@ -1,6 +1,7 @@
 use {
 	data::ast::{Block, Document, Prefix, Rule},
-	syn::{braced, export::Span, ext::IdentExt, parse::ParseStream, token::Brace, Ident, Token},
+	proc_macro2::Span,
+	syn::{braced, ext::IdentExt, parse::ParseStream, token::Brace, Ident, Token},
 };
 
 fn peek_rule(input: ParseStream) -> bool {
@@ -53,7 +54,7 @@ impl Parse for Document {
 		Ok(Self {
 			root: Block {
 				identifier: Ident::new("_", Span::call_site()),
-				prefix: Prefix::Instance,
+				prefix: Prefix::Page,
 				rules,
 				blocks,
 			},
