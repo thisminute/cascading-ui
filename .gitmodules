@@ -1,0 +1,4 @@
+[submodule "create-cwl-app"]
+	path = create-cwl-app
+	url = https://github.com/thisminute/create-cwl-app
+	branch = debug
