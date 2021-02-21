@@ -119,8 +119,7 @@ impl Semantics {
 		let id = self.groups.len();
 		self.groups[parent_id]
 			.subgroups
-			.insert(identifier, Vec::new())
-			.expect("inserting group");
+			.insert(identifier, Vec::new());
 		self.groups.push(Group {
 			// id,
 			parent_id: Some(parent_id),
