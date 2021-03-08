@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-#[derive(Hash, PartialEq, Eq, Clone)]
+#[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub enum CssProperty {
 	BackgroundColor,
 	Color,
@@ -9,7 +9,7 @@ pub enum CssProperty {
 }
 pub type CssProperties = HashMap<CssProperty, String>;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct Properties {
 	pub title: Option<String>,
 	pub route: Option<String>,
@@ -22,11 +22,10 @@ pub struct Properties {
 	pub image: Option<String>,
 }
 
-// TODO
-// impl Properties {
-// 	pub fn cascade(&mut self, properties: Self) {
-// 		for (property, value) in properties.css {
-// 			self.css.insert(property, value);
-// 		}
-// 	}
-// }
+impl Properties {
+	pub fn cascade(&mut self, properties: Self) {
+		for (property, value) in properties.css {
+			self.css.entry(property).or_insert(value);
+		}
+	}
+}

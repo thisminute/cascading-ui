@@ -58,10 +58,9 @@ impl Render for Groups {
 			panic!("get rid of groups with no members")
 		}
 		if self[group_id].members.len() == 1 {
-			// TODO: currently just overwrites styles, should merge them instead
-			let member_id = self[group_id].members[0];
-			eprintln!("applying styles to group {}", member_id);
-			self[member_id].styles = self[group_id].properties.css.clone();
+			let &member_id = self[group_id].members.first().unwrap();
+			let incoming_properties = self[group_id].properties.clone();
+			self[member_id].properties.cascade(incoming_properties);
 		} else {
 			let mut queue = Vec::new();
 			let class = id_gen(IdCategory::Class);
@@ -107,7 +106,7 @@ impl Render for Groups {
 				link: group.properties.link.clone(),
 				text: group.properties.text.clone().unwrap_or_default(),
 				classes: group.classes.clone(),
-				style: group.styles.clone(),
+				style: group.properties.css.clone(),
 				children: Vec::new(),
 				listeners: Vec::new(),
 			}
