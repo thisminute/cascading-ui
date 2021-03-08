@@ -2,7 +2,7 @@ pub mod event;
 pub mod properties;
 
 use {
-	self::properties::{CssProperties, Properties},
+	self::properties::{CssProperties, PageProperty, Properties},
 	std::{collections::HashMap, error::Error, fmt},
 };
 
@@ -25,7 +25,6 @@ pub struct Group {
 	pub properties: Properties,
 
 	pub classes: Vec<String>,
-	pub styles: CssProperties,
 
 	pub parent_id: Option<usize>,
 	pub children: Vec<usize>,
@@ -72,14 +71,15 @@ impl Semantics {
 			properties: Properties::default(),
 
 			classes: Vec::new(),
-			styles: HashMap::new(),
 			children: Vec::new(),
 			subgroups: HashMap::new(),
 		};
 		eprintln!("Generating page group {}", id);
 		page.members.push(id);
 		if id == 0 {
-			page.properties.route = Some("/".into());
+			page.properties
+				.page
+				.insert(PageProperty::Route, String::from("/"));
 		}
 		self.pages.push(id);
 
@@ -95,7 +95,6 @@ impl Semantics {
 			properties: Properties::default(),
 
 			classes: Vec::new(),
-			styles: HashMap::new(),
 			children: Vec::new(),
 			subgroups: HashMap::new(),
 		};
@@ -128,7 +127,6 @@ impl Semantics {
 			properties: Properties::default(),
 
 			classes: Vec::new(),
-			styles: HashMap::new(),
 			children: Vec::new(),
 			subgroups: HashMap::new(),
 		};

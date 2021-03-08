@@ -6,7 +6,7 @@ pub use self::{
 	dom::{Dom, Element},
 	semantics::{
 		event::EventListener,
-		properties::{CssProperties, CssProperty, Properties},
+		properties::{CssProperties, CssProperty, CwlProperty, PageProperty, Properties},
 		CssRule, Semantics,
 	},
 };

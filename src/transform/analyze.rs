@@ -1,7 +1,7 @@
 use {
 	data::{
 		ast::{Block, Document, Prefix, Property},
-		CssProperty, Semantics,
+		CssProperty, CwlProperty, PageProperty, Semantics,
 	},
 	misc::Context,
 	quote::ToTokens,
@@ -76,22 +76,19 @@ impl Analyze for Property {
 
 		match property {
 			// page properties
-			"title" if context.is_root() => properties.title = Some(value),
-			"route" if context.is_root() => properties.route = Some(value),
+			"title" if context.is_root() => properties.page.insert(PageProperty::Title, value),
+			"route" if context.is_root() => properties.page.insert(PageProperty::Route, value),
 
 			// css properties
-			"background_color" => {
-				properties.css.insert(CssProperty::BackgroundColor, value);
-			}
-			"color" => {
-				properties.css.insert(CssProperty::Color, value);
-			}
+			"background_color" => properties.css.insert(CssProperty::BackgroundColor, value),
 
-			"link" => properties.link = Some(value),
-			"text" => properties.text = Some(value),
-			"tooltip" => properties.tooltip = Some(value),
-			"image" => properties.image = Some(value),
-			_ => {}
-		}
+			"color" => properties.css.insert(CssProperty::Color, value),
+
+			"link" => properties.cwl.insert(CwlProperty::Link, value),
+			"text" => properties.cwl.insert(CwlProperty::Text, value),
+			"tooltip" => properties.cwl.insert(CwlProperty::Tooltip, value),
+			"image" => properties.cwl.insert(CwlProperty::Image, value),
+			_ => None,
+		};
 	}
 }

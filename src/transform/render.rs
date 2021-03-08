@@ -2,11 +2,13 @@ use {
 	crate::misc::id_gen::IdCategory,
 	data::{
 		dom::Page,
-		semantics::{properties::CssProperty, Group},
+		semantics::{
+			properties::{CssProperty, CwlProperty, PageProperty},
+			Group,
+		},
 		CssRule, Dom, Element, Semantics,
 	},
 	misc::id_gen::id_gen,
-	transform::write::css::Css,
 };
 
 type Groups = Vec<Group>;
@@ -33,15 +35,17 @@ impl Semantics {
 			let page = &mut self.groups[page];
 			dom.html_roots.insert(
 				page.properties
-					.route
-					.clone()
-					.expect("a route must be set for all pages (index defaults to \"/\")"),
+					.page
+					.get(&PageProperty::Route)
+					.expect("a route must be set for all pages (index defaults to \"/\")")
+					.to_string(),
 				Page {
 					title: page
 						.properties
-						.title
-						.clone()
-						.expect("a title must be set for the home page"),
+						.page
+						.get(&PageProperty::Title)
+						.expect("a title must be set for the home page")
+						.to_string(),
 					styles,
 					root,
 				},
@@ -57,18 +61,23 @@ impl Render for Groups {
 		if self[group_id].members.len() == 0 {
 			panic!("get rid of groups with no members")
 		}
+		let incoming_properties = self[group_id].properties.clone();
 		if self[group_id].members.len() == 1 {
 			let &member_id = self[group_id].members.first().unwrap();
-			let incoming_properties = self[group_id].properties.clone();
-			self[member_id].properties.cascade(incoming_properties);
+			self[member_id]
+				.properties
+				.cascade(&incoming_properties, true);
 		} else {
 			let mut queue = Vec::new();
 			let class = id_gen(IdCategory::Class);
 			for &member_id in &self[group_id].members {
 				queue.push((member_id, class.clone()));
 			}
-			for (group_id, class) in queue {
-				self[group_id].classes.push(class);
+			for (member_id, class) in queue {
+				self[member_id].classes.push(class);
+				self[member_id]
+					.properties
+					.cascade(&incoming_properties, false);
 			}
 			styles.push(CssRule {
 				selector: format!(".{}", class),
@@ -96,15 +105,31 @@ impl Render for Groups {
 
 		let mut element = {
 			let group = &self[group_id];
-			eprintln!("style {}", group.styles.css());
+			eprintln!(
+				"text {}",
+				group
+					.properties
+					.cwl
+					.get(&CwlProperty::Text)
+					.unwrap_or(&format!(""))
+					.clone()
+			);
 			Element {
 				id: if group.subgroups.len() > 0 {
 					Some(id_gen(IdCategory::Id))
 				} else {
 					None
 				},
-				link: group.properties.link.clone(),
-				text: group.properties.text.clone().unwrap_or_default(),
+				link: match group.properties.cwl.get(&CwlProperty::Link) {
+					Some(url) => Some(url.clone()),
+					None => None,
+				},
+				text: group
+					.properties
+					.cwl
+					.get(&CwlProperty::Text)
+					.unwrap_or(&format!(""))
+					.clone(),
 				classes: group.classes.clone(),
 				style: group.properties.css.clone(),
 				children: Vec::new(),
