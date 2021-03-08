@@ -1,9 +1,8 @@
 pub mod event;
-pub mod rules;
+pub mod properties;
 
 use {
-	self::rules::Rules,
-	// misc::{id_gen, Context},
+	self::properties::{CssProperties, CssProperty, Properties},
 	std::{collections::HashMap, error::Error, fmt},
 };
 
@@ -16,28 +15,23 @@ impl fmt::Display for MyError {
 }
 impl Error for MyError {}
 
-pub struct Group {
-	// id: usize,
-	pub parent_id: Option<usize>,
-	// class: Option<String>,
-	pub children: Vec<usize>,
-	pub subgroups: HashMap<String, Vec<usize>>,
-
-	pub rules: Rules,
+pub struct CssRule {
+	pub selector: String,
+	pub properties: HashMap<CssProperty, String>,
 }
 
-// pub struct Class<'a> {
-// 	pub text: &'a str,
-// 	pub styles: Vec<&'a str>,
-// }
-// impl Default for Class<'_> {
-// 	fn default() -> Self {
-// 		Self {
-// 			text: "",
-// 			styles: Vec::new(),
-// 		}
-// 	}
-// }
+pub struct Group {
+	pub members: Vec<usize>,
+	pub properties: Properties,
+
+	pub classes: Vec<String>,
+	pub styles: CssProperties,
+
+	pub parent_id: Option<usize>,
+	pub children: Vec<usize>,
+	pub subgroups: HashMap<String, usize>,
+	pub subclasses: Vec<(String, CssRule)>,
+}
 
 pub struct Semantics {
 	pub only_header_wasm: bool,
@@ -46,7 +40,6 @@ pub struct Semantics {
 	pub errors: Vec<&'static str>,
 	pub warnings: Vec<&'static str>,
 
-	pub title: Option<String>,
 	pub pages: Vec<usize>,
 	pub groups: Vec<Group>,
 }
@@ -59,7 +52,6 @@ impl Semantics {
 			errors: Vec::new(),
 			warnings: Vec::new(),
 
-			title: None,
 			pages: Vec::new(),
 			groups: Vec::new(),
 		}
@@ -76,40 +68,54 @@ impl Semantics {
 	pub fn page_group(&mut self) -> usize {
 		let id = self.groups.len();
 		let mut page = Group {
-			// id,
 			parent_id: None,
-			rules: Rules::new(),
-			// class: None,
+			members: Vec::new(),
+			properties: Properties::default(),
+
+			classes: Vec::new(),
+			styles: HashMap::new(),
 			children: Vec::new(),
 			subgroups: HashMap::new(),
+			subclasses: Vec::new(),
 		};
+		page.members.push(id);
 		if id == 0 {
-			page.rules.route = Some("/".into())
+			page.properties.route = Some("/".into());
 		}
-		self.groups.push(page);
 		self.pages.push(id);
+
+		self.groups.push(page);
 		id
 	}
 
 	pub fn instance_group(&mut self, identifier: String, parent_id: usize) -> usize {
 		let id = self.groups.len();
 		let mut instance = Group {
-			// id,
 			parent_id: Some(parent_id),
-			rules: Rules::new(),
-			// class: None,
+			members: vec![id],
+			properties: Properties::default(),
+
+			classes: Vec::new(),
+			styles: HashMap::new(),
 			children: Vec::new(),
 			subgroups: HashMap::new(),
+			subclasses: Vec::new(),
 		};
 
 		// add a reference to this group to every ancestor group that has a class definition for this group's identifier
+		let mut queue = Vec::new();
 		let mut ancestor = &mut instance;
-		while let Some(parent) = ancestor.parent_id {
-			ancestor = &mut self.groups[parent];
-			if let Some(subgroup) = ancestor.subgroups.get_mut(&identifier) {
-				subgroup.push(parent);
+		while let Some(parent_id) = ancestor.parent_id {
+			ancestor = &mut self.groups[parent_id];
+			if let Some(subgroup) = ancestor.subgroups.get(&identifier) {
+				queue.push((subgroup.clone(), parent_id));
 			}
 		}
+
+		for (group_id, member_id) in queue {
+			self.groups[group_id].members.push(member_id);
+		}
+
 		self.groups[parent_id].children.push(id);
 		self.groups.push(instance);
 		id
@@ -117,25 +123,27 @@ impl Semantics {
 
 	pub fn class_group(&mut self, identifier: String, parent_id: usize) -> usize {
 		let id = self.groups.len();
-		self.groups[parent_id]
-			.subgroups
-			.insert(identifier, Vec::new());
-		self.groups.push(Group {
-			// id,
+		let class = Group {
 			parent_id: Some(parent_id),
-			rules: Rules::new(),
-			// class: Some(identifier),
+			members: Vec::new(),
+			properties: Properties::default(),
+
+			classes: Vec::new(),
+			styles: HashMap::new(),
 			children: Vec::new(),
 			subgroups: HashMap::new(),
-		});
+			subclasses: Vec::new(),
+		};
+		self.groups[parent_id].subgroups.insert(identifier, id);
+		self.groups.push(class);
 		id
 	}
 
 	// pub fn activate_element(&mut self, context: &Context, size: usize) -> &Element {
 	// 	let mut current = &mut self.dom[context.root];
-	// 	for i in &context.path {
+	// 	for i in context.path {
 	// 		current.active = true;
-	// 		current = &mut current.children[*i];
+	// 		current = &mut current.children[&i];
 	// 	}
 
 	// 	current.active = true;
@@ -148,8 +156,8 @@ impl Semantics {
 
 	// pub fn get_element(&mut self, context: &Context) -> &Element {
 	// 	let mut current = &self.dom[context.root];
-	// 	for i in &context.path {
-	// 		current = &current.children[*i];
+	// 	for i in context.path {
+	// 		current = &current.children[i];
 	// 	}
 	// 	current
 	// }

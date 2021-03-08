@@ -16,6 +16,7 @@ pub enum Prefix {
 	Action,
 	Listener,
 }
+
 pub struct Block {
 	pub prefix: Prefix,
 	pub identifier: Ident,

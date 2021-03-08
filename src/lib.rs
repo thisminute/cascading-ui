@@ -25,7 +25,7 @@ use {
 fn pipeline(document: Document, bindgen_start: bool) -> (Vec<(String, String)>, TokenStream2) {
 	let mut semantics = document.analyze(bindgen_start);
 	let dom = semantics.render();
-	(dom.html(&mut semantics), dom.wasm(&semantics))
+	(dom.html(), dom.wasm(&semantics))
 }
 
 #[proc_macro]

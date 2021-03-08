@@ -5,8 +5,8 @@ pub mod semantics;
 pub use self::{
 	dom::{Dom, Element},
 	semantics::{
-		event::{Event, EventListener},
-		rules::Rules,
+		event::EventListener,
+		properties::{CssProperties, CssProperty, Properties},
 		Semantics,
 	},
 };
