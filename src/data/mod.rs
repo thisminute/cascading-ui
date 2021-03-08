@@ -7,6 +7,6 @@ pub use self::{
 	semantics::{
 		event::EventListener,
 		properties::{CssProperties, CssProperty, Properties},
-		Semantics,
+		CssRule, Semantics,
 	},
 };

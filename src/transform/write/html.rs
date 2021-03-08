@@ -19,7 +19,7 @@ impl Page {
 			"<html>{}{}</html>",
 			format!("<head>{}{}</head>", 
 				format!("<title>{}</title>", self.title),
-				format!("<style>{}</style>", self.title)
+				format!("<style>{}</style>", self.styles.css())
 			),
 			format!(
 				"<body>{}{}{}</body>",

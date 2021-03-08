@@ -1,6 +1,6 @@
 use {
 	data::{
-		ast::{Block, Document, Prefix, Rule},
+		ast::{Block, Document, Prefix, Property},
 		CssProperty, Semantics,
 	},
 	misc::Context,
@@ -25,12 +25,15 @@ impl Document {
 }
 
 trait Analyze {
-	fn analyze(&self, semantics: &mut Semantics, context: &Context, parent: Option<usize>);
+	fn analyze(&self, semantics: &mut Semantics, context: &Context, group_id: Option<usize>);
 }
 
 impl Analyze for Block {
 	fn analyze(&self, semantics: &mut Semantics, context: &Context, parent_id: Option<usize>) {
 		let identifier = self.identifier.to_string();
+
+		eprintln!("analyzing block with identifier {}", identifier);
+
 		let group_id = if let Some(parent_id) = parent_id {
 			match context.block.prefix {
 				Prefix::Page => semantics.page_group(),
@@ -43,13 +46,13 @@ impl Analyze for Block {
 			semantics.page_group()
 		};
 
-		for rule in &self.rules {
+		for property in &self.properties {
 			let context = Context {
 				block: context.block,
 				path: context.path.clone(),
 				root: context.root,
 			};
-			rule.analyze(semantics, &context, Some(group_id));
+			property.analyze(semantics, &context, Some(group_id));
 		}
 
 		for block in &self.blocks {
@@ -63,13 +66,13 @@ impl Analyze for Block {
 	}
 }
 
-impl Analyze for Rule {
-	fn analyze(&self, semantics: &mut Semantics, context: &Context, parent_id: Option<usize>) {
-		let properties = &mut semantics.groups[parent_id.unwrap()].properties;
+impl Analyze for Property {
+	fn analyze(&self, semantics: &mut Semantics, context: &Context, group_id: Option<usize>) {
+		let properties = &mut semantics.groups[group_id.unwrap()].properties;
 		let property = &*self.property.to_string();
 		let value = self.value.to_token_stream().to_string();
 		let value = value[1..value.len() - 1].to_string();
-		eprintln!("Block: {} Rule: {}:{}", parent_id.unwrap(), property, value);
+		eprintln!("Block: {} Rule: {}:{}", group_id.unwrap(), property, value);
 
 		match property {
 			// page properties

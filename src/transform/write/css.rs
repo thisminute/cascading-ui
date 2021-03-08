@@ -1,12 +1,22 @@
-use crate::data::{CssProperties, CssProperty};
+use crate::data::{CssProperties, CssProperty, CssRule};
 pub trait Css {
 	fn css(&self) -> String;
 }
-// impl CssRule {
-// 	pub fn css(&self) -> String {
-// 		format!("{}{{{}}}", self.selector, self.properties.css())
-// 	}
-// }
+
+impl Css for Vec<CssRule> {
+	fn css(&self) -> String {
+		self.iter()
+			.map(|rule| rule.css())
+			.collect::<Vec<String>>()
+			.join("")
+	}
+}
+
+impl Css for CssRule {
+	fn css(&self) -> String {
+		format!("{}{{{}}}", self.selector, self.properties.css())
+	}
+}
 
 impl Css for CssProperties {
 	fn css(&self) -> String {

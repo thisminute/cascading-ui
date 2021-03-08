@@ -13,6 +13,7 @@ static SYMBOLS_2: &[char] = &[
 	'0', '1', '2', //, '3', '4', '5', '6', '7', '8', '9', '-'
 ];
 
+#[derive(Debug)]
 pub enum IdCategory {
 	Id,
 	Class,
@@ -43,5 +44,6 @@ pub fn id_gen(category: IdCategory) -> String {
 		n /= symbol_pool;
 		n > 0
 	} {}
+	eprintln!("{:?} generated: '{}'", category, id);
 	id
 }

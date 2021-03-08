@@ -1,5 +1,5 @@
 use {
-	data::ast::{Block, Document, Prefix, Rule},
+	data::ast::{Block, Document, Prefix, Property},
 	proc_macro2::Span,
 	syn::{braced, ext::IdentExt, parse::ParseStream, token::Brace, Ident, Token},
 };
@@ -39,11 +39,11 @@ pub use syn::parse::Parse;
 
 impl Parse for Document {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		let mut rules = Vec::new();
+		let mut properties = Vec::new();
 		let mut blocks = Vec::new();
 		loop {
 			if peek_rule(&input) {
-				rules.push(input.parse()?);
+				properties.push(input.parse()?);
 			} else if peek_block(&input) || peek_prefixed_block(&input) {
 				blocks.push(input.parse()?);
 			} else {
@@ -55,7 +55,7 @@ impl Parse for Document {
 			root: Block {
 				identifier: Ident::new("_", Span::call_site()),
 				prefix: Prefix::Page,
-				rules,
+				properties,
 				blocks,
 			},
 		})
@@ -82,11 +82,11 @@ impl Parse for Block {
 		let content;
 		braced!(content in input);
 
-		let mut rules = Vec::new();
+		let mut properties = Vec::new();
 		let mut blocks = Vec::new();
 		loop {
 			if peek_rule(&content) {
-				rules.push(content.parse()?);
+				properties.push(content.parse()?);
 			} else if peek_block(&content) || peek_prefixed_block(&content) {
 				blocks.push(content.parse()?);
 			} else {
@@ -97,13 +97,13 @@ impl Parse for Block {
 		Ok(Self {
 			prefix,
 			identifier,
-			rules,
+			properties,
 			blocks,
 		})
 	}
 }
 
-impl Parse for Rule {
+impl Parse for Property {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
 		let property = input.parse()?;
 		input.parse::<Token![:]>()?;

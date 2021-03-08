@@ -2,7 +2,7 @@ pub mod event;
 pub mod properties;
 
 use {
-	self::properties::{CssProperties, CssProperty, Properties},
+	self::properties::{CssProperties, Properties},
 	std::{collections::HashMap, error::Error, fmt},
 };
 
@@ -17,7 +17,7 @@ impl Error for MyError {}
 
 pub struct CssRule {
 	pub selector: String,
-	pub properties: HashMap<CssProperty, String>,
+	pub properties: CssProperties,
 }
 
 pub struct Group {
@@ -30,7 +30,6 @@ pub struct Group {
 	pub parent_id: Option<usize>,
 	pub children: Vec<usize>,
 	pub subgroups: HashMap<String, usize>,
-	pub subclasses: Vec<(String, CssRule)>,
 }
 
 pub struct Semantics {
@@ -76,8 +75,8 @@ impl Semantics {
 			styles: HashMap::new(),
 			children: Vec::new(),
 			subgroups: HashMap::new(),
-			subclasses: Vec::new(),
 		};
+		eprintln!("Generating page group {}", id);
 		page.members.push(id);
 		if id == 0 {
 			page.properties.route = Some("/".into());
@@ -99,7 +98,6 @@ impl Semantics {
 			styles: HashMap::new(),
 			children: Vec::new(),
 			subgroups: HashMap::new(),
-			subclasses: Vec::new(),
 		};
 
 		// add a reference to this group to every ancestor group that has a class definition for this group's identifier
@@ -108,11 +106,12 @@ impl Semantics {
 		while let Some(parent_id) = ancestor.parent_id {
 			ancestor = &mut self.groups[parent_id];
 			if let Some(subgroup) = ancestor.subgroups.get(&identifier) {
-				queue.push((subgroup.clone(), parent_id));
+				queue.push((subgroup.clone(), id));
 			}
 		}
 
 		for (group_id, member_id) in queue {
+			eprintln!("Adding member {} to group {}", member_id, group_id);
 			self.groups[group_id].members.push(member_id);
 		}
 
@@ -132,7 +131,6 @@ impl Semantics {
 			styles: HashMap::new(),
 			children: Vec::new(),
 			subgroups: HashMap::new(),
-			subclasses: Vec::new(),
 		};
 		self.groups[parent_id].subgroups.insert(identifier, id);
 		self.groups.push(class);

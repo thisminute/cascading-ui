@@ -1,4 +1,4 @@
-use super::CssProperties;
+use super::{CssProperties, CssRule};
 
 use {data::semantics::event::EventListener, std::collections::HashMap};
 
@@ -14,6 +14,7 @@ pub struct Element {
 
 pub struct Page {
 	pub title: String,
+	pub styles: Vec<CssRule>,
 	pub root: Element,
 }
 

@@ -20,11 +20,11 @@ pub enum Prefix {
 pub struct Block {
 	pub prefix: Prefix,
 	pub identifier: Ident,
-	pub rules: Vec<Rule>,
+	pub properties: Vec<Property>,
 	pub blocks: Vec<Block>,
 }
 
-pub struct Rule {
+pub struct Property {
 	pub property: Ident,
 	pub value: Expr,
 }
