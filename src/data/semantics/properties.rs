@@ -6,6 +6,7 @@ pub enum CssProperty {
 	Color,
 	Margin,
 	Padding,
+	Display,
 }
 pub type CssProperties = HashMap<CssProperty, String>;
 

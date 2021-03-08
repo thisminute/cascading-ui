@@ -23,13 +23,22 @@ impl Semantics {
 		let mut dom = Dom::new();
 		for &page in &self.pages {
 			eprintln!("rendering page {}", page);
-			let mut styles = vec![CssRule {
-				selector: String::from("body"),
-				properties: [(CssProperty::Margin, 0.to_string())]
-					.iter()
-					.cloned()
-					.collect(),
-			}];
+			let mut styles = vec![
+				CssRule {
+					selector: String::from("body"),
+					properties: [(CssProperty::Margin, 0.to_string())]
+						.iter()
+						.cloned()
+						.collect(),
+				},
+				CssRule {
+					selector: String::from("a"),
+					properties: [(CssProperty::Display, "block".to_string())]
+						.iter()
+						.cloned()
+						.collect(),
+				},
+			];
 			self.groups.render_1(page, &mut styles);
 			let root = self.groups.render_2(page);
 			let page = &mut self.groups[page];
