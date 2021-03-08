@@ -24,6 +24,7 @@ impl Css for CssProperties {
 			("background-color", self.get(&CssProperty::BackgroundColor)),
 			("color", self.get(&CssProperty::Color)),
 			("margin", self.get(&CssProperty::Margin)),
+			("padding", self.get(&CssProperty::Padding)),
 		]
 		.iter()
 		.filter(|(_, value)| value.is_some())
