@@ -1,6 +1,10 @@
 use {
 	crate::misc::id_gen::IdCategory,
-	data::{dom::Page, semantics::Group, CssRule, Dom, Element, Semantics},
+	data::{
+		dom::Page,
+		semantics::{properties::CssProperty, Group},
+		CssRule, Dom, Element, Semantics,
+	},
 	misc::id_gen::id_gen,
 	transform::write::css::Css,
 };
@@ -17,7 +21,13 @@ impl Semantics {
 		let mut dom = Dom::new();
 		for &page in &self.pages {
 			eprintln!("rendering page {}", page);
-			let mut styles = Vec::new();
+			let mut styles = vec![CssRule {
+				selector: String::from("body"),
+				properties: [(CssProperty::Margin, 0.to_string())]
+					.iter()
+					.cloned()
+					.collect(),
+			}];
 			self.groups.render_1(page, &mut styles);
 			let root = self.groups.render_2(page);
 			let page = &mut self.groups[page];

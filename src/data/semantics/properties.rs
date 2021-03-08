@@ -4,6 +4,8 @@ use std::collections::HashMap;
 pub enum CssProperty {
 	BackgroundColor,
 	Color,
+	Margin,
+	Padding,
 }
 pub type CssProperties = HashMap<CssProperty, String>;
 
