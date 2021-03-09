@@ -1,18 +1,21 @@
 use {
-	data::semantics::{event::EventListener, rules::Rules},
+	super::{CssProperties, CssRule, EventListener},
 	std::collections::HashMap,
 };
 
 pub struct Element {
-	// pub classes: Vec<Class>,
+	pub id: Option<String>,
+	pub classes: Vec<String>,
+	pub style: CssProperties,
 	pub children: Vec<Element>,
-	pub active: bool,
 	pub listeners: Vec<EventListener>,
-	pub rules: Rules,
+	pub text: String,
+	pub link: Option<String>,
 }
 
 pub struct Page {
 	pub title: String,
+	pub styles: Vec<CssRule>,
 	pub root: Element,
 }
 

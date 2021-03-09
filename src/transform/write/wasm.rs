@@ -1,8 +1,7 @@
 use {
-	crate::data::Semantics,
 	data::{
 		dom::{Dom, Element},
-		Event,
+		Semantics,
 	},
 	proc_macro2::{Span, TokenStream as TokenStream2},
 	quote::{quote, quote_spanned},
@@ -101,17 +100,16 @@ impl Wasm for Dom {
 			let document = &window.document().expect("getting `window.document`");
 			let head = &document.head().expect("getting `window.document.head`");
 			let body = &document.body().expect("getting `window.document.body`");
-
 		}
 	}
 
 	fn element(&self, element: &Element) -> TokenStream2 {
-		if element.active {
-			let id = format!("aaa");
-			let events = element.listeners.iter().map(|listener| {
-				let event = match listener.event {
-					Event::Click => quote! { set_onclick },
-				};
+		let id = format!("aaa");
+		let events = element.listeners.iter().map(|listener| {
+				let event = quote! { set_onclick };
+				// match listener.event {
+				// 	Event::Click => quote! { set_onclick },
+				// };
 
 				let effects = vec![
 					match &listener.effects.text {
@@ -148,14 +146,11 @@ impl Wasm for Dom {
 				}
 			});
 
-			let children = element.children.iter().map(|child| self.element(child));
+		let children = element.children.iter().map(|child| self.element(child));
 
-			quote! {
-				#( #events )*
-				#( #children )*
-			}
-		} else {
-			quote! {}
+		quote! {
+			#( #events )*
+			#( #children )*
 		}
 	}
 
