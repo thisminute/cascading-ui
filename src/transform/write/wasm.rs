@@ -1,6 +1,8 @@
 use {
-	crate::data::Semantics,
-	data::dom::{Dom, Element},
+	data::{
+		dom::{Dom, Element},
+		Semantics,
+	},
 	proc_macro2::{Span, TokenStream as TokenStream2},
 	quote::{quote, quote_spanned},
 };

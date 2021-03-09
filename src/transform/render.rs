@@ -1,5 +1,4 @@
 use {
-	crate::misc::id_gen::IdCategory,
 	data::{
 		dom::Page,
 		semantics::{
@@ -8,7 +7,7 @@ use {
 		},
 		CssRule, Dom, Element, Semantics,
 	},
-	misc::id_gen::id_gen,
+	misc::id_gen::{id_gen, IdCategory},
 };
 
 type Groups = Vec<Group>;

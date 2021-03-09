@@ -1,4 +1,5 @@
-use crate::data::{CssProperties, CssProperty, CssRule};
+use data::{CssProperties, CssProperty, CssRule};
+
 pub trait Css {
 	fn css(&self) -> String;
 }
@@ -26,6 +27,7 @@ impl Css for CssProperties {
 			("margin", self.get(&CssProperty::Margin)),
 			("padding", self.get(&CssProperty::Padding)),
 			("display", self.get(&CssProperty::Display)),
+			("height", self.get(&CssProperty::Height)),
 		]
 		.iter()
 		.filter(|(_, value)| value.is_some())

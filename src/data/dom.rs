@@ -1,6 +1,7 @@
-use super::{CssProperties, CssRule};
-
-use {data::semantics::event::EventListener, std::collections::HashMap};
+use {
+	super::{CssProperties, CssRule, EventListener},
+	std::collections::HashMap,
+};
 
 pub struct Element {
 	pub id: Option<String>,
