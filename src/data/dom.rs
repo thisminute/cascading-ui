@@ -1,5 +1,5 @@
 use {
-	super::{CssProperties, EventListener},
+	super::semantics::{event::EventListener, properties::CssProperties},
 	std::collections::HashMap,
 };
 

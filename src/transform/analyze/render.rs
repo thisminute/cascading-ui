@@ -1,12 +1,11 @@
 use {
 	super::cascade::Cascade,
 	data::{
-		dom::Page,
+		dom::{CssRule, Dom, Element, Page},
 		semantics::{
 			properties::{CssProperty, CwlProperty, PageProperty},
-			Group,
+			Group, Semantics,
 		},
-		CssRule, Dom, Element, Semantics,
 	},
 	misc::id_gen::{id_gen, IdCategory},
 	std::collections::HashMap,
@@ -86,9 +85,7 @@ impl Render for Groups {
 			}
 			_ => {
 				let class = id_gen(IdCategory::Class);
-				for &member_id in &self[group_id].members.clone() {
-					self[member_id].class_names.push(class.clone());
-				}
+				self[group_id].id = Some(class.clone());
 				styles.push(CssRule {
 					selector: format!(".{}", class),
 					properties: self[group_id].properties.css.clone(),
@@ -99,7 +96,7 @@ impl Render for Groups {
 		for &child_id in &self[group_id].elements.clone() {
 			self.render_1(child_id, styles, active_classes);
 		}
-		for (_, group_ids) in &self[group_id].scoped_groups.clone() {
+		for (_, group_ids) in &self[group_id].classes.clone() {
 			for group_id in group_ids {
 				self.render_1(*group_id, styles, active_classes);
 			}
@@ -130,7 +127,16 @@ impl Render for Groups {
 					.get(&CwlProperty::Text)
 					.unwrap_or(&format!(""))
 					.clone(),
-				classes: group.class_names.clone(),
+				classes: group
+					.member_of
+					.iter()
+					.map(|&member_id| {
+						self[member_id]
+							.id
+							.clone()
+							.expect("all classes should have an id generated")
+					})
+					.collect(),
 				style: group.properties.css.clone(),
 				children: Vec::new(),
 				listeners: Vec::new(),

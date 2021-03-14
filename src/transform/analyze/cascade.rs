@@ -3,12 +3,12 @@ use data::semantics::Group;
 type Groups = Vec<Group>;
 
 pub trait Cascade {
-	fn cascade(&mut self, from_group_id: usize, into_group_id: usize, cascade_css: bool);
+	fn cascade(&mut self, from_group_id: usize, into_group_id: usize);
 	fn cascade_css(&mut self, from_group_id: usize, into_group_id: usize);
 }
 
 impl Cascade for Groups {
-	fn cascade(&mut self, from_group_id: usize, into_group_id: usize, cascade_css: bool) {
+	fn cascade(&mut self, from_group_id: usize, into_group_id: usize) {
 		eprintln!(
 			"Cascading from group {} into group {}",
 			from_group_id, into_group_id
@@ -28,22 +28,21 @@ impl Cascade for Groups {
 		for _ in &self[from_group_id].properties.page {
 			panic!("page properties should never be cascaded");
 		}
-		if cascade_css {}
-		for (name, class_ids) in &self[from_group_id].scoped_groups.clone() {
+		for (name, class_ids) in &self[from_group_id].classes.clone() {
 			for &class_id in class_ids {
 				eprintln!(" Cascading scoped group with name {}", name);
-				let classes = self[into_group_id]
-					.scoped_groups
-					.entry(name.clone())
-					.or_default();
+				let classes = self[into_group_id].classes.entry(name.clone()).or_default();
 				classes.push(class_id);
 			}
 		}
 		if self[from_group_id].elements.len() > 0 {
+			eprintln!(
+				" Cascading element rules {:?} into {:?}",
+				self[from_group_id].elements, self[into_group_id].elements
+			);
 			if self[into_group_id].elements.len() > 0 {
 				panic!("can't disambiguate which elements get appended")
 			}
-			eprintln!(" Cascading element rule!");
 			self[into_group_id].elements = self[from_group_id].elements.clone();
 		}
 	}

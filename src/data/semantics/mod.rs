@@ -18,14 +18,30 @@ impl Error for MyError {}
 pub struct Group {
 	pub parent_id: Option<usize>,
 	pub name: Option<String>,
-	pub class_names: Vec<String>,
+	pub id: Option<String>,
 
-	pub members: Vec<usize>,
 	pub properties: Properties,
 	pub elements: Vec<usize>,
+	pub classes: HashMap<String, Vec<usize>>,
 
+	pub members: Vec<usize>,
 	pub member_of: Vec<usize>,
-	pub scoped_groups: HashMap<String, Vec<usize>>,
+}
+impl Group {
+	pub fn new(parent_id: Option<usize>, name: Option<String>) -> Self {
+		Self {
+			parent_id,
+			name,
+			id: None,
+
+			properties: Properties::default(),
+			elements: Vec::new(),
+			classes: HashMap::new(),
+
+			members: Vec::new(),
+			member_of: Vec::new(),
+		}
+	}
 }
 
 pub struct Semantics {

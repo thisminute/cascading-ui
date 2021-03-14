@@ -1,7 +1,7 @@
 use {
 	data::{
 		dom::{Dom, Element},
-		Semantics,
+		semantics::Semantics,
 	},
 	proc_macro2::{Span, TokenStream as TokenStream2},
 	quote::{quote, quote_spanned},

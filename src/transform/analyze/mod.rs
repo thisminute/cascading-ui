@@ -5,7 +5,10 @@ use {
 	self::cascade::Cascade,
 	data::{
 		ast::{Block, Document, Prefix, Property},
-		CssProperty, CwlProperty, Group, PageProperty, Properties, Semantics,
+		semantics::{
+			properties::{CssProperty, CwlProperty, PageProperty},
+			Group, Semantics,
+		},
 	},
 	quote::ToTokens,
 	std::collections::HashMap,
@@ -14,7 +17,9 @@ use {
 impl Document {
 	pub fn analyze(self, bindgen: bool) -> Semantics {
 		let mut semantics = Semantics::new(bindgen);
+		eprintln!("Creating groups...");
 		semantics.add_group(self.root, None);
+		eprintln!("Applying classes...");
 		semantics.apply_classes(0, &mut HashMap::new());
 		semantics
 	}
@@ -34,76 +39,21 @@ impl Semantics {
 			match block.prefix {
 				Prefix::Element => {
 					self.groups[parent_id].elements.push(group_id);
-					Group {
-						parent_id: Some(parent_id),
-						name: Some(identifier.clone()),
-						class_names: Vec::new(),
-
-						members: Vec::new(),
-						properties: Properties::default(),
-						elements: Vec::new(),
-
-						member_of: Vec::new(),
-						scoped_groups: HashMap::new(),
-					}
+					Group::new(Some(parent_id), Some(identifier))
 				}
 				Prefix::Class => {
 					self.groups[parent_id]
-						.scoped_groups
+						.classes
 						.entry(identifier.clone())
 						.or_default()
 						.push(group_id);
-					Group {
-						parent_id: Some(parent_id),
-						name: Some(identifier),
-						class_names: Vec::new(),
-
-						members: Vec::new(),
-						properties: Properties::default(),
-						elements: Vec::new(),
-
-						member_of: Vec::new(),
-						scoped_groups: HashMap::new(),
-					}
+					Group::new(Some(parent_id), Some(identifier))
 				}
-				Prefix::Action => Group {
-					parent_id: Some(parent_id),
-					name: Some(identifier.clone()),
-					class_names: Vec::new(),
-
-					members: Vec::new(),
-					properties: Properties::default(),
-					elements: Vec::new(),
-
-					member_of: Vec::new(),
-					scoped_groups: HashMap::new(),
-				},
-				Prefix::Listener => Group {
-					parent_id: Some(parent_id),
-					name: Some(identifier.clone()),
-					class_names: Vec::new(),
-
-					members: Vec::new(),
-					properties: Properties::default(),
-					elements: Vec::new(),
-
-					member_of: Vec::new(),
-					scoped_groups: HashMap::new(),
-				},
+				Prefix::Action => Group::new(Some(parent_id), Some(identifier)),
+				Prefix::Listener => Group::new(Some(parent_id), Some(identifier)),
 			}
 		} else {
-			let mut page = Group {
-				parent_id: None,
-				name: None,
-				class_names: Vec::new(),
-
-				members: Vec::new(),
-				properties: Properties::default(),
-				elements: Vec::new(),
-
-				member_of: Vec::new(),
-				scoped_groups: HashMap::new(),
-			};
+			let mut page = Group::new(None, None);
 			if group_id == 0 {
 				page.properties
 					.page
@@ -158,27 +108,26 @@ impl Semantics {
 			"text" => properties.cwl.insert(CwlProperty::Text, value),
 			"tooltip" => properties.cwl.insert(CwlProperty::Tooltip, value),
 			"image" => properties.cwl.insert(CwlProperty::Image, value),
-			_ => None,
+			_ => {
+				eprintln!("Unrecognized property {}", property);
+				panic!("Unrecognized property");
+			}
 		} {
 			eprintln!("Overwrote old value of {}", value)
 		}
 	}
 
 	fn apply_classes(&mut self, group_id: usize, active_classes: &mut HashMap<String, Vec<usize>>) {
-		if let Some(identifier) = &self.groups[group_id].name.clone() {
+		eprintln!("Applying classes to group {}", group_id);
+		if let Some(name) = &self.groups[group_id].name.clone() {
 			let mut ancestor = &self.groups[group_id];
 			let mut queue = Vec::new();
 			while let Some(parent_id) = ancestor.parent_id {
 				ancestor = &mut self.groups[parent_id];
-				for &subgroup_id in ancestor
-					.scoped_groups
-					.get(identifier)
-					.unwrap_or(&Vec::new())
-				{
+				for &subgroup_id in ancestor.classes.get(name).unwrap_or(&Vec::new()) {
 					queue.push((subgroup_id, group_id));
 				}
 			}
-
 			for (subgroup_id, member_id) in queue {
 				eprintln!("Adding member {} to class {}", member_id, subgroup_id);
 				self.groups[subgroup_id].members.push(member_id);
@@ -186,23 +135,23 @@ impl Semantics {
 			}
 		}
 
-		eprintln!("!!!");
 		for &class_id in &self.groups[group_id].member_of.clone() {
 			eprintln!("Group {} is a member of class {}", group_id, class_id);
-			let class = &mut self.groups[class_id];
-			if let Some(name) = &class.name.clone() {
-				let classes = active_classes.entry(name.clone()).or_default();
-				for &mut class_id in classes {
-					eprintln!(
-						"Cascading from group {} with name {} into group {}",
-						class_id, name, group_id
-					);
-					self.groups.cascade(class_id, group_id, false);
-				}
+			let name = &mut self.groups[class_id]
+				.name
+				.clone()
+				.expect("it should be impossible to be a member of a group without having a name");
+			let classes = active_classes.entry(name.clone()).or_default();
+			for &mut class_id in classes {
+				eprintln!(
+					"Cascading from group {} with name {} into group {}",
+					class_id, name, group_id
+				);
+				self.groups.cascade(class_id, group_id);
 			}
 		}
 
-		for (class, subgroup_ids) in &self.groups[group_id].scoped_groups {
+		for (class, subgroup_ids) in &self.groups[group_id].classes {
 			for subgroup_id in subgroup_ids {
 				active_classes
 					.entry(class.clone())
@@ -215,7 +164,7 @@ impl Semantics {
 			self.apply_classes(element_id, active_classes);
 		}
 
-		for (class, _) in &self.groups[group_id].scoped_groups {
+		for (class, _) in &self.groups[group_id].classes {
 			active_classes.entry(class.clone()).or_default().pop();
 		}
 	}
