@@ -22,6 +22,7 @@ pub struct Block {
 	pub properties: Vec<Property>,
 	pub elements: Vec<Block>,
 	pub classes: Vec<Block>,
+	pub listeners: Vec<Block>,
 }
 
 pub struct Property {

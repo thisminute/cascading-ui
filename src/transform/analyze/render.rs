@@ -78,9 +78,9 @@ impl Render for Groups {
 	) {
 		eprintln!("render 1 for group {}", group_id);
 		match self[group_id].members.len() {
-			x if x == 0 => {}
-			x if x == 1 => {
-				let &member_id = self[group_id].members.first().expect("asdfasdf");
+			0 => {}
+			1 => {
+				let &member_id = self[group_id].members.first().unwrap();
 				self.cascade_css(group_id, member_id);
 			}
 			_ => {
@@ -107,15 +107,6 @@ impl Render for Groups {
 		eprintln!("render 2 on group {}", group_id);
 		let mut element = {
 			let group = &self[group_id];
-			eprintln!(
-				"text {}",
-				group
-					.properties
-					.cwl
-					.get(&CwlProperty::Text)
-					.unwrap_or(&format!(""))
-					.clone()
-			);
 			Element {
 				link: match group.properties.cwl.get(&CwlProperty::Link) {
 					Some(url) => Some(url.clone()),
