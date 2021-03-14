@@ -130,6 +130,7 @@ impl Render for Groups {
 				classes: group
 					.member_of
 					.iter()
+					.filter(|&&member_id| self[member_id].members.len() > 1)
 					.map(|&member_id| {
 						self[member_id]
 							.id

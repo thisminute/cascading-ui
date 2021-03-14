@@ -6,7 +6,7 @@ use {
 	data::{
 		ast::{Block, Document, Prefix, Property},
 		semantics::{
-			properties::{CssProperty, CwlProperty, PageProperty},
+			properties::{CssProperty, CwlProperty, PageProperty, Properties},
 			Group, Semantics,
 		},
 	},
@@ -18,7 +18,7 @@ impl Document {
 	pub fn analyze(self, bindgen: bool) -> Semantics {
 		let mut semantics = Semantics::new(bindgen);
 		eprintln!("Creating groups...");
-		semantics.add_group(self.root, None);
+		semantics.create_group_from_block(self.root, None);
 		eprintln!("Applying classes...");
 		semantics.apply_classes(0, &mut HashMap::new());
 		semantics
@@ -26,7 +26,7 @@ impl Document {
 }
 
 impl Semantics {
-	fn add_group(&mut self, block: Block, parent_id: Option<usize>) {
+	fn create_group_from_block(&mut self, block: Block, parent_id: Option<usize>) {
 		eprintln!(
 			"Analyzing {:?} block with identifier {}",
 			block.prefix,
@@ -39,7 +39,18 @@ impl Semantics {
 			match block.prefix {
 				Prefix::Element => {
 					self.groups[parent_id].elements.push(group_id);
-					Group::new(Some(parent_id), Some(identifier))
+					Group {
+						parent_id: Some(parent_id),
+						name: Some(identifier),
+						id: None,
+
+						properties: Properties::default(),
+						elements: Vec::new(),
+						classes: HashMap::new(),
+
+						members: vec![group_id],
+						member_of: vec![group_id],
+					}
 				}
 				Prefix::Class => {
 					self.groups[parent_id]
@@ -70,11 +81,11 @@ impl Semantics {
 		}
 
 		for block in block.classes {
-			self.add_group(block, Some(group_id));
+			self.create_group_from_block(block, Some(group_id));
 		}
 
 		for block in block.elements {
-			self.add_group(block, Some(group_id));
+			self.create_group_from_block(block, Some(group_id));
 		}
 	}
 
@@ -117,12 +128,38 @@ impl Semantics {
 		}
 	}
 
+	fn create_group_from_group(&mut self, group_id: usize, parent_id: usize) {
+		let element_id = self.groups.len();
+		let group = &mut self.groups[group_id];
+		let identifier = group.name.clone().unwrap();
+		let element = Group {
+			parent_id: Some(parent_id),
+			name: Some(identifier),
+			id: None,
+
+			properties: Properties {
+				cwl: group.properties.cwl.clone(),
+				css: HashMap::new(),
+				page: HashMap::new(),
+			},
+			elements: group.elements.clone(),
+			classes: group.classes.clone(),
+
+			members: Vec::new(),
+			member_of: vec![group_id],
+		};
+		group.members.push(element_id);
+		self.groups[parent_id].elements.push(element_id);
+		self.groups.push(element);
+	}
+
 	fn apply_classes(&mut self, group_id: usize, active_classes: &mut HashMap<String, Vec<usize>>) {
 		eprintln!("Applying classes to group {}", group_id);
 		if let Some(name) = &self.groups[group_id].name.clone() {
 			let mut ancestor = &self.groups[group_id];
 			let mut queue = Vec::new();
 			while let Some(parent_id) = ancestor.parent_id {
+				eprintln!("{}", parent_id);
 				ancestor = &mut self.groups[parent_id];
 				for &subgroup_id in ancestor.classes.get(name).unwrap_or(&Vec::new()) {
 					queue.push((subgroup_id, group_id));
@@ -140,15 +177,20 @@ impl Semantics {
 			let name = &mut self.groups[class_id]
 				.name
 				.clone()
-				.expect("it should be impossible to be a member of a group without having a name");
-			let classes = active_classes.entry(name.clone()).or_default();
-			for &mut class_id in classes {
-				eprintln!(
-					"Cascading from group {} with name {} into group {}",
-					class_id, name, group_id
-				);
-				self.groups.cascade(class_id, group_id);
+				.expect("it should be impossible for a group that has members to have no name");
+			eprintln!(
+				"Cascading from group {} with name {} into group {}",
+				class_id, name, group_id
+			);
+			if self.groups[class_id].elements.len() > 0 {
+				if self.groups[group_id].elements.len() > 0 {
+					panic!("can't disambiguate which elements get appended")
+				}
+				for element_id in self.groups[class_id].elements.clone() {
+					self.create_group_from_group(element_id, group_id);
+				}
 			}
+			self.groups.cascade(class_id, group_id);
 		}
 
 		for (class, subgroup_ids) in &self.groups[group_id].classes {

@@ -35,16 +35,6 @@ impl Cascade for Groups {
 				classes.push(class_id);
 			}
 		}
-		if self[from_group_id].elements.len() > 0 {
-			eprintln!(
-				" Cascading element rules {:?} into {:?}",
-				self[from_group_id].elements, self[into_group_id].elements
-			);
-			if self[into_group_id].elements.len() > 0 {
-				panic!("can't disambiguate which elements get appended")
-			}
-			self[into_group_id].elements = self[from_group_id].elements.clone();
-		}
 	}
 
 	fn cascade_css(&mut self, from_group_id: usize, into_group_id: usize) {
