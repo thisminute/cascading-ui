@@ -3,10 +3,10 @@ pub mod dom;
 pub mod semantics;
 
 pub use self::{
-	dom::{Dom, Element},
+	dom::{CssRule, Dom, Element},
 	semantics::{
 		event::EventListener,
 		properties::{CssProperties, CssProperty, CwlProperty, PageProperty, Properties},
-		CssRule, Semantics,
+		Group, Semantics,
 	},
 };

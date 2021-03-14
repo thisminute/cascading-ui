@@ -35,19 +35,3 @@ pub struct Properties {
 	pub css: CssProperties,
 	pub cwl: CwlProperties,
 }
-
-impl Properties {
-	pub fn cascade(&mut self, properties: &Self, cascade_css: bool) {
-		for (property, value) in &properties.cwl {
-			self.cwl.entry(*property).or_insert(value.clone());
-		}
-		for (property, value) in &properties.page {
-			self.page.entry(*property).or_insert(value.clone());
-		}
-		if cascade_css {
-			for (property, value) in &properties.css {
-				self.css.entry(*property).or_insert(value.clone());
-			}
-		}
-	}
-}

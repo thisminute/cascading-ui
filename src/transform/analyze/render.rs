@@ -1,4 +1,5 @@
 use {
+	super::cascade::Cascade,
 	data::{
 		dom::Page,
 		semantics::{
@@ -8,12 +9,18 @@ use {
 		CssRule, Dom, Element, Semantics,
 	},
 	misc::id_gen::{id_gen, IdCategory},
+	std::collections::HashMap,
 };
 
 type Groups = Vec<Group>;
 
 trait Render {
-	fn render_1(&mut self, group_id: usize, styles: &mut Vec<CssRule>);
+	fn render_1(
+		&mut self,
+		group_id: usize,
+		styles: &mut Vec<CssRule>,
+		active_classes: &mut HashMap<String, Vec<usize>>,
+	);
 	fn render_2(&mut self, group_id: usize) -> Element;
 }
 
@@ -38,7 +45,7 @@ impl Semantics {
 						.collect(),
 				},
 			];
-			self.groups.render_1(page, &mut styles);
+			self.groups.render_1(page, &mut styles, &mut HashMap::new());
 			let root = self.groups.render_2(page);
 			let page = &mut self.groups[page];
 			dom.html_roots.insert(
@@ -64,53 +71,43 @@ impl Semantics {
 }
 
 impl Render for Groups {
-	fn render_1(&mut self, group_id: usize, styles: &mut Vec<CssRule>) {
+	fn render_1(
+		&mut self,
+		group_id: usize,
+		styles: &mut Vec<CssRule>,
+		active_classes: &mut HashMap<String, Vec<usize>>,
+	) {
 		eprintln!("render 1 for group {}", group_id);
-		if self[group_id].members.len() == 0 {
-			panic!("get rid of groups with no members")
-		}
-		let incoming_properties = self[group_id].properties.clone();
-		if self[group_id].members.len() == 1 {
-			let &member_id = self[group_id].members.first().unwrap();
-			self[member_id]
-				.properties
-				.cascade(&incoming_properties, true);
-		} else {
-			let mut queue = Vec::new();
-			let class = id_gen(IdCategory::Class);
-			for &member_id in &self[group_id].members {
-				queue.push((member_id, class.clone()));
+		match self[group_id].members.len() {
+			x if x == 0 => {}
+			x if x == 1 => {
+				let &member_id = self[group_id].members.first().expect("asdfasdf");
+				self.cascade_css(group_id, member_id);
 			}
-			for (member_id, class) in queue {
-				self[member_id].classes.push(class);
-				self[member_id]
-					.properties
-					.cascade(&incoming_properties, false);
+			_ => {
+				let class = id_gen(IdCategory::Class);
+				for &member_id in &self[group_id].members.clone() {
+					self[member_id].class_names.push(class.clone());
+				}
+				styles.push(CssRule {
+					selector: format!(".{}", class),
+					properties: self[group_id].properties.css.clone(),
+				});
 			}
-			styles.push(CssRule {
-				selector: format!(".{}", class),
-				properties: self[group_id].properties.css.clone(),
-			});
 		}
 
-		let mut queue = Vec::new();
-		for &child_id in &self[group_id].children {
-			queue.push(child_id);
+		for &child_id in &self[group_id].elements.clone() {
+			self.render_1(child_id, styles, active_classes);
 		}
-		for (_, &group_id) in &self[group_id].subgroups {
-			queue.push(group_id);
-		}
-		for item in queue {
-			self.render_1(item, styles);
+		for (_, group_ids) in &self[group_id].scoped_groups.clone() {
+			for group_id in group_ids {
+				self.render_1(*group_id, styles, active_classes);
+			}
 		}
 	}
 
 	fn render_2(&mut self, group_id: usize) -> Element {
 		eprintln!("render 2 on group {}", group_id);
-		if self[group_id].members.len() == 0 {
-			panic!("get rid of groups with no members")
-		}
-
 		let mut element = {
 			let group = &self[group_id];
 			eprintln!(
@@ -123,11 +120,6 @@ impl Render for Groups {
 					.clone()
 			);
 			Element {
-				id: if group.subgroups.len() > 0 {
-					Some(id_gen(IdCategory::Id))
-				} else {
-					None
-				},
 				link: match group.properties.cwl.get(&CwlProperty::Link) {
 					Some(url) => Some(url.clone()),
 					None => None,
@@ -138,19 +130,15 @@ impl Render for Groups {
 					.get(&CwlProperty::Text)
 					.unwrap_or(&format!(""))
 					.clone(),
-				classes: group.classes.clone(),
+				classes: group.class_names.clone(),
 				style: group.properties.css.clone(),
 				children: Vec::new(),
 				listeners: Vec::new(),
 			}
 		};
 
-		let mut queue = Vec::new();
-		for &child in &self[group_id].children {
+		for &child in &self[group_id].elements.clone() {
 			eprintln!("adding a child");
-			queue.push(child);
-		}
-		for child in queue {
 			element.children.push(self.render_2(child));
 		}
 		element
