@@ -4,17 +4,20 @@ use {
 	syn::{braced, ext::IdentExt, parse::ParseStream, token::Brace, Ident, Token},
 };
 
-fn peek_rule(input: ParseStream) -> bool {
+fn peek_property(input: ParseStream) -> bool {
 	input.peek(Ident::peek_any) && input.peek2(Token![:])
 }
 fn peek_block(input: ParseStream) -> bool {
 	input.peek(Ident::peek_any) && input.peek2(Brace)
 }
-fn peek_prefixed_block(input: ParseStream) -> bool {
-	(input.peek(Token![.]) || input.peek(Token![!]) || input.peek(Token![?]))
-		&& input.peek2(Ident::peek_any)
-		&& input.peek3(Brace)
+fn peek_class_block(input: ParseStream) -> bool {
+	input.peek(Token![.]) && input.peek2(Ident::peek_any) && input.peek3(Brace)
 }
+// fn peek_prefixed_block(input: ParseStream) -> bool {
+// 	(input.peek(Token![!]) || input.peek(Token![?]))
+// 		&& input.peek2(Ident::peek_any)
+// 		&& input.peek3(Brace)
+// }
 
 // impl Parse for HyphenatedIdent {
 // 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
@@ -40,12 +43,15 @@ pub use syn::parse::Parse;
 impl Parse for Document {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
 		let mut properties = Vec::new();
-		let mut blocks = Vec::new();
+		let mut elements = Vec::new();
+		let mut classes = Vec::new();
 		loop {
-			if peek_rule(&input) {
+			if peek_property(&input) {
 				properties.push(input.parse()?);
-			} else if peek_block(&input) || peek_prefixed_block(&input) {
-				blocks.push(input.parse()?);
+			} else if peek_block(&input) {
+				elements.push(input.parse()?);
+			} else if peek_class_block(&input) {
+				classes.push(input.parse()?);
 			} else {
 				break;
 			}
@@ -54,9 +60,10 @@ impl Parse for Document {
 		Ok(Self {
 			root: Block {
 				identifier: Ident::new("_", Span::call_site()),
-				prefix: Prefix::Page,
+				prefix: Prefix::Element,
 				properties,
-				blocks,
+				elements,
+				classes,
 			},
 		})
 	}
@@ -74,7 +81,7 @@ impl Parse for Block {
 			input.parse::<Token![?]>()?;
 			Prefix::Listener
 		} else {
-			Prefix::Instance
+			Prefix::Element
 		};
 
 		let identifier = input.parse()?;
@@ -83,12 +90,15 @@ impl Parse for Block {
 		braced!(content in input);
 
 		let mut properties = Vec::new();
-		let mut blocks = Vec::new();
+		let mut elements = Vec::new();
+		let mut classes = Vec::new();
 		loop {
-			if peek_rule(&content) {
+			if peek_property(&content) {
 				properties.push(content.parse()?);
-			} else if peek_block(&content) || peek_prefixed_block(&content) {
-				blocks.push(content.parse()?);
+			} else if peek_block(&content) {
+				elements.push(content.parse()?);
+			} else if peek_class_block(&content) {
+				classes.push(content.parse()?);
 			} else {
 				break;
 			}
@@ -98,7 +108,8 @@ impl Parse for Block {
 			prefix,
 			identifier,
 			properties,
-			blocks,
+			elements,
+			classes,
 		})
 	}
 }

@@ -8,7 +8,7 @@ mod misc;
 mod transform;
 
 use {
-	data::{ast::Document, dom::Dom, Semantics},
+	data::{ast::Document, dom::Dom, semantics::Semantics},
 	proc_macro::TokenStream,
 	proc_macro2::TokenStream as TokenStream2,
 	quote::ToTokens,

@@ -1,4 +1,7 @@
-use data::{CssProperties, CssProperty, CssRule};
+use data::{
+	dom::CssRule,
+	semantics::properties::{CssProperties, CssProperty},
+};
 
 pub trait Css {
 	fn css(&self) -> String;

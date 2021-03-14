@@ -1,6 +1,6 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
+// static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
 static CLASS_COUNTER: AtomicUsize = AtomicUsize::new(0);
 static SYMBOLS_1: &[char] = &[
 	'_', 'a',
@@ -15,13 +15,13 @@ static SYMBOLS_2: &[char] = &[
 
 #[derive(Debug)]
 pub enum IdCategory {
-	Id,
+	// Id,
 	Class,
 }
 
 pub fn id_gen(category: IdCategory) -> String {
 	let counter = match category {
-		IdCategory::Id => &ID_COUNTER,
+		// IdCategory::Id => &ID_COUNTER,
 		IdCategory::Class => &CLASS_COUNTER,
 	};
 

@@ -8,10 +8,9 @@ pub struct Document {
 	pub root: Block,
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Prefix {
-	Page,
-	Instance,
+	Element,
 	Class,
 	Action,
 	Listener,
@@ -21,7 +20,8 @@ pub struct Block {
 	pub prefix: Prefix,
 	pub identifier: Ident,
 	pub properties: Vec<Property>,
-	pub blocks: Vec<Block>,
+	pub elements: Vec<Block>,
+	pub classes: Vec<Block>,
 }
 
 pub struct Property {
