@@ -20,7 +20,7 @@ impl Document {
 		eprintln!("Creating groups...");
 		semantics.create_group_from_block(self.root, None);
 		eprintln!("Applying classes...");
-		semantics.apply_classes(0, &mut HashMap::new());
+		semantics.apply_classes(0);
 		semantics
 	}
 }
@@ -128,32 +128,7 @@ impl Semantics {
 		}
 	}
 
-	fn create_group_from_group(&mut self, group_id: usize, parent_id: usize) {
-		let element_id = self.groups.len();
-		let group = &mut self.groups[group_id];
-		let identifier = group.name.clone().unwrap();
-		let element = Group {
-			parent_id: Some(parent_id),
-			name: Some(identifier),
-			id: None,
-
-			properties: Properties {
-				cwl: group.properties.cwl.clone(),
-				css: HashMap::new(),
-				page: HashMap::new(),
-			},
-			elements: group.elements.clone(),
-			classes: group.classes.clone(),
-
-			members: Vec::new(),
-			member_of: vec![group_id],
-		};
-		group.members.push(element_id);
-		self.groups[parent_id].elements.push(element_id);
-		self.groups.push(element);
-	}
-
-	fn apply_classes(&mut self, group_id: usize, active_classes: &mut HashMap<String, Vec<usize>>) {
+	fn apply_classes(&mut self, group_id: usize) {
 		eprintln!("Applying classes to group {}", group_id);
 		if let Some(name) = &self.groups[group_id].name.clone() {
 			let mut ancestor = &self.groups[group_id];
@@ -174,40 +149,11 @@ impl Semantics {
 
 		for &class_id in &self.groups[group_id].member_of.clone() {
 			eprintln!("Group {} is a member of class {}", group_id, class_id);
-			let name = &mut self.groups[class_id]
-				.name
-				.clone()
-				.expect("it should be impossible for a group that has members to have no name");
-			eprintln!(
-				"Cascading from group {} with name {} into group {}",
-				class_id, name, group_id
-			);
-			if self.groups[class_id].elements.len() > 0 {
-				if self.groups[group_id].elements.len() > 0 {
-					panic!("can't disambiguate which elements get appended")
-				}
-				for element_id in self.groups[class_id].elements.clone() {
-					self.create_group_from_group(element_id, group_id);
-				}
-			}
 			self.groups.cascade(class_id, group_id);
 		}
 
-		for (class, subgroup_ids) in &self.groups[group_id].classes {
-			for subgroup_id in subgroup_ids {
-				active_classes
-					.entry(class.clone())
-					.or_default()
-					.push(*subgroup_id);
-			}
-		}
-
 		for &element_id in &self.groups[group_id].elements.clone() {
-			self.apply_classes(element_id, active_classes);
-		}
-
-		for (class, _) in &self.groups[group_id].classes {
-			active_classes.entry(class.clone()).or_default().pop();
+			self.apply_classes(element_id);
 		}
 	}
 }
