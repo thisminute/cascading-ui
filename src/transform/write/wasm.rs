@@ -1,32 +1,32 @@
 use {
-	data::{
-		dom::{Dom, Element},
-		semantics::Semantics,
+	data::semantics::{
+		properties::{CssProperty, CwlProperty},
+		Group, Semantics,
 	},
-	proc_macro2::{Span, TokenStream as TokenStream2},
+	proc_macro2::{Span, TokenStream},
 	quote::{quote, quote_spanned},
 };
 
 pub trait Wasm {
-	fn wasm(&self, semantics: &Semantics) -> TokenStream2;
-	fn website(&self, header: TokenStream2, document: TokenStream2) -> TokenStream2;
-	fn header(&self) -> TokenStream2;
-	fn document(&self, semantics: &Semantics) -> TokenStream2;
-	fn element(&self, element: &Element) -> TokenStream2;
+	fn wasm(&self) -> TokenStream;
+	fn website(&self, header: TokenStream, document: TokenStream) -> TokenStream;
+	fn header(&self) -> TokenStream;
+	fn document(&self) -> TokenStream;
+	fn element(&self, element: &Group) -> TokenStream;
 }
 
-impl Wasm for Dom {
-	fn wasm(&self, semantics: &Semantics) -> TokenStream2 {
-		if semantics.only_header_wasm {
+impl Wasm for Semantics {
+	fn wasm(&self) -> TokenStream {
+		if self.only_header_wasm {
 			self.header()
-		} else if semantics.bindgen {
-			self.website(self.header(), self.document(semantics))
+		} else if self.bindgen {
+			self.website(self.header(), self.document())
 		} else {
-			self.document(semantics)
+			self.document()
 		}
 	}
 
-	fn website(&self, header: TokenStream2, document: TokenStream2) -> TokenStream2 {
+	fn website(&self, header: TokenStream, document: TokenStream) -> TokenStream {
 		quote! {
 			#header
 
@@ -38,7 +38,7 @@ impl Wasm for Dom {
 		}
 	}
 
-	fn header(&self) -> TokenStream2 {
+	fn header(&self) -> TokenStream {
 		let includes = vec![
 			quote! { console },
 			// quote! { Document },
@@ -58,6 +58,7 @@ impl Wasm for Dom {
 				wasm_bindgen::{
 					prelude::*,
 					JsCast,
+					JsValue,
 				},
 				web_sys::{
 					#( #includes ),*
@@ -73,14 +74,14 @@ impl Wasm for Dom {
 		}
 	}
 
-	fn document(&self, semantics: &Semantics) -> TokenStream2 {
-		let warnings = semantics.warnings.iter().map(|error| {
+	fn document(&self) -> TokenStream {
+		let warnings = self.warnings.iter().map(|error| {
 			quote_spanned! {Span::call_site()=>
 				compile_error!(#error);
 			}
 		});
-		if !semantics.errors.is_empty() {
-			let errors = semantics.errors.iter().map(|error| {
+		if !self.errors.is_empty() {
+			let errors = self.errors.iter().map(|error| {
 				quote_spanned! {Span::call_site()=>
 					compile_error!(#error);
 				}
@@ -92,7 +93,11 @@ impl Wasm for Dom {
 			};
 		}
 
-		// let body = self.element(&self.dom[&0]);
+		let runtime = self
+			.pages
+			.iter()
+			.map(|&page| self.element(&self.groups[page]));
+
 		quote! {
 			#( #warnings )*
 
@@ -100,40 +105,68 @@ impl Wasm for Dom {
 			let document = &window.document().expect("getting `window.document`");
 			let head = &document.head().expect("getting `window.document.head`");
 			let body = &document.body().expect("getting `window.document.body`");
+
+			#( #runtime )*
 		}
 	}
 
-	fn element(&self, element: &Element) -> TokenStream2 {
-		let id = format!("aaa");
-		let events = element.listeners.iter().map(|listener| {
-				let event = quote! { set_onclick };
-				// match listener.event {
-				// 	Event::Click => quote! { set_onclick },
-				// };
+	fn element(&self, element: &Group) -> TokenStream {
+		let events = element.listeners.iter().map(|&listener_id| {
+			let listener = &self.groups[listener_id];
+			let event = match &*listener
+				.name
+				.clone()
+				.expect("listener should have an event id")
+			{
+				"click" => quote! { set_onclick },
+				_ => panic!("unknown event id"),
+			};
 
-				let effects = vec![
-					match &listener.effects.text {
-						Some(text) => quote! { element.set_inner_html(#text); },
-						None => quote! {},
-					},
-					match &listener.effects.link {
-						Some(link) => {
-							quote! { document.location().expect("a").assign(#link).expect("e"); }
-						}
-						None => quote! {},
-					},
-				];
-
+			let mut effects = Vec::new();
+			if let Some(text) = listener.properties.cwl.get(&CwlProperty::Text) {
+				effects.push(quote! { element.set_inner_html(#text); });
+			}
+			if let Some(link) = listener.properties.cwl.get(&CwlProperty::Link) {
+				effects.push(quote! {
+					document.location().expect("a").assign(#link).expect("e");
+					element.style().set_property("cursor", "pointer").unwrap();
+				});
+			}
+			let properties = listener.properties.css.iter().map(|(property, value)| {
+				let property = match property {
+					CssProperty::BackgroundColor => "background-color",
+					CssProperty::Color => "color",
+					CssProperty::Margin => "margin",
+					CssProperty::Padding => "padding",
+					CssProperty::Display => "display",
+					CssProperty::Position => "position",
+					CssProperty::Width => "width",
+					CssProperty::Height => "height",
+				};
 				quote! {
-					// EventTarget::new();
+					element.style().set_property(#property, #value).unwrap();
+				}
+			});
 
-					let element = &document.get_element_by_id(#id).expect("asdf").dyn_into::<web_sys::HtmlElement>().expect("wqer");
-					// EventListener::new(element, #event, move |_event| {
-					// 	console::log_1(&"bbbbbbbbb".into());
-					// 	element.set_inner_html("Hello World");
-					// }).forget();
+			let class = &listener.id;
+			effects.push(quote! {
+				let elements = document.get_elements_by_class_name(#class);
+				for i in 0..elements.length() {
+					let element = elements.item(i).unwrap().dyn_into::<web_sys::HtmlElement>().unwrap();
+					#( #properties )*
+				}
+			});
+
+			let class = listener
+				.id
+				.clone()
+				.expect("listener should have a selector");
+			quote! {
+				let elements = document.get_elements_by_class_name(#class);
+				console::log_1(&JsValue::from_str("aaaaaaaAA"));
+				for i in 0..elements.length() {
+					let element = elements.item(i).unwrap().dyn_into::<web_sys::HtmlElement>().unwrap();
 					let on_click = {
-						let element = element.clone();
 						Closure::wrap(Box::new(move |_e: Event| {
 							let window = web_sys::window().expect("getting window");
 							let document = window.document().expect("getting `window.document`");
@@ -141,12 +174,15 @@ impl Wasm for Dom {
 						}) as Box<dyn FnMut(Event)>)
 					};
 					element.#event(Some(on_click.as_ref().unchecked_ref()));
-					element.style().set_property("cursor", "pointer").unwrap();
 					on_click.forget();
 				}
-			});
+			}
+		});
 
-		let children = element.children.iter().map(|child| self.element(child));
+		let children = element
+			.elements
+			.iter()
+			.map(|&child_id| self.element(&self.groups[child_id]));
 
 		quote! {
 			#( #events )*
@@ -154,7 +190,7 @@ impl Wasm for Dom {
 		}
 	}
 
-	// fn rule(&self) -> TokenStream2 {
+	// fn rule(&self) -> TokenStream {
 	// 	let property = &self.property.to_string();
 	// 	let value = &self.value;
 

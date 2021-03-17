@@ -28,6 +28,7 @@ impl Cascade for Groups {
 			},
 			elements: group.elements.clone(),
 			classes: group.classes.clone(),
+			listeners: group.listeners.clone(),
 
 			members: Vec::new(),
 			member_of: vec![source_id],
@@ -43,7 +44,7 @@ impl Cascade for Groups {
 			source_id, target_id
 		);
 		if source_id == target_id {
-			return;
+			panic!("the build process should never try to cascade a group into itself")
 		}
 
 		if self[source_id].elements.len() > 0 {
@@ -68,10 +69,17 @@ impl Cascade for Groups {
 		}
 		for (name, class_ids) in &self[source_id].classes.clone() {
 			for &class_id in class_ids {
-				eprintln!(" Cascading scoped group with name {}", name);
-				let classes = self[target_id].classes.entry(name.clone()).or_default();
-				classes.push(class_id);
+				eprintln!(" Cascading scoped class with name {}", name);
+				self[target_id]
+					.classes
+					.entry(name.clone())
+					.or_default()
+					.push(class_id);
 			}
+		}
+		for &listener_id in &self[source_id].listeners.clone() {
+			eprintln!(" Cascading scoped listener {}", listener_id);
+			self[target_id].listeners.push(listener_id);
 		}
 	}
 

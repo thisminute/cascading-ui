@@ -1,7 +1,4 @@
-use {
-	super::semantics::{event::EventListener, properties::CssProperties},
-	std::collections::HashMap,
-};
+use {super::semantics::properties::CssProperties, std::collections::HashMap};
 
 pub struct CssRule {
 	pub selector: String,
@@ -12,7 +9,6 @@ pub struct Element {
 	pub classes: Vec<String>,
 	pub style: CssProperties,
 	pub children: Vec<Element>,
-	pub listeners: Vec<EventListener>,
 	pub text: String,
 	pub link: Option<String>,
 }

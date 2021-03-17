@@ -8,18 +8,12 @@ use {
 		},
 	},
 	misc::id_gen::{id_gen, IdCategory},
-	std::collections::HashMap,
 };
 
 type Groups = Vec<Group>;
 
 trait Render {
-	fn render_1(
-		&mut self,
-		group_id: usize,
-		styles: &mut Vec<CssRule>,
-		active_classes: &mut HashMap<String, Vec<usize>>,
-	);
+	fn render_1(&mut self, group_id: usize, styles: &mut Vec<CssRule>);
 	fn render_2(&mut self, group_id: usize) -> Element;
 }
 
@@ -44,7 +38,7 @@ impl Semantics {
 						.collect(),
 				},
 			];
-			self.groups.render_1(page, &mut styles, &mut HashMap::new());
+			self.groups.render_1(page, &mut styles);
 			let root = self.groups.render_2(page);
 			let page = &mut self.groups[page];
 			dom.html_roots.insert(
@@ -70,75 +64,88 @@ impl Semantics {
 }
 
 impl Render for Groups {
-	fn render_1(
-		&mut self,
-		group_id: usize,
-		styles: &mut Vec<CssRule>,
-		active_classes: &mut HashMap<String, Vec<usize>>,
-	) {
+	fn render_1(&mut self, group_id: usize, styles: &mut Vec<CssRule>) {
 		eprintln!("render 1 for group {}", group_id);
-		match self[group_id].members.len() {
-			0 => {}
-			1 => {
-				let &member_id = self[group_id].members.first().unwrap();
-				self.cascade_css(group_id, member_id);
-			}
-			_ => {
-				let class = id_gen(IdCategory::Class);
-				self[group_id].id = Some(class.clone());
-				styles.push(CssRule {
-					selector: format!(".{}", class),
-					properties: self[group_id].properties.css.clone(),
-				});
+		if self[group_id].properties.css.len() > 0 {
+			match self[group_id].members.len() {
+				0 => {}
+				1 => {
+					let &member_id = self[group_id].members.first().unwrap();
+					self.cascade_css(group_id, member_id);
+				}
+				_ => {
+					let class = id_gen(IdCategory::Class);
+					self[group_id].id = Some(class.clone());
+					styles.push(CssRule {
+						selector: format!(".{}", class),
+						properties: self[group_id].properties.css.clone(),
+					});
+				}
 			}
 		}
 
 		for &child_id in &self[group_id].elements.clone() {
-			self.render_1(child_id, styles, active_classes);
+			self.render_1(child_id, styles);
 		}
 		for (_, group_ids) in &self[group_id].classes.clone() {
-			for group_id in group_ids {
-				self.render_1(*group_id, styles, active_classes);
+			for &group_id in group_ids {
+				self.render_1(group_id, styles);
 			}
+		}
+		for &listener_id in &self[group_id].listeners.clone() {
+			if self[listener_id].id.is_some() {
+				panic!("should only assign ids to listeners once")
+			}
+			self[listener_id].id = Some(id_gen(IdCategory::Class));
 		}
 	}
 
 	fn render_2(&mut self, group_id: usize) -> Element {
 		eprintln!("render 2 on group {}", group_id);
-		let mut element = {
-			let group = &self[group_id];
-			Element {
-				link: match group.properties.cwl.get(&CwlProperty::Link) {
-					Some(url) => Some(url.clone()),
-					None => None,
-				},
-				text: group
-					.properties
-					.cwl
-					.get(&CwlProperty::Text)
-					.unwrap_or(&format!(""))
-					.clone(),
-				classes: group
-					.member_of
-					.iter()
-					.filter(|&&member_id| self[member_id].members.len() > 1)
-					.map(|&member_id| {
-						self[member_id]
-							.id
-							.clone()
-							.expect("all classes should have an id generated")
-					})
-					.collect(),
-				style: group.properties.css.clone(),
-				children: Vec::new(),
-				listeners: Vec::new(),
-			}
-		};
-
-		for &child in &self[group_id].elements.clone() {
-			eprintln!("adding a child");
-			element.children.push(self.render_2(child));
+		let group = &self[group_id];
+		let mut classes = group
+			.member_of
+			.iter()
+			.filter(|&&member_id| self[member_id].members.len() > 1)
+			.map(|&member_id| {
+				eprintln!(
+					"member_id {} {}",
+					member_id,
+					self[member_id].id.clone().unwrap()
+				);
+				self[member_id]
+					.id
+					.clone()
+					.expect("all classes should have an id generated")
+			})
+			.collect::<Vec<String>>();
+		for &listener_id in &group.listeners {
+			classes.push(
+				self[listener_id]
+					.id
+					.clone()
+					.expect("all listeners should have an id generated"),
+			);
 		}
-		element
+		Element {
+			link: match group.properties.cwl.get(&CwlProperty::Link) {
+				Some(url) => Some(url.clone()),
+				None => None,
+			},
+			text: group
+				.properties
+				.cwl
+				.get(&CwlProperty::Text)
+				.unwrap_or(&format!(""))
+				.clone(),
+			classes,
+			style: group.properties.css.clone(),
+			children: group
+				.elements
+				.clone()
+				.iter()
+				.map(|&child| self.render_2(child))
+				.collect(),
+		}
 	}
 }

@@ -8,7 +8,7 @@ mod misc;
 mod transform;
 
 use {
-	data::{ast::Document, dom::Dom, semantics::Semantics},
+	data::{ast::Document, semantics::Semantics},
 	proc_macro::TokenStream,
 	proc_macro2::TokenStream as TokenStream2,
 	quote::ToTokens,
@@ -25,7 +25,7 @@ use {
 fn pipeline(document: Document, bindgen_start: bool) -> (Vec<(String, String)>, TokenStream2) {
 	let mut semantics = document.analyze(bindgen_start);
 	let dom = semantics.render();
-	(dom.html(), dom.wasm(&semantics))
+	(dom.html(), semantics.wasm())
 }
 
 #[proc_macro]
@@ -66,7 +66,6 @@ pub fn cwl_document(input: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn cwl_header(_input: TokenStream) -> TokenStream {
 	let mut semantics = Semantics::new(false);
-	let dom = Dom::new();
 	semantics.only_header_wasm = true;
-	dom.wasm(&semantics).into()
+	semantics.wasm().into()
 }

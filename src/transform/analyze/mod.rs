@@ -6,12 +6,11 @@ use {
 	data::{
 		ast::{Block, Document, Prefix, Property},
 		semantics::{
-			properties::{CssProperty, CwlProperty, PageProperty, Properties},
+			properties::{CssProperty, CwlProperty, PageProperty},
 			Group, Semantics,
 		},
 	},
 	quote::ToTokens,
-	std::collections::HashMap,
 };
 
 impl Document {
@@ -36,33 +35,24 @@ impl Semantics {
 		let identifier = block.identifier.to_string();
 		let group_id = self.groups.len();
 		let group = if let Some(parent_id) = parent_id {
+			let parent = &mut self.groups[parent_id];
 			match block.prefix {
 				Prefix::Element => {
-					self.groups[parent_id].elements.push(group_id);
-					Group {
-						parent_id: Some(parent_id),
-						name: Some(identifier),
-						id: None,
-
-						properties: Properties::default(),
-						elements: Vec::new(),
-						classes: HashMap::new(),
-
-						members: vec![group_id],
-						member_of: vec![group_id],
-					}
+					parent.elements.push(group_id);
 				}
 				Prefix::Class => {
-					self.groups[parent_id]
+					parent
 						.classes
 						.entry(identifier.clone())
 						.or_default()
 						.push(group_id);
-					Group::new(Some(parent_id), Some(identifier))
 				}
-				Prefix::Action => Group::new(Some(parent_id), Some(identifier)),
-				Prefix::Listener => Group::new(Some(parent_id), Some(identifier)),
+				Prefix::Action => {}
+				Prefix::Listener => {
+					parent.listeners.push(group_id);
+				}
 			}
+			Group::new(Some(parent_id), Some(identifier))
 		} else {
 			let mut page = Group::new(None, None);
 			if group_id == 0 {
@@ -85,6 +75,10 @@ impl Semantics {
 		}
 
 		for block in block.elements {
+			self.create_group_from_block(block, Some(group_id));
+		}
+
+		for block in block.listeners {
 			self.create_group_from_block(block, Some(group_id));
 		}
 	}
@@ -129,7 +123,7 @@ impl Semantics {
 	}
 
 	fn apply_classes(&mut self, group_id: usize) {
-		eprintln!("Applying classes to group {}", group_id);
+		eprintln!("Applying properties from classes to group {}", group_id);
 		if let Some(name) = &self.groups[group_id].name.clone() {
 			let mut ancestor = &self.groups[group_id];
 			let mut queue = Vec::new();

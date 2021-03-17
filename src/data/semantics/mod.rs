@@ -1,4 +1,3 @@
-pub mod event;
 pub mod properties;
 
 use {
@@ -23,6 +22,7 @@ pub struct Group {
 	pub properties: Properties,
 	pub elements: Vec<usize>,
 	pub classes: HashMap<String, Vec<usize>>,
+	pub listeners: Vec<usize>,
 
 	pub members: Vec<usize>,
 	pub member_of: Vec<usize>,
@@ -37,6 +37,7 @@ impl Group {
 			properties: Properties::default(),
 			elements: Vec::new(),
 			classes: HashMap::new(),
+			listeners: Vec::new(),
 
 			members: Vec::new(),
 			member_of: Vec::new(),
