@@ -46,9 +46,6 @@ impl Group {
 }
 
 pub struct Semantics {
-	pub only_header_wasm: bool,
-	pub bindgen: bool,
-
 	pub errors: Vec<&'static str>,
 	pub warnings: Vec<&'static str>,
 
@@ -56,11 +53,8 @@ pub struct Semantics {
 	pub groups: Vec<Group>,
 }
 impl Semantics {
-	pub fn new(bindgen: bool) -> Self {
+	pub fn new() -> Self {
 		Self {
-			only_header_wasm: false,
-			bindgen,
-
 			errors: Vec::new(),
 			warnings: Vec::new(),
 

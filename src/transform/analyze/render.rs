@@ -1,13 +1,13 @@
 use {
 	super::cascade::Cascade,
 	data::{
-		dom::{CssRule, Dom, Element, Page},
+		dom::{CssRule, Dom, Element, Listener, Page},
 		semantics::{
 			properties::{CssProperty, CwlProperty, PageProperty},
 			Group, Semantics,
 		},
 	},
-	misc::id_gen::{id_gen, IdCategory},
+	misc::id_gen::id_gen,
 };
 
 type Groups = Vec<Group>;
@@ -65,7 +65,7 @@ impl Semantics {
 
 impl Render for Groups {
 	fn render_1(&mut self, group_id: usize, styles: &mut Vec<CssRule>) {
-		eprintln!("render 1 for group {}", group_id);
+		eprintln!("render_1 for group {}", group_id);
 		if self[group_id].properties.css.len() > 0 {
 			match self[group_id].members.len() {
 				0 => {}
@@ -74,7 +74,7 @@ impl Render for Groups {
 					self.cascade_css(group_id, member_id);
 				}
 				_ => {
-					let class = id_gen(IdCategory::Class);
+					let class = id_gen();
 					self[group_id].id = Some(class.clone());
 					styles.push(CssRule {
 						selector: format!(".{}", class),
@@ -92,41 +92,33 @@ impl Render for Groups {
 				self.render_1(group_id, styles);
 			}
 		}
-		for &listener_id in &self[group_id].listeners.clone() {
-			if self[listener_id].id.is_some() {
-				panic!("should only assign ids to listeners once")
-			}
-			self[listener_id].id = Some(id_gen(IdCategory::Class));
-		}
 	}
 
 	fn render_2(&mut self, group_id: usize) -> Element {
-		eprintln!("render 2 on group {}", group_id);
+		eprintln!("render_2 on group {}", group_id);
 		let group = &self[group_id];
 		let mut classes = group
 			.member_of
 			.iter()
-			.filter(|&&member_id| self[member_id].members.len() > 1)
-			.map(|&member_id| {
-				eprintln!(
-					"member_id {} {}",
-					member_id,
-					self[member_id].id.clone().unwrap()
-				);
-				self[member_id]
-					.id
-					.clone()
-					.expect("all classes should have an id generated")
-			})
+			.filter(|&&member_id| self[member_id].id.is_some())
+			.map(|&member_id| self[member_id].id.clone().unwrap())
 			.collect::<Vec<String>>();
-		for &listener_id in &group.listeners {
-			classes.push(
-				self[listener_id]
-					.id
-					.clone()
-					.expect("all listeners should have an id generated"),
-			);
-		}
+		let listeners = self[group_id]
+			.listeners
+			.iter()
+			.map(|&listener_id| {
+				let id = id_gen();
+				classes.push(id.clone());
+				Listener {
+					event: self[listener_id]
+						.name
+						.clone()
+						.expect("all listeners should have an associated event type"),
+					id,
+					properties: self[listener_id].properties.clone(),
+				}
+			})
+			.collect();
 		Element {
 			link: match group.properties.cwl.get(&CwlProperty::Link) {
 				Some(url) => Some(url.clone()),
@@ -146,6 +138,7 @@ impl Render for Groups {
 				.iter()
 				.map(|&child| self.render_2(child))
 				.collect(),
+			listeners,
 		}
 	}
 }

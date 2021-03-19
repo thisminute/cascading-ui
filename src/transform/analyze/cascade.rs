@@ -15,7 +15,10 @@ impl Cascade for Groups {
 	fn create_group_from_group(&mut self, source_id: usize, parent_id: usize) {
 		let element_id = self.len();
 		let group = &mut self[source_id];
-		let identifier = group.name.clone().unwrap();
+		let identifier = group
+			.name
+			.clone()
+			.expect("should never try to make an instance of a class with no name");
 		let element = Group {
 			parent_id: Some(parent_id),
 			name: Some(identifier),

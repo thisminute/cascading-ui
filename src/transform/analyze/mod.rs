@@ -14,8 +14,8 @@ use {
 };
 
 impl Document {
-	pub fn analyze(self, bindgen: bool) -> Semantics {
-		let mut semantics = Semantics::new(bindgen);
+	pub fn analyze(self) -> Semantics {
+		let mut semantics = Semantics::new();
 		eprintln!("Creating groups...");
 		semantics.create_group_from_block(self.root, None);
 		eprintln!("Applying classes...");
@@ -91,7 +91,10 @@ impl Semantics {
 			property.value.to_token_stream().to_string(),
 		);
 		let value = value[1..value.len() - 1].to_string();
-		eprintln!("Block: {} Rule: {}:{}", group_id, property, value);
+		eprintln!(
+			" Applying property {}:{} to group {}",
+			property, value, group_id
+		);
 
 		if let Some(value) = match property {
 			// page properties
@@ -128,7 +131,6 @@ impl Semantics {
 			let mut ancestor = &self.groups[group_id];
 			let mut queue = Vec::new();
 			while let Some(parent_id) = ancestor.parent_id {
-				eprintln!("{}", parent_id);
 				ancestor = &mut self.groups[parent_id];
 				for &subgroup_id in ancestor.classes.get(name).unwrap_or(&Vec::new()) {
 					queue.push((subgroup_id, group_id));
@@ -142,7 +144,6 @@ impl Semantics {
 		}
 
 		for &class_id in &self.groups[group_id].member_of.clone() {
-			eprintln!("Group {} is a member of class {}", group_id, class_id);
 			self.groups.cascade(class_id, group_id);
 		}
 

@@ -1,28 +1,45 @@
 use {
-	data::semantics::{
-		properties::{CssProperty, CwlProperty},
-		Group, Semantics,
+	data::{
+		dom::{Dom, Element},
+		semantics::properties::{CssProperty, CwlProperty},
 	},
 	proc_macro2::{Span, TokenStream},
 	quote::{quote, quote_spanned},
 };
 
-pub trait Wasm {
-	fn wasm(&self) -> TokenStream;
-	fn website(&self, header: TokenStream, document: TokenStream) -> TokenStream;
-	fn header(&self) -> TokenStream;
-	fn document(&self) -> TokenStream;
-	fn element(&self, element: &Group) -> TokenStream;
-}
+impl Dom {
+	pub fn wasm(
+		&self,
+		warnings: Vec<&'static str>,
+		errors: Vec<&'static str>,
+		full: bool,
+	) -> TokenStream {
+		let warnings = warnings.iter().map(|error| {
+			quote_spanned! {Span::call_site()=>
+				compile_error!(#error);
+			}
+		});
+		let core = if !errors.is_empty() {
+			let errors = errors.iter().map(|error| {
+				quote_spanned! {Span::call_site()=>
+					compile_error!(#error);
+				}
+			});
 
-impl Wasm for Semantics {
-	fn wasm(&self) -> TokenStream {
-		if self.only_header_wasm {
-			self.header()
-		} else if self.bindgen {
-			self.website(self.header(), self.document())
+			quote! {
+				#( #errors )*
+			}
 		} else {
-			self.document()
+			if full {
+				self.website(Self::header(), self.document())
+			} else {
+				self.document()
+			}
+		};
+
+		quote! {
+			#( #warnings )*
+			#core
 		}
 	}
 
@@ -38,7 +55,7 @@ impl Wasm for Semantics {
 		}
 	}
 
-	fn header(&self) -> TokenStream {
+	pub fn header() -> TokenStream {
 		let includes = vec![
 			quote! { console },
 			// quote! { Document },
@@ -75,49 +92,25 @@ impl Wasm for Semantics {
 	}
 
 	fn document(&self) -> TokenStream {
-		let warnings = self.warnings.iter().map(|error| {
-			quote_spanned! {Span::call_site()=>
-				compile_error!(#error);
-			}
+		let runtime = self.html_roots.iter().map(|(_, page)| {
+			let pages = page.root.children.iter().map(|page| page.element());
+			quote! { #( #pages )* }
 		});
-		if !self.errors.is_empty() {
-			let errors = self.errors.iter().map(|error| {
-				quote_spanned! {Span::call_site()=>
-					compile_error!(#error);
-				}
-			});
-
-			return quote! {
-				#( #warnings )*
-				#( #errors )*
-			};
-		}
-
-		let runtime = self
-			.pages
-			.iter()
-			.map(|&page| self.element(&self.groups[page]));
 
 		quote! {
-			#( #warnings )*
-
 			let window = web_sys::window().expect("getting window");
 			let document = &window.document().expect("getting `window.document`");
 			let head = &document.head().expect("getting `window.document.head`");
 			let body = &document.body().expect("getting `window.document.body`");
-
 			#( #runtime )*
 		}
 	}
+}
 
-	fn element(&self, element: &Group) -> TokenStream {
-		let events = element.listeners.iter().map(|&listener_id| {
-			let listener = &self.groups[listener_id];
-			let event = match &*listener
-				.name
-				.clone()
-				.expect("listener should have an event id")
-			{
+impl Element {
+	fn element(&self) -> TokenStream {
+		let events = self.listeners.iter().map(|listener| {
+			let event = match &*listener.event {
 				"click" => quote! { set_onclick },
 				_ => panic!("unknown event id"),
 			};
@@ -128,10 +121,11 @@ impl Wasm for Semantics {
 			}
 			if let Some(link) = listener.properties.cwl.get(&CwlProperty::Link) {
 				effects.push(quote! {
-					document.location().expect("a").assign(#link).expect("e");
+					document.location().unwrap().assign(#link).unwrap();
 					element.style().set_property("cursor", "pointer").unwrap();
 				});
 			}
+
 			let properties = listener.properties.css.iter().map(|(property, value)| {
 				let property = match property {
 					CssProperty::BackgroundColor => "background-color",
@@ -147,43 +141,33 @@ impl Wasm for Semantics {
 					element.style().set_property(#property, #value).unwrap();
 				}
 			});
-
-			let class = &listener.id;
 			effects.push(quote! {
-				let elements = document.get_elements_by_class_name(#class);
-				for i in 0..elements.length() {
-					let element = elements.item(i).unwrap().dyn_into::<web_sys::HtmlElement>().unwrap();
-					#( #properties )*
-				}
+				#( #properties )*
 			});
 
-			let class = listener
-				.id
-				.clone()
-				.expect("listener should have a selector");
+			let class = &listener.id;
 			quote! {
-				let elements = document.get_elements_by_class_name(#class);
+				let element = document
+					.get_elements_by_class_name(#class)
+					.item(0)
+					.unwrap()
+					.dyn_into::<web_sys::HtmlElement>()
+					.unwrap();
 				console::log_1(&JsValue::from_str("aaaaaaaAA"));
-				for i in 0..elements.length() {
-					let element = elements.item(i).unwrap().dyn_into::<web_sys::HtmlElement>().unwrap();
-					let on_click = {
-						Closure::wrap(Box::new(move |_e: Event| {
-							let window = web_sys::window().expect("getting window");
-							let document = window.document().expect("getting `window.document`");
-							#( #effects )*
-						}) as Box<dyn FnMut(Event)>)
-					};
-					element.#event(Some(on_click.as_ref().unchecked_ref()));
-					on_click.forget();
-				}
+				let on_click = {
+					let element = element.clone();
+					Closure::wrap(Box::new(move |_e: Event| {
+						let window = web_sys::window().expect("getting window");
+						let document = window.document().expect("getting `window.document`");
+						#( #effects )*
+					}) as Box<dyn FnMut(Event)>)
+				};
+				element.#event(Some(on_click.as_ref().unchecked_ref()));
+				on_click.forget();
 			}
 		});
 
-		let children = element
-			.elements
-			.iter()
-			.map(|&child_id| self.element(&self.groups[child_id]));
-
+		let children = self.children.iter().map(|child| child.element());
 		quote! {
 			#( #events )*
 			#( #children )*
