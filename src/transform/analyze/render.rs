@@ -1,7 +1,7 @@
 use {
 	super::cascade::Cascade,
 	data::{
-		dom::{CssRule, Dom, Element, Listener, Page},
+		dom::{CssRule, Dom, Element, Page},
 		semantics::{
 			properties::{CssProperty, CwlProperty, PageProperty},
 			Group, Semantics,
@@ -108,15 +108,10 @@ impl Render for Groups {
 			.iter()
 			.map(|&listener_id| {
 				let id = id_gen();
-				classes.push(id.clone());
-				Listener {
-					event: self[listener_id]
-						.name
-						.clone()
-						.expect("all listeners should have an associated event type"),
-					id,
-					properties: self[listener_id].properties.clone(),
-				}
+				let mut listener = self[listener_id].clone();
+				listener.id = Some(id.clone());
+				classes.push(id);
+				listener
 			})
 			.collect();
 		Element {

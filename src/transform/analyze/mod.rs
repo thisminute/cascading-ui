@@ -15,7 +15,7 @@ use {
 
 impl Document {
 	pub fn analyze(self) -> Semantics {
-		let mut semantics = Semantics::new();
+		let mut semantics = Semantics::default();
 		eprintln!("Creating groups...");
 		semantics.create_group_from_block(self.root, None);
 		eprintln!("Applying classes...");

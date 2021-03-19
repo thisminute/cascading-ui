@@ -112,14 +112,15 @@ impl Dom {
 impl Element {
 	fn element(&self) -> TokenStream {
 		let events = self.listeners.iter().map(|listener| {
-			let event = match &*listener.event {
-				"click" => quote! { set_onclick },
-				_ => panic!("unknown event id"),
-			};
-
 			let mut effects = Vec::new();
 			if let Some(text) = listener.properties.cwl.get(&CwlProperty::Text) {
-				effects.push(quote! { element.set_inner_html(#text); });
+				effects.push(quote! {
+					element
+						.child_nodes()
+						.item(0)
+						.unwrap()
+						.set_node_value(Some(#text));
+				});
 			}
 			if let Some(link) = listener.properties.cwl.get(&CwlProperty::Link) {
 				effects.push(quote! {
@@ -146,6 +147,15 @@ impl Element {
 			effects.push(quote! {
 				#( #properties )*
 			});
+
+			let event = match &*listener
+				.name
+				.clone()
+				.expect("every listener should have an event id")
+			{
+				"click" => quote! { set_onclick },
+				_ => panic!("unknown event id"),
+			};
 
 			let class = &listener.id;
 			quote! {

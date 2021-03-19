@@ -1,5 +1,12 @@
 use std::collections::HashMap;
 
+#[derive(Hash, PartialEq, Eq, Clone, Debug, Copy)]
+pub enum PageProperty {
+	Title,
+	Route,
+}
+pub type PageProperties = HashMap<PageProperty, String>;
+
 #[derive(Hash, PartialEq, Eq, Clone, Copy, Debug)]
 pub enum CssProperty {
 	BackgroundColor,
@@ -21,13 +28,6 @@ pub enum CwlProperty {
 	Image,
 }
 pub type CwlProperties = HashMap<CwlProperty, String>;
-
-#[derive(Hash, PartialEq, Eq, Clone, Debug, Copy)]
-pub enum PageProperty {
-	Title,
-	Route,
-}
-pub type PageProperties = HashMap<PageProperty, String>;
 
 #[derive(Default, Clone, Debug)]
 pub struct Properties {

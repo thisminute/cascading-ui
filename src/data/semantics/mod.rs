@@ -1,19 +1,8 @@
 pub mod properties;
 
-use {
-	self::properties::Properties,
-	std::{collections::HashMap, error::Error, fmt},
-};
+use {self::properties::Properties, std::collections::HashMap};
 
-#[derive(Debug)]
-struct MyError(String);
-impl fmt::Display for MyError {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "There is an error: {}", self.0)
-	}
-}
-impl Error for MyError {}
-
+#[derive(Clone)]
 pub struct Group {
 	pub parent_id: Option<usize>,
 	pub name: Option<String>,
@@ -45,6 +34,7 @@ impl Group {
 	}
 }
 
+#[derive(Default)]
 pub struct Semantics {
 	pub errors: Vec<&'static str>,
 	pub warnings: Vec<&'static str>,
@@ -53,16 +43,6 @@ pub struct Semantics {
 	pub groups: Vec<Group>,
 }
 impl Semantics {
-	pub fn new() -> Self {
-		Self {
-			errors: Vec::new(),
-			warnings: Vec::new(),
-
-			pages: Vec::new(),
-			groups: Vec::new(),
-		}
-	}
-
 	pub fn _error(&mut self, message: &'static str) {
 		self.errors.push(message);
 	}
