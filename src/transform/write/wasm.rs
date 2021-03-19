@@ -71,6 +71,7 @@ impl Dom {
 		quote! {
 			extern crate wasm_bindgen;
 			extern crate web_sys;
+			extern crate console_error_panic_hook;
 			use {
 				wasm_bindgen::{
 					prelude::*,
@@ -98,6 +99,7 @@ impl Dom {
 		});
 
 		quote! {
+			std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 			let window = web_sys::window().expect("getting window");
 			let document = &window.document().expect("getting `window.document`");
 			let head = &document.head().expect("getting `window.document.head`");
@@ -153,7 +155,6 @@ impl Element {
 					.unwrap()
 					.dyn_into::<web_sys::HtmlElement>()
 					.unwrap();
-				console::log_1(&JsValue::from_str("aaaaaaaAA"));
 				let on_click = {
 					let element = element.clone();
 					Closure::wrap(Box::new(move |_e: Event| {
