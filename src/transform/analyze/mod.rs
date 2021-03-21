@@ -1,16 +1,16 @@
 pub mod cascade;
-pub mod render;
 
 use {
-	self::cascade::Cascade,
 	data::{
 		ast::{Block, Document, Prefix, Property},
 		semantics::{
 			properties::{CssProperty, CwlProperty, PageProperty},
-			Group, Semantics,
+			Group, Page, Semantics,
 		},
 	},
+	misc::id_gen::id_gen,
 	quote::ToTokens,
+	std::collections::HashMap,
 };
 
 impl Document {
@@ -49,19 +49,19 @@ impl Semantics {
 				}
 				Prefix::Action => {}
 				Prefix::Listener => {
-					parent.listeners.push(group_id);
+					parent.listeners.push((id_gen(), group_id));
 				}
 			}
 			Group::new(Some(parent_id), Some(identifier))
 		} else {
-			let mut page = Group::new(None, None);
-			if group_id == 0 {
-				page.properties
-					.page
-					.insert(PageProperty::Route, String::from("/"));
-			}
-			self.pages.push(group_id);
-			page
+			let group = Group::new(None, None);
+			self.pages.push(Page {
+				title: String::from(""),
+				route: String::from("/"),
+				styles: HashMap::new(),
+				root_id: group_id,
+			});
+			group
 		};
 
 		self.groups.push(group);
@@ -87,7 +87,7 @@ impl Semantics {
 		let group = &mut self.groups[group_id];
 		let properties = &mut group.properties;
 		let (property, value) = (
-			&*property.property.to_string(),
+			property.property.to_string(),
 			property.value.to_token_stream().to_string(),
 		);
 		let value = value[1..value.len() - 1].to_string();
@@ -96,7 +96,7 @@ impl Semantics {
 			property, value, group_id
 		);
 
-		if let Some(value) = match property {
+		if let Some(value) = match &*property {
 			// page properties
 			"title" if group.parent_id.is_none() => {
 				properties.page.insert(PageProperty::Title, value)
@@ -144,7 +144,7 @@ impl Semantics {
 		}
 
 		for &class_id in &self.groups[group_id].member_of.clone() {
-			self.groups.cascade(class_id, group_id);
+			self.cascade(class_id, group_id);
 		}
 
 		for &element_id in &self.groups[group_id].elements.clone() {

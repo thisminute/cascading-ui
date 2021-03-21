@@ -29,6 +29,8 @@ pub enum CwlProperty {
 }
 pub type CwlProperties = HashMap<CwlProperty, String>;
 
+pub type CssRules = HashMap<String, CssProperties>;
+
 #[derive(Default, Clone, Debug)]
 pub struct Properties {
 	pub page: PageProperties,

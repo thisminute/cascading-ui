@@ -1,20 +1,16 @@
 use {
-	data::semantics::{properties::Properties, Group},
+	data::semantics::{
+		properties::{CssProperties, Properties},
+		Group, Semantics,
+	},
+	misc::id_gen::id_gen,
 	std::collections::HashMap,
 };
 
-type Groups = Vec<Group>;
-
-pub trait Cascade {
-	fn create_group_from_group(&mut self, source_id: usize, parent_id: usize);
-	fn cascade(&mut self, source_id: usize, target_id: usize);
-	fn cascade_css(&mut self, source_id: usize, target_id: usize);
-}
-
-impl Cascade for Groups {
+impl Semantics {
 	fn create_group_from_group(&mut self, source_id: usize, parent_id: usize) {
-		let element_id = self.len();
-		let group = &mut self[source_id];
+		let element_id = self.groups.len();
+		let group = &mut self.groups[source_id];
 		let identifier = group
 			.name
 			.clone()
@@ -22,7 +18,8 @@ impl Cascade for Groups {
 		let element = Group {
 			parent_id: Some(parent_id),
 			name: Some(identifier),
-			id: None,
+			selector: None,
+			class_names: Vec::new(),
 
 			properties: Properties {
 				cwl: group.properties.cwl.clone(),
@@ -37,11 +34,11 @@ impl Cascade for Groups {
 			member_of: vec![source_id],
 		};
 		group.members.push(element_id);
-		self[parent_id].elements.push(element_id);
-		self.push(element);
+		self.groups[parent_id].elements.push(element_id);
+		self.groups.push(element);
 	}
 
-	fn cascade(&mut self, source_id: usize, target_id: usize) {
+	pub fn cascade(&mut self, source_id: usize, target_id: usize) {
 		eprintln!(
 			"Cascading from group {} into group {}",
 			source_id, target_id
@@ -50,50 +47,50 @@ impl Cascade for Groups {
 			panic!("the build process should never try to cascade a group into itself")
 		}
 
-		if self[source_id].elements.len() > 0 {
-			if self[target_id].elements.len() > 0 {
+		if self.groups[source_id].elements.len() > 0 {
+			if self.groups[target_id].elements.len() > 0 {
 				panic!("Source and target group both have elements; their ordering cannot be determined")
 			}
-			for source_id in self[source_id].elements.clone() {
+			for source_id in self.groups[source_id].elements.clone() {
 				self.create_group_from_group(source_id, target_id);
 			}
 		}
 
-		for (&property, value) in &self[source_id].properties.cwl.clone() {
+		for (property, value) in self.groups[source_id].properties.cwl.clone() {
 			eprintln!(" Cascading cwl property {:?}:{}", property, value);
-			self[target_id]
+			self.groups[target_id]
 				.properties
 				.cwl
 				.entry(property)
 				.or_insert(value.clone());
 		}
-		for _ in &self[source_id].properties.page {
+		for _ in &self.groups[source_id].properties.page {
 			panic!("page properties should never be cascaded");
 		}
-		for (name, class_ids) in &self[source_id].classes.clone() {
-			for &class_id in class_ids {
+		for (name, class_ids) in self.groups[source_id].classes.clone() {
+			for class_id in class_ids {
 				eprintln!(" Cascading scoped class with name {}", name);
-				self[target_id]
+				self.groups[target_id]
 					.classes
 					.entry(name.clone())
 					.or_default()
 					.push(class_id);
 			}
 		}
-		for &listener_id in &self[source_id].listeners.clone() {
+		for (_, listener_id) in self.groups[source_id].listeners.clone() {
 			eprintln!(" Cascading scoped listener {}", listener_id);
-			self[target_id].listeners.push(listener_id);
+			self.groups[target_id]
+				.listeners
+				.push((id_gen(), listener_id));
 		}
 	}
+}
 
-	fn cascade_css(&mut self, source_id: usize, target_id: usize) {
-		for (&property, value) in &self[source_id].properties.css.clone() {
+impl Group {
+	pub fn cascade_css(&mut self, source_css: CssProperties) {
+		for (property, value) in source_css {
 			eprintln!(" Cascading css property {:?}:{}", property, value);
-			self[target_id]
-				.properties
-				.css
-				.entry(property)
-				.or_insert(value.clone());
+			self.properties.css.entry(property).or_insert(value);
 		}
 	}
 }

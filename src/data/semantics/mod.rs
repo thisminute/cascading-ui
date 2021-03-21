@@ -1,17 +1,21 @@
 pub mod properties;
 
-use {self::properties::Properties, std::collections::HashMap};
+use {
+	self::properties::{CssRules, Properties},
+	std::collections::HashMap,
+};
 
 #[derive(Clone)]
 pub struct Group {
 	pub parent_id: Option<usize>,
 	pub name: Option<String>,
-	pub id: Option<String>,
+	pub selector: Option<String>,
+	pub class_names: Vec<String>,
 
 	pub properties: Properties,
 	pub elements: Vec<usize>,
 	pub classes: HashMap<String, Vec<usize>>,
-	pub listeners: Vec<usize>,
+	pub listeners: Vec<(String, usize)>,
 
 	pub members: Vec<usize>,
 	pub member_of: Vec<usize>,
@@ -21,7 +25,8 @@ impl Group {
 		Self {
 			parent_id,
 			name,
-			id: None,
+			selector: None,
+			class_names: Vec::new(),
 
 			properties: Properties::default(),
 			elements: Vec::new(),
@@ -34,12 +39,19 @@ impl Group {
 	}
 }
 
+pub struct Page {
+	pub title: String,
+	pub route: String,
+	pub styles: CssRules,
+	pub root_id: usize,
+}
+
 #[derive(Default)]
 pub struct Semantics {
 	pub errors: Vec<&'static str>,
 	pub warnings: Vec<&'static str>,
 
-	pub pages: Vec<usize>,
+	pub pages: Vec<Page>,
 	pub groups: Vec<Group>,
 }
 impl Semantics {

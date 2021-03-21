@@ -1,9 +1,5 @@
 use syn::{Expr, Ident};
 
-// struct HyphenatedIdent {
-// 	pub parts: Vec<Ident>,
-// }
-
 pub struct Document {
 	pub root: Block,
 }

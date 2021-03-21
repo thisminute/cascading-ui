@@ -8,11 +8,12 @@ mod misc;
 mod transform;
 
 use {
-	data::{ast::Document, dom::Dom},
+	data::{ast::Document, semantics::Semantics},
 	proc_macro::TokenStream,
 	proc_macro2::TokenStream as TokenStream2,
 	quote::ToTokens,
 	std::{
+		collections::HashMap,
 		fs::{read_dir, read_to_string, write},
 		path::Path,
 	},
@@ -21,13 +22,10 @@ use {
 
 // type BoxResult<T> = Result<T, Box<dyn std::error::ErrorError>>;
 
-fn pipeline(document: Document) -> (Vec<(String, String)>, TokenStream2) {
+fn pipeline(document: Document) -> (HashMap<String, String>, TokenStream2) {
 	let mut semantics = document.analyze();
-	let dom = semantics.render();
-	(
-		dom.html(),
-		dom.wasm(semantics.warnings, semantics.errors, true),
-	)
+	semantics.render();
+	(semantics.html(), semantics.wasm(true))
 }
 
 #[proc_macro]
@@ -51,6 +49,10 @@ pub fn cwl(input: TokenStream) -> TokenStream {
 	let (pages, runtime) = pipeline(parse_macro_input!(input as Document));
 
 	for (filename, html) in pages {
+		let filename = match &*filename {
+			"/" => "index.html".into(),
+			_ => filename,
+		};
 		let destination = format!("target/html/{}", filename);
 		write(&destination, html).expect(&*format!("writing output html code to {}", destination));
 	}
@@ -63,11 +65,11 @@ pub fn cwl(input: TokenStream) -> TokenStream {
 pub fn cwl_document(input: TokenStream) -> TokenStream {
 	let document = parse_macro_input!(input as Document);
 	let mut semantics = document.analyze();
-	let dom = semantics.render();
-	dom.wasm(semantics.warnings, semantics.errors, false).into()
+	semantics.render();
+	semantics.wasm(false).into()
 }
 
 #[proc_macro]
 pub fn cwl_header(_input: TokenStream) -> TokenStream {
-	Dom::header().into()
+	Semantics::header().into()
 }
