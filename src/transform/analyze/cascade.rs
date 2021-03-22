@@ -3,7 +3,6 @@ use {
 		properties::{CssProperties, Properties},
 		Group, Semantics,
 	},
-	misc::id_gen::id_gen,
 	std::collections::HashMap,
 };
 
@@ -78,10 +77,13 @@ impl Semantics {
 			}
 		}
 		for (_, listener_id) in self.groups[source_id].listeners.clone() {
-			eprintln!(" Cascading scoped listener {}", listener_id);
+			eprintln!(
+				" Cascading scoped listener {} with properties {:?}",
+				listener_id, self.groups[listener_id].properties
+			);
 			self.groups[target_id]
 				.listeners
-				.push((id_gen(), listener_id));
+				.push((String::default(), listener_id));
 		}
 	}
 }

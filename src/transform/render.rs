@@ -76,6 +76,10 @@ impl Semantics {
 				self.render_css(group_id, styles);
 			}
 		}
+		for listener in &mut self.groups[group_id].listeners {
+			let class = id_gen();
+			listener.0 = class.clone();
+		}
 		for (class, _) in self.groups[group_id].listeners.clone() {
 			self.groups[group_id].class_names.push(class);
 		}

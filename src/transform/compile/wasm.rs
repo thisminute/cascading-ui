@@ -101,7 +101,7 @@ impl Semantics {
 	}
 
 	fn element(&self, element_id: usize) -> TokenStream {
-		self.groups[element_id]
+		let listeners = self.groups[element_id]
 			.listeners
 			.iter()
 			.map(|(class, listener_id)| {
@@ -153,9 +153,7 @@ impl Semantics {
 					_ => panic!("unknown event id"),
 				};
 
-				eprintln!("{}", listener.name.clone().unwrap());
 				quote! {
-					console::log_1(&#class.into());
 					let element = document
 						.get_elements_by_class_name(#class)
 						.item(0)
@@ -173,7 +171,14 @@ impl Semantics {
 					element.#event(Some(on_click.as_ref().unchecked_ref()));
 					on_click.forget();
 				}
-			})
-			.collect()
+			});
+		let children = self.groups[element_id]
+			.elements
+			.iter()
+			.map(|&child_id| self.element(child_id));
+		quote! {
+			#( #children )*
+			#( #listeners )*
+		}
 	}
 }

@@ -8,7 +8,6 @@ use {
 			Group, Page, Semantics,
 		},
 	},
-	misc::id_gen::id_gen,
 	quote::ToTokens,
 	std::collections::HashMap,
 };
@@ -49,7 +48,7 @@ impl Semantics {
 				}
 				Prefix::Action => {}
 				Prefix::Listener => {
-					parent.listeners.push((id_gen(), group_id));
+					parent.listeners.push((String::default(), group_id));
 				}
 			}
 			Group::new(Some(parent_id), Some(identifier))
