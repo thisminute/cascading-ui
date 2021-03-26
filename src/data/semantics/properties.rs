@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt};
 
 #[derive(Hash, PartialEq, Eq, Clone, Debug, Copy)]
 pub enum PageProperty {
@@ -19,6 +19,22 @@ pub enum CssProperty {
 	Height,
 }
 pub type CssProperties = HashMap<CssProperty, String>;
+
+impl fmt::Display for CssProperty {
+	fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+		fmt.write_str(match self {
+			CssProperty::BackgroundColor => "background-color",
+			CssProperty::Color => "color",
+			CssProperty::Margin => "margin",
+			CssProperty::Padding => "padding",
+			CssProperty::Display => "display",
+			CssProperty::Position => "position",
+			CssProperty::Width => "width",
+			CssProperty::Height => "height",
+		})?;
+		Ok(())
+	}
+}
 
 #[derive(Hash, PartialEq, Eq, Clone, Copy, Debug)]
 pub enum CwlProperty {

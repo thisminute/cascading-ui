@@ -49,22 +49,17 @@ impl Semantics {
 impl Semantics {
 	fn render_css(&mut self, group_id: usize, styles: &mut CssRules) {
 		eprintln!("render_css for group {}", group_id);
-		if !self.groups[group_id].properties.css.is_empty() {
+		if self.groups[group_id].members.len() > 0 {
+			let class = id_gen();
+			self.groups[group_id].selector = Some(class.clone());
 			for member_id in self.groups[group_id].members.clone() {
-				if self.groups[group_id].members.len() == 1 {
-					let css = self.groups[group_id].properties.css.clone();
-					self.groups[member_id].cascade_css(css);
-				} else {
-					let class = id_gen();
-					self.groups[group_id].selector = Some(class.clone());
-					for member_id in self.groups[group_id].members.clone() {
-						self.groups[member_id].class_names.push(class.clone());
-					}
-					styles.insert(
-						format!(".{}", class),
-						self.groups[group_id].properties.css.clone(),
-					);
-				}
+				self.groups[member_id].class_names.push(class.clone());
+			}
+			if !self.groups[group_id].properties.css.is_empty() {
+				styles.insert(
+					format!(".{}", class),
+					self.groups[group_id].properties.css.clone(),
+				);
 			}
 		}
 

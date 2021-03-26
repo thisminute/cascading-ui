@@ -1,8 +1,5 @@
 use {
-	data::semantics::{
-		properties::{CssProperties, Properties},
-		Group, Semantics,
-	},
+	data::semantics::{properties::Properties, Group, Semantics},
 	std::collections::HashMap,
 };
 
@@ -88,11 +85,11 @@ impl Semantics {
 	}
 }
 
-impl Group {
-	pub fn cascade_css(&mut self, source_css: CssProperties) {
-		for (property, value) in source_css {
-			eprintln!(" Cascading css property {:?}:{}", property, value);
-			self.properties.css.entry(property).or_insert(value);
-		}
-	}
-}
+// impl Group {
+// 	pub fn cascade_css(&mut self, source_css: CssProperties) {
+// 		for (property, value) in source_css {
+// 			eprintln!(" Cascading css property {:?}:{}", property, value);
+// 			self.properties.css.entry(property).or_insert(value);
+// 		}
+// 	}
+// }

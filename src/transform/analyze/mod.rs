@@ -17,8 +17,6 @@ impl Document {
 		let mut semantics = Semantics::default();
 		eprintln!("Creating groups...");
 		semantics.create_group_from_block(self.root, None);
-		eprintln!("Applying classes...");
-		semantics.apply_classes(0);
 		semantics
 	}
 }
@@ -66,10 +64,14 @@ impl Semantics {
 		self.groups.push(group);
 
 		for property in block.properties {
-			self.apply_property(property, group_id);
+			self.apply_static_property(property, group_id);
 		}
 
 		for block in block.classes {
+			self.create_group_from_block(block, Some(group_id));
+		}
+
+		for block in block.listeners {
 			self.create_group_from_block(block, Some(group_id));
 		}
 
@@ -77,12 +79,12 @@ impl Semantics {
 			self.create_group_from_block(block, Some(group_id));
 		}
 
-		for block in block.listeners {
-			self.create_group_from_block(block, Some(group_id));
+		if block.prefix == Prefix::Element {
+			self.apply_static_classes(group_id);
 		}
 	}
 
-	fn apply_property(&mut self, property: Property, group_id: usize) {
+	fn apply_static_property(&mut self, property: Property, group_id: usize) {
 		let group = &mut self.groups[group_id];
 		let properties = &mut group.properties;
 		let (property, value) = (
@@ -124,7 +126,7 @@ impl Semantics {
 		}
 	}
 
-	fn apply_classes(&mut self, group_id: usize) {
+	fn apply_static_classes(&mut self, group_id: usize) {
 		eprintln!("Applying properties from classes to group {}", group_id);
 		if let Some(name) = &self.groups[group_id].name.clone() {
 			let mut ancestor = &self.groups[group_id];
@@ -144,10 +146,6 @@ impl Semantics {
 
 		for &class_id in &self.groups[group_id].member_of.clone() {
 			self.cascade(class_id, group_id);
-		}
-
-		for &element_id in &self.groups[group_id].elements.clone() {
-			self.apply_classes(element_id);
 		}
 	}
 }

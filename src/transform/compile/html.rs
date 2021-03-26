@@ -37,7 +37,6 @@ impl Group {
 			Some(value) => value,
 			None => "",
 		};
-		let tag = if link.is_empty() { "div" } else { "a" };
 		let attributes = [
 			("style", &*self.properties.css.css()),
 			("class", &*self.class_names.join(" ")),
@@ -58,7 +57,7 @@ impl Group {
 
 		format!(
 			"<{0}{1}>{2}{3}</{0}>",
-			tag,
+			self.tag(),
 			attributes,
 			match self.properties.cwl.get(&CwlProperty::Text) {
 				Some(value) => value,
