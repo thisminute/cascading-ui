@@ -46,7 +46,7 @@ impl Semantics {
 		self.groups[class_id]
 			.listeners
 			.iter()
-			.map(|(_selector, listener_id)| {
+			.map(|listener_id| {
 				let rules = self.queue_all(*listener_id);
 				quote! {
 					class.listeners.push({

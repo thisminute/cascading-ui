@@ -1,5 +1,3 @@
-pub mod cascade;
-
 use {
 	data::{
 		ast::{Block, Document, Prefix, Property},
@@ -9,20 +7,39 @@ use {
 		},
 	},
 	quote::ToTokens,
-	std::collections::HashMap,
 };
 
 impl Document {
 	pub fn analyze(self) -> Semantics {
 		let mut semantics = Semantics::default();
-		eprintln!("Creating groups...");
-		semantics.create_group_from_block(self.root, None);
+		semantics.styles.insert(
+			"body".into(),
+			[(CssProperty::Margin, "0".into())]
+				.iter()
+				.cloned()
+				.collect(),
+		);
+		semantics.styles.insert(
+			"a".into(),
+			[(CssProperty::Display, "block".into())]
+				.iter()
+				.cloned()
+				.collect(),
+		);
+		eprintln!("...Creating groups...");
+		semantics.create_group_from_block(self.root, None, None, true);
 		semantics
 	}
 }
 
 impl Semantics {
-	fn create_group_from_block(&mut self, block: Block, parent_id: Option<usize>) {
+	fn create_group_from_block(
+		&mut self,
+		block: Block,
+		mut page_id: Option<usize>,
+		parent_id: Option<usize>,
+		mut r#static: bool,
+	) -> usize {
 		eprintln!(
 			"Analyzing {:?} block with identifier {}",
 			block.prefix,
@@ -32,35 +49,36 @@ impl Semantics {
 		let identifier = block.identifier.to_string();
 		let group_id = self.groups.len();
 		let group = if let Some(parent_id) = parent_id {
+			let group = Group::new(Some(identifier.clone()), r#static);
 			let parent = &mut self.groups[parent_id];
 			match block.prefix {
 				Prefix::Element => {
 					parent.elements.push(group_id);
 				}
 				Prefix::Class => {
+					r#static = false;
 					parent
 						.classes
 						.entry(identifier.clone())
 						.or_default()
 						.push(group_id);
 				}
-				Prefix::Action => {}
 				Prefix::Listener => {
-					parent.listeners.push((String::default(), group_id));
+					r#static = false;
+					parent.listeners.push(group_id);
 				}
 			}
-			Group::new(Some(parent_id), Some(identifier))
+			group
 		} else {
-			let group = Group::new(None, None);
+			let group = Group::new(None, r#static);
+			page_id = Some(self.pages.len());
 			self.pages.push(Page {
 				title: String::from(""),
 				route: String::from("/"),
-				styles: HashMap::new(),
 				root_id: group_id,
 			});
 			group
 		};
-
 		self.groups.push(group);
 
 		for property in block.properties {
@@ -68,20 +86,16 @@ impl Semantics {
 		}
 
 		for block in block.classes {
-			self.create_group_from_block(block, Some(group_id));
+			self.create_group_from_block(block, page_id, Some(group_id), r#static);
 		}
-
 		for block in block.listeners {
-			self.create_group_from_block(block, Some(group_id));
+			self.create_group_from_block(block, page_id, Some(group_id), r#static);
 		}
-
 		for block in block.elements {
-			self.create_group_from_block(block, Some(group_id));
+			self.create_group_from_block(block, page_id, Some(group_id), r#static);
 		}
 
-		if block.prefix == Prefix::Element {
-			self.apply_static_classes(group_id);
-		}
+		group_id
 	}
 
 	fn apply_static_property(&mut self, property: Property, group_id: usize) {
@@ -99,12 +113,8 @@ impl Semantics {
 
 		if let Some(value) = match &*property {
 			// page properties
-			"title" if group.parent_id.is_none() => {
-				properties.page.insert(PageProperty::Title, value)
-			}
-			"route" if group.parent_id.is_none() => {
-				properties.page.insert(PageProperty::Route, value)
-			}
+			"title" => properties.page.insert(PageProperty::Title, value),
+			"route" => properties.page.insert(PageProperty::Route, value),
 
 			// css properties
 			"background_color" => properties.css.insert(CssProperty::BackgroundColor, value),
@@ -123,29 +133,6 @@ impl Semantics {
 			}
 		} {
 			eprintln!("Overwrote old value of {}", value)
-		}
-	}
-
-	fn apply_static_classes(&mut self, group_id: usize) {
-		eprintln!("Applying properties from classes to group {}", group_id);
-		if let Some(name) = &self.groups[group_id].name.clone() {
-			let mut ancestor = &self.groups[group_id];
-			let mut queue = Vec::new();
-			while let Some(parent_id) = ancestor.parent_id {
-				ancestor = &mut self.groups[parent_id];
-				for &subgroup_id in ancestor.classes.get(name).unwrap_or(&Vec::new()) {
-					queue.push((subgroup_id, group_id));
-				}
-			}
-			for (subgroup_id, member_id) in queue {
-				eprintln!("Adding member {} to class {}", member_id, subgroup_id);
-				self.groups[subgroup_id].members.push(member_id);
-				self.groups[member_id].member_of.push(subgroup_id);
-			}
-		}
-
-		for &class_id in &self.groups[group_id].member_of.clone() {
-			self.cascade(class_id, group_id);
 		}
 	}
 }

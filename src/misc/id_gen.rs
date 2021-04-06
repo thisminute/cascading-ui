@@ -1,6 +1,6 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-static COUNTER: AtomicUsize = AtomicUsize::new(0);
+static COUNTER: AtomicUsize = AtomicUsize::new(1);
 static SYMBOLS_1: &[char] = &[
 	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
 	't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
@@ -13,7 +13,7 @@ pub fn id_gen() -> String {
 	let mut n = COUNTER.load(Ordering::Relaxed);
 	COUNTER.swap(n + 1, Ordering::Relaxed);
 
-	while {
+	while n > 0 {
 		let symbol_pool = if id.len() == 0 {
 			SYMBOLS_1.len()
 		} else {
@@ -26,8 +26,6 @@ pub fn id_gen() -> String {
 			SYMBOLS_2[digit]
 		});
 		n /= symbol_pool;
-		n > 0
-	} {}
-	eprintln!("generated class id: '{}'", id);
+	}
 	id
 }

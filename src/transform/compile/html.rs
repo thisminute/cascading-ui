@@ -6,20 +6,26 @@ use {
 
 impl Semantics {
 	pub fn html(&self) -> HashMap<String, String> {
+		eprintln!("...Writing HTML...");
 		self.pages
 			.iter()
-			.map(|page| (page.route.clone(), page.html(&self.groups)))
+			.map(|page| {
+				(
+					page.route.clone(),
+					page.html(&self.groups, self.styles.css()),
+				)
+			})
 			.collect()
 	}
 }
 
 impl Page {
-	fn html(&self, groups: &Vec<Group>) -> String {
+	fn html(&self, groups: &Vec<Group>, styles: String) -> String {
 		format!(
 			"<html>{}{}</html>",
 			format!("<head>{}{}</head>", 
 				format!("<title>{}</title>", self.title),
-				format!("<style>{}</style>", self.styles.css())
+				format!("<style>{}</style>", styles)
 			),
 			format!(
 				"<body>{}{}{}</body>",

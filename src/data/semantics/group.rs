@@ -5,26 +5,26 @@ use {
 
 #[derive(Clone, Debug)]
 pub struct Group {
-	pub parent_id: Option<usize>,
 	pub name: Option<String>,
 	pub selector: Option<String>,
 	pub class_names: Vec<String>,
+	pub r#static: bool,
 
 	pub properties: Properties,
 	pub elements: Vec<usize>,
 	pub classes: HashMap<String, Vec<usize>>,
-	pub listeners: Vec<(String, usize)>,
+	pub listeners: Vec<usize>,
 
 	pub members: Vec<usize>,
 	pub member_of: Vec<usize>,
 }
 impl Group {
-	pub fn new(parent_id: Option<usize>, name: Option<String>) -> Self {
+	pub fn new(name: Option<String>, r#static: bool) -> Self {
 		Self {
-			parent_id,
 			name,
 			selector: None,
 			class_names: Vec::new(),
+			r#static,
 
 			properties: Properties::default(),
 			elements: Vec::new(),

@@ -80,9 +80,6 @@ impl Parse for Block {
 		let prefix = if input.peek(Token![.]) {
 			input.parse::<Token![.]>()?;
 			Prefix::Class
-		} else if input.peek(Token![!]) {
-			input.parse::<Token![!]>()?;
-			Prefix::Action
 		} else if input.peek(Token![?]) {
 			input.parse::<Token![?]>()?;
 			Prefix::Listener

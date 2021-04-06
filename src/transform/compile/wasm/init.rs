@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use {data::semantics::Semantics, proc_macro2::TokenStream, quote::quote};
 
 impl Semantics {
@@ -60,15 +62,6 @@ impl Semantics {
 				elements: Vec<Class>,
 				properties: HashMap<Property, &'static str>,
 			}
-
-			impl Class {
-				fn cascade(&mut self, rule: &Class){
-					for (property, value) in &rule.properties {
-						let property = property.clone();
-						self.properties.insert(property, value);
-					}
-				}
-			}
 		}
 	}
 
@@ -77,15 +70,21 @@ impl Semantics {
 			.pages
 			.iter()
 			.map(|page| self.static_element(page.root_id));
+
 		quote! {
 			let window = web_sys::window().expect("getting window");
 			let document = &window.document().expect("getting `window.document`");
 			let head = &document.head().expect("getting `window.document.head`");
 			let body = &document.body().expect("getting `window.document.body`");
-			let element = body;
 			let mut classes: HashMap<&'static str, Class> = HashMap::new();
 
-			#( #executable )*
+			let element = body
+				.children()
+				.item(1) // item(0) is the <noscript> tag
+				.expect("body should have a root element")
+				.dyn_into::<HtmlElement>()
+				.unwrap();
+				#( #executable )*
 		}
 	}
 
@@ -95,7 +94,22 @@ impl Semantics {
 		let children = self.groups[element_id]
 			.elements
 			.iter()
-			.map(|&child_id| self.static_element(child_id));
+			.enumerate()
+			.map(|(i, child_id)| {
+				let i: u32 = i.try_into().unwrap();
+				let element = self.static_element(*child_id);
+				quote! {
+					{
+						let element = element
+							.children()
+							.item(#i)
+							.expect("aa")
+							.dyn_into::<HtmlElement>()
+							.unwrap();
+						#element
+					}
+				}
+			});
 		quote! {
 			#classes
 			#listeners
@@ -109,10 +123,12 @@ impl Semantics {
 			.iter()
 			.flat_map(|(_, groups)| groups.iter())
 			.map(|&class_id| {
+				eprintln!("Class {} applies within {}", class_id, group_id);
+				eprintln!("{:?}", self.groups[class_id]);
 				let selector = self.groups[class_id]
 					.selector
 					.clone()
-					.expect("static and dynamic classes should have a selector");
+					.expect("static classes should have a selector");
 				let rules = self.queue_all(class_id);
 				quote! {
 					{

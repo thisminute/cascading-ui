@@ -25,9 +25,10 @@ impl Semantics {
 			.iter()
 			.flat_map(|(_, groups)| groups.iter())
 			.map(|&class_id| {
+				eprintln!("{} {}", group_id, class_id);
 				let selector = self.groups[class_id]
 					.selector
-					.clone()
+					.as_ref()
 					.expect("dynamic classes should have a selector");
 				let rules = self.apply_all(class_id);
 				quote! {
@@ -43,11 +44,11 @@ impl Semantics {
 		self.groups[group_id]
 			.listeners
 			.iter()
-			.map(|(_class, listener_id)| {
-				let rules = self.apply_all(*listener_id);
-				let event = match &*self.groups[*listener_id]
+			.map(|&listener_id| {
+				let rules = self.apply_all(listener_id);
+				let event = match &**self.groups[listener_id]
 					.name
-					.clone()
+					.as_ref()
 					.expect("every listener should have an event id")
 				{
 					"click" => quote! { set_onclick },
@@ -85,8 +86,8 @@ impl Semantics {
 							.dyn_into::<HtmlElement>()
 							.unwrap();
 						#rules
-						&element.clone()
-					});
+						element
+					}).unwrap();
 				}
 			})
 			.collect()
@@ -98,11 +99,12 @@ impl Semantics {
 		let mut effects = Vec::new();
 		if let Some(text) = properties.cwl.get(&CwlProperty::Text) {
 			effects.push(quote! {
-				element
+				if let Some(element) = element
 					.child_nodes()
 					.item(0)
-					.unwrap()
-					.set_node_value(None);
+				{
+					element.set_node_value(None);
+				}
 				element.prepend_with_str_1(#text).unwrap();
 			});
 		}

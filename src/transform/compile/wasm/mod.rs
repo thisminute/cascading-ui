@@ -27,6 +27,7 @@ impl Semantics {
 			}
 		} else {
 			if full {
+				eprintln!("...Writing Wasm...");
 				self.full(Self::header(), self.document())
 			} else {
 				self.document()

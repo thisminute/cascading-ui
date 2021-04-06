@@ -8,7 +8,6 @@ pub struct Document {
 pub enum Prefix {
 	Element,
 	Class,
-	Action,
 	Listener,
 }
 

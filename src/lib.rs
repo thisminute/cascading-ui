@@ -25,6 +25,9 @@ use {
 fn pipeline(document: Document) -> (HashMap<String, String>, TokenStream2) {
 	let mut semantics = document.analyze();
 	semantics.render();
+	for (i, group) in semantics.groups.iter().enumerate() {
+		eprintln!("{} {:?}", i, group);
+	}
 	(semantics.html(), semantics.wasm(true))
 }
 
@@ -66,7 +69,9 @@ pub fn cwl_document(input: TokenStream) -> TokenStream {
 	let document = parse_macro_input!(input as Document);
 	let mut semantics = document.analyze();
 	semantics.render();
-	semantics.wasm(false).into()
+	let thing = semantics.wasm(false).into();
+	eprintln!("{}", thing);
+	thing
 }
 
 #[proc_macro]

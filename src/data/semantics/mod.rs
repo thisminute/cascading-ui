@@ -8,7 +8,6 @@ use self::properties::CssRules;
 pub struct Page {
 	pub title: String,
 	pub route: String,
-	pub styles: CssRules,
 	pub root_id: usize,
 }
 
@@ -16,16 +15,8 @@ pub struct Page {
 pub struct Semantics {
 	pub errors: Vec<&'static str>,
 	pub warnings: Vec<&'static str>,
+	pub styles: CssRules,
 
 	pub pages: Vec<Page>,
 	pub groups: Vec<Group>,
-}
-impl Semantics {
-	pub fn _error(&mut self, message: &'static str) {
-		self.errors.push(message);
-	}
-
-	pub fn _warning(&mut self, message: &'static str) {
-		self.warnings.push(message);
-	}
 }
