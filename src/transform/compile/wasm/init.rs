@@ -80,7 +80,7 @@ impl Semantics {
 
 			let element = body
 				.children()
-				.item(1) // item(0) is the <noscript> tag
+				.item(0)
 				.expect("body should have a root element")
 				.dyn_into::<HtmlElement>()
 				.unwrap();
@@ -96,14 +96,16 @@ impl Semantics {
 			.iter()
 			.enumerate()
 			.map(|(i, child_id)| {
+				let child_id = *child_id;
 				let i: u32 = i.try_into().unwrap();
-				let element = self.static_element(*child_id);
+				let element = self.static_element(child_id);
 				quote! {
 					{
+						// console::log_1(&element.inner_text().into());
 						let element = element
 							.children()
 							.item(#i)
-							.expect("aa")
+							.expect("should never try to index into an empty element")
 							.dyn_into::<HtmlElement>()
 							.unwrap();
 						#element
@@ -132,7 +134,7 @@ impl Semantics {
 				let rules = self.queue_all(class_id);
 				quote! {
 					{
-						let class = classes
+						let mut class = classes
 							.entry(#selector)
 							.or_insert(Class::default());
 						#rules

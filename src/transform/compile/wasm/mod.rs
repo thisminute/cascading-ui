@@ -10,6 +10,8 @@ use {
 
 impl Semantics {
 	pub fn wasm(&self, full: bool) -> TokenStream {
+		eprintln!("...Writing Wasm...");
+
 		let warnings = self.warnings.iter().map(|error| {
 			quote_spanned! {Span::call_site()=>
 				compile_error!(#error);
@@ -27,7 +29,6 @@ impl Semantics {
 			}
 		} else {
 			if full {
-				eprintln!("...Writing Wasm...");
 				self.full(Self::header(), self.document())
 			} else {
 				self.document()
