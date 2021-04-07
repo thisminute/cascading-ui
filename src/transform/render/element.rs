@@ -35,7 +35,7 @@ impl Semantics {
 			{
 				self.styles.insert(
 					format!(".{}", selector),
-					self.groups[element_id].properties.css.clone(),
+					self.groups[class_id].properties.css.clone(),
 				);
 			}
 			self.groups[element_id].class_names.push(selector);

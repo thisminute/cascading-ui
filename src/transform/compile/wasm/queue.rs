@@ -32,7 +32,7 @@ impl Semantics {
 				let rules = self.queue_all(class_id);
 				quote! {
 					{
-						let class = class.classes
+						let mut class = class.classes
 							.entry(#selector)
 							.or_insert(Class::default());
 						#rules
@@ -50,7 +50,7 @@ impl Semantics {
 				let rules = self.queue_all(*listener_id);
 				quote! {
 					class.listeners.push({
-						let class = Class::default();
+						let mut class = Class::default();
 						#rules
 						class
 					});
@@ -67,7 +67,7 @@ impl Semantics {
 				let rules = self.queue_all(element_id);
 				quote! {
 					class.elements.push({
-						let class = Class::default();
+						let mut class = Class::default();
 						#rules
 						class
 					});
