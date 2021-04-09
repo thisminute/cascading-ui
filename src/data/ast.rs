@@ -1,9 +1,5 @@
 use syn::{Expr, Ident};
 
-// struct HyphenatedIdent {
-// 	pub parts: Vec<Ident>,
-// }
-
 pub struct Document {
 	pub root: Block,
 }
@@ -12,7 +8,6 @@ pub struct Document {
 pub enum Prefix {
 	Element,
 	Class,
-	Action,
 	Listener,
 }
 
@@ -22,6 +17,7 @@ pub struct Block {
 	pub properties: Vec<Property>,
 	pub elements: Vec<Block>,
 	pub classes: Vec<Block>,
+	pub listeners: Vec<Block>,
 }
 
 pub struct Property {

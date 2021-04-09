@@ -8,24 +8,26 @@ mod misc;
 mod transform;
 
 use {
-	data::{ast::Document, dom::Dom, semantics::Semantics},
+	data::{ast::Document, semantics::Semantics},
 	proc_macro::TokenStream,
 	proc_macro2::TokenStream as TokenStream2,
-	quote::ToTokens,
+	quote::{quote, ToTokens},
 	std::{
 		fs::{read_dir, read_to_string, write},
 		path::Path,
 	},
 	syn::parse_macro_input,
-	transform::write::Wasm,
 };
 
 // type BoxResult<T> = Result<T, Box<dyn std::error::ErrorError>>;
 
-fn pipeline(document: Document, bindgen_start: bool) -> (Vec<(String, String)>, TokenStream2) {
-	let mut semantics = document.analyze(bindgen_start);
-	let dom = semantics.render();
-	(dom.html(), dom.wasm(&semantics))
+fn pipeline(document: Document) -> (String, TokenStream2) {
+	let mut semantics = document.analyze();
+	semantics.render();
+	for (i, group) in semantics.groups.iter().enumerate() {
+		eprintln!("{} {:?}", i, group);
+	}
+	(semantics.html().0, semantics.wasm(true))
 }
 
 #[proc_macro]
@@ -46,12 +48,9 @@ pub fn cwl(input: TokenStream) -> TokenStream {
 	}
 
 	let input = input.into();
-	let (pages, runtime) = pipeline(parse_macro_input!(input as Document), true);
-
-	for (filename, html) in pages {
-		let destination = format!("target/html/{}", filename);
-		write(&destination, html).expect(&*format!("writing output html code to {}", destination));
-	}
+	let (html, runtime) = pipeline(parse_macro_input!(input as Document));
+	let destination = format!("target/html/index.html");
+	write(&destination, html).expect(&*format!("writing output html code to {}", destination));
 	write("target/cwl_macro_output.rs", runtime.to_string()).expect("writing output rust code");
 
 	runtime.into()
@@ -59,14 +58,43 @@ pub fn cwl(input: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn cwl_document(input: TokenStream) -> TokenStream {
-	let (_pages, runtime) = pipeline(parse_macro_input!(input as Document), false);
-	runtime.into()
+	let document = parse_macro_input!(input as Document);
+	let mut semantics = document.analyze();
+	semantics.render();
+
+	let (pages, styles) = semantics.html_parts();
+	let content = pages.get(&String::from("/")).unwrap();
+
+	let wasm = semantics.wasm(false);
+	let wasm = quote! {
+		let window = web_sys::window().expect("getting window");
+		let document = &window.document().expect("getting `window.document`");
+		let head = &document.head().expect("getting `window.document.head`");
+		let body = &document.body().expect("getting `window.document.body`");
+		{
+			let style = document
+				.create_element("style")
+				.unwrap()
+				.dyn_into::<HtmlElement>()
+				.unwrap();
+			style.set_inner_text(#styles);
+			head.append_child(&style).unwrap();
+
+			let content = document.create_element("div").unwrap();
+			body.prepend_with_node_1(&content).unwrap();
+			content.set_outer_html(#content);
+		}
+		#wasm
+	};
+
+	eprintln!("***************************");
+	eprintln!("{}", wasm);
+	eprintln!("***************************");
+
+	wasm.into()
 }
 
 #[proc_macro]
 pub fn cwl_header(_input: TokenStream) -> TokenStream {
-	let mut semantics = Semantics::new(false);
-	let dom = Dom::new();
-	semantics.only_header_wasm = true;
-	dom.wasm(&semantics).into()
+	Semantics::header().into()
 }

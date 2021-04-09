@@ -1,78 +1,22 @@
-pub mod event;
+mod group;
 pub mod properties;
 
-use {
-	self::properties::Properties,
-	std::{collections::HashMap, error::Error, fmt},
-};
+pub use self::group::Group;
 
-#[derive(Debug)]
-struct MyError(String);
-impl fmt::Display for MyError {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "There is an error: {}", self.0)
-	}
-}
-impl Error for MyError {}
+use self::properties::CssRules;
 
-pub struct Group {
-	pub parent_id: Option<usize>,
-	pub name: Option<String>,
-	pub id: Option<String>,
-
-	pub properties: Properties,
-	pub elements: Vec<usize>,
-	pub classes: HashMap<String, Vec<usize>>,
-
-	pub members: Vec<usize>,
-	pub member_of: Vec<usize>,
-}
-impl Group {
-	pub fn new(parent_id: Option<usize>, name: Option<String>) -> Self {
-		Self {
-			parent_id,
-			name,
-			id: None,
-
-			properties: Properties::default(),
-			elements: Vec::new(),
-			classes: HashMap::new(),
-
-			members: Vec::new(),
-			member_of: Vec::new(),
-		}
-	}
+pub struct Page {
+	pub title: String,
+	pub route: String,
+	pub root_id: usize,
 }
 
+#[derive(Default)]
 pub struct Semantics {
-	pub only_header_wasm: bool,
-	pub bindgen: bool,
-
 	pub errors: Vec<&'static str>,
 	pub warnings: Vec<&'static str>,
+	pub styles: CssRules,
 
-	pub pages: Vec<usize>,
+	pub pages: Vec<Page>,
 	pub groups: Vec<Group>,
-}
-impl Semantics {
-	pub fn new(bindgen: bool) -> Self {
-		Self {
-			only_header_wasm: false,
-			bindgen,
-
-			errors: Vec::new(),
-			warnings: Vec::new(),
-
-			pages: Vec::new(),
-			groups: Vec::new(),
-		}
-	}
-
-	pub fn _error(&mut self, message: &'static str) {
-		self.errors.push(message);
-	}
-
-	pub fn _warning(&mut self, message: &'static str) {
-		self.warnings.push(message);
-	}
 }

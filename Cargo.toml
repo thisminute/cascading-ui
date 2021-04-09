@@ -38,10 +38,12 @@ features = [
   "Event",
   "EventListener",
   "EventTarget",
+  "HtmlCollection",
   "HtmlElement",
   "HtmlHeadElement",
   "Location",
   "Node",
+  "NodeList",
   "Window",
 ]
 version = "0.3"
