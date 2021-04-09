@@ -49,14 +49,12 @@ impl Semantics {
 		let identifier = block.identifier.to_string();
 		let group_id = self.groups.len();
 		let group = if let Some(parent_id) = parent_id {
-			let group = Group::new(Some(identifier.clone()), r#static);
 			let parent = &mut self.groups[parent_id];
 			match block.prefix {
 				Prefix::Element => {
 					parent.elements.push(group_id);
 				}
 				Prefix::Class => {
-					r#static = false;
 					parent
 						.classes
 						.entry(identifier.clone())
@@ -68,7 +66,7 @@ impl Semantics {
 					parent.listeners.push(group_id);
 				}
 			}
-			group
+			Group::new(Some(identifier.clone()), r#static)
 		} else {
 			let group = Group::new(None, r#static);
 			page_id = Some(self.pages.len());

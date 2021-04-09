@@ -48,13 +48,22 @@ impl Semantics {
 			panic!("the build process should never try to cascade a group into itself")
 		}
 
-		for (property, value) in self.groups[source_id].properties.cwl.clone() {
-			eprintln!(" Cascading cwl property {:?}:{}", property, value);
-			self.groups[target_id]
-				.properties
-				.cwl
-				.entry(property)
-				.or_insert(value.clone());
+		if self.groups[source_id].r#static {
+			for (property, value) in self.groups[source_id].properties.cwl.clone() {
+				eprintln!(" Cascading cwl property {:?}:{}", property, value);
+				self.groups[target_id]
+					.properties
+					.cwl
+					.entry(property)
+					.or_insert(value.clone());
+			}
+			for listener_id in self.groups[source_id].listeners.clone() {
+				eprintln!(
+					" Cascading scoped listener {} with properties {:?}",
+					listener_id, self.groups[listener_id].properties
+				);
+				self.groups[target_id].listeners.push(listener_id);
+			}
 		}
 		for (name, class_ids) in self.groups[source_id].classes.clone() {
 			for class_id in class_ids {
@@ -66,24 +75,20 @@ impl Semantics {
 					.push(class_id);
 			}
 		}
-		for listener_id in self.groups[source_id].listeners.clone() {
-			eprintln!(
-				" Cascading scoped listener {} with properties {:?}",
-				listener_id, self.groups[listener_id].properties
-			);
-			self.groups[target_id].listeners.push(listener_id);
-		}
 
-		if self.groups[source_id].elements.len() > 0 {
-			if self.groups[target_id].elements.len() > 0 {
-				panic!("Source and target group both have elements; their ordering cannot be determined")
-			}
-			for source_id in self.groups[source_id].elements.clone() {
-				eprintln!(
-					" Cascading element with name {}",
-					self.groups[source_id].name.clone().unwrap()
-				);
-				self.create_element_from_group(source_id, target_id);
+		eprintln!("{}", source_id);
+		if self.groups[source_id].r#static {
+			if self.groups[source_id].elements.len() > 0 {
+				if self.groups[target_id].elements.len() > 0 {
+					panic!("Source and target group both have elements; their ordering cannot be determined")
+				}
+				for source_id in self.groups[source_id].elements.clone() {
+					eprintln!(
+						" Cascading element with name {}",
+						self.groups[source_id].name.clone().unwrap()
+					);
+					self.create_element_from_group(source_id, target_id);
+				}
 			}
 		}
 	}

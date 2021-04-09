@@ -32,7 +32,13 @@ impl Semantics {
 					.expect("dynamic classes should have a selector");
 				let rules = self.apply_all(class_id);
 				quote! {
-					for element in document.get_elements_by_class_name(#selector) {
+					let elements = document.get_elements_by_class_name(#selector);
+					for i in 0..elements.length() {
+						let element = elements
+							.item(i)
+							.unwrap()
+							.dyn_into::<HtmlElement>()
+							.unwrap();
 						#rules
 					}
 				}
@@ -86,7 +92,7 @@ impl Semantics {
 							.dyn_into::<HtmlElement>()
 							.unwrap();
 						#rules
-						element
+						&element.into()
 					}).unwrap();
 				}
 			})

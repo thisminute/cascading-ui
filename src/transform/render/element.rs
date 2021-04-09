@@ -5,7 +5,7 @@ impl Semantics {
 		eprintln!("Rendering element {}", element_id);
 
 		for ancestor_id in ancestors.clone() {
-			eprintln!("Looking at ancestor: {}", ancestor_id);
+			eprintln!(" Looking at ancestor: {}", ancestor_id);
 			for class_id in self.groups[ancestor_id]
 				.classes
 				.get(
@@ -17,32 +17,41 @@ impl Semantics {
 				.unwrap_or(&Vec::new())
 				.clone()
 			{
-				eprintln!("Adding element {} to class {}", element_id, class_id);
-
+				eprintln!("  Attaching class {} to element {}", class_id, element_id);
 				self.groups[class_id].members.push(element_id);
 				self.groups[element_id].member_of.push(class_id);
 			}
 		}
 
-		for class_id in self.groups[element_id].member_of.clone() {
-			self.cascade(class_id, element_id);
+		for listener_id in self.groups[element_id].listeners.clone() {
+			eprintln!(
+				" Attaching listener {} to element {}",
+				listener_id, element_id,
+			);
+			self.cascade(listener_id, element_id);
+		}
 
-			let selector = self.groups[class_id]
+		for source_id in self.groups[element_id].member_of.clone() {
+			// eventually we want to be able to uncomment this
+			// if self.groups[element_id].r#static && self.groups[source_id].properties.css.is_empty() {
+			// 	continue;
+			// }
+
+			let selector = self.groups[source_id]
 				.selector
 				.get_or_insert_with(id_gen)
 				.clone();
-			if self.groups[element_id].r#static && !self.groups[class_id].properties.css.is_empty()
-			{
-				self.styles.insert(
-					format!(".{}", selector),
-					self.groups[class_id].properties.css.clone(),
-				);
+			if self.groups[source_id].r#static {
+				eprintln!("am i crazy");
+				self.cascade(source_id, element_id);
+				if !self.groups[source_id].properties.css.is_empty() {
+					self.styles.insert(
+						format!(".{}", selector),
+						self.groups[source_id].properties.css.clone(),
+					);
+				}
 			}
 			self.groups[element_id].class_names.push(selector);
-		}
-
-		for listener_id in self.groups[element_id].listeners.clone() {
-			self.render_listener(listener_id, ancestors);
 		}
 
 		ancestors.push(element_id);
