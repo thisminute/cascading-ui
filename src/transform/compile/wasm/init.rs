@@ -1,20 +1,14 @@
-use std::convert::TryInto;
-
-use {data::semantics::Semantics, proc_macro2::TokenStream, quote::quote};
+use {data::semantics::Semantics, proc_macro2::TokenStream, quote::quote, std::convert::TryInto};
 
 impl Semantics {
 	pub fn header() -> TokenStream {
-		let web_sys_includes = vec![
-			quote! { console },
-			quote! { Document },
-			// quote! { Element },
-			quote! { Event },
-			quote! { EventListener },
-			// quote! { EventTarget },
-			quote! { HtmlElement },
-			// quote! { HtmlHeadElement },
-			// quote! { Window },
-		];
+		let web_sys_includes = quote! {
+			console,
+			Document,
+			Event,
+			EventListener,
+			HtmlElement,
+		};
 
 		quote! {
 			extern crate wasm_bindgen;
@@ -27,7 +21,7 @@ impl Semantics {
 					JsValue,
 				},
 				web_sys::{
-					#( #web_sys_includes ),*
+					#web_sys_includes
 				},
 			};
 
@@ -56,11 +50,92 @@ impl Semantics {
 			impl Eq for Property {}
 
 			#[derive(Default)]
+			struct Element {
+				class_names: Vec<&'static str>,
+				classes: HashMap<&'static str, Class>,
+				listeners: Vec<Class>,
+				elements: Vec<Element>,
+				properties: HashMap<Property, &'static str>,
+			}
+
+			#[derive(Default)]
 			struct Class {
 				classes: HashMap<&'static str, Class>,
 				listeners: Vec<Class>,
-				elements: Vec<Class>,
+				elements: Vec<Element>,
 				properties: HashMap<Property, &'static str>,
+			}
+
+			trait Std {
+				fn text(&mut self, value: &'static str);
+				fn css(&mut self, property: &'static str, value: &'static str);
+			}
+
+			impl Std for HtmlElement {
+				fn text(&mut self, value: &'static str) {
+					if let Some(element) = self
+						.child_nodes()
+						.item(0)
+					{
+						element.set_node_value(None);
+					}
+					self.prepend_with_str_1(value).unwrap();
+				}
+
+				fn css(&mut self, property: &'static str, value: &'static str) {
+					self.style().set_property(property, value).unwrap();
+				}
+			}
+
+			fn create_element(
+				classes: &mut HashMap<&'static str, Class>,
+				tag: &'static str,
+				class_names: Vec<&'static str>,
+			) -> HtmlElement {
+				let window = web_sys::window().expect("getting window");
+				let document = &window.document().expect("getting `window.document`");
+				let mut element = document
+					.create_element(tag)
+					.expect(&*format!("Failed to create `{}` element.", tag))
+					.dyn_into::<HtmlElement>()
+					.unwrap();
+				let mut queue = Vec::new();
+				for class_name in class_names {
+					if let Some(source) = classes.get(class_name) {
+						for class in &source.classes {
+							// let mut class = class.classes
+							// 	.entry(#selector)
+							// 	.or_insert(Class::default());
+						}
+						for class in &source.listeners {
+						}
+						for child in &source.elements {
+							let tag = if child.properties.get(&Property::Link).is_some() {
+								"a"
+							} else {
+								"div"
+							};
+							queue.push((tag, child.class_names.clone()));
+						}
+						for (property, value) in &source.properties {
+							match property {
+								Property::Css(property) => element.css(property, value),
+								Property::Link => (),
+								Property::Text => element.text(value),
+								Property::Tooltip => (),
+								Property::Image => (),
+							}
+						}
+					}
+				}
+
+				for (tag, class_names) in queue {
+					element
+						.append_child(&create_element(classes, tag, class_names))
+						.unwrap();
+				}
+
+				element
 			}
 		}
 	}
@@ -101,7 +176,6 @@ impl Semantics {
 				let element = self.static_element(child_id);
 				quote! {
 					{
-						// console::log_1(&element.inner_text().into());
 						let element = element
 							.children()
 							.item(#i)

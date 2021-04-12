@@ -9,7 +9,7 @@ impl Semantics {
 	fn apply_all(&self, group_id: usize) -> TokenStream {
 		let classes = self.apply_classes(group_id);
 		let listeners = self.apply_listeners(group_id);
-		let elements = self.apply_element(group_id);
+		let elements = self.apply_elements(group_id);
 		let properties = self.apply_properties(group_id);
 		quote! {
 			#classes
@@ -25,7 +25,6 @@ impl Semantics {
 			.iter()
 			.flat_map(|(_, groups)| groups.iter())
 			.map(|&class_id| {
-				eprintln!("{} {}", group_id, class_id);
 				let selector = self.groups[class_id]
 					.selector
 					.as_ref()
@@ -34,7 +33,7 @@ impl Semantics {
 				quote! {
 					let elements = document.get_elements_by_class_name(#selector);
 					for i in 0..elements.length() {
-						let element = elements
+						let mut element = elements
 							.item(i)
 							.unwrap()
 							.dyn_into::<HtmlElement>()
@@ -77,20 +76,21 @@ impl Semantics {
 			.collect()
 	}
 
-	fn apply_element(&self, group_id: usize) -> TokenStream {
+	fn apply_elements(&self, group_id: usize) -> TokenStream {
 		self.groups[group_id]
 			.elements
 			.iter()
-			.map(|&listener_id| {
-				let rules = self.apply_all(listener_id);
-				let tag = self.groups[listener_id].tag();
+			.map(|&element_id| {
+				let rules = self.apply_all(element_id);
+				let tag = self.groups[element_id].tag();
+				let class_names = &self.groups[element_id]
+					.class_names
+					.iter()
+					.map(|class_name| quote! { #class_name, })
+					.collect::<TokenStream>();
 				quote! {
 					element.append_child({
-						let element = document
-							.create_element(#tag)
-							.expect(&*format!("Failed to create `{}` element.", #tag))
-							.dyn_into::<HtmlElement>()
-							.unwrap();
+						let mut element = create_element(&mut classes, #tag, vec![#class_names]);
 						#rules
 						&element.into()
 					}).unwrap();
@@ -103,26 +103,16 @@ impl Semantics {
 		let properties = &self.groups[group_id].properties;
 		eprintln!("applying properties of group {}", group_id);
 		let mut effects = Vec::new();
-		if let Some(text) = properties.cwl.get(&CwlProperty::Text) {
-			effects.push(quote! {
-				if let Some(element) = element
-					.child_nodes()
-					.item(0)
-				{
-					element.set_node_value(None);
-				}
-				element.prepend_with_str_1(#text).unwrap();
-			});
+		if let Some(value) = properties.cwl.get(&CwlProperty::Text) {
+			effects.push(quote! { element.text(#value); });
 		}
-		if let Some(_link) = properties.cwl.get(&CwlProperty::Link) {
+		if let Some(_value) = properties.cwl.get(&CwlProperty::Link) {
 			effects.push(quote! {});
 		}
 
 		for (property, value) in &properties.css {
 			let property = property.css();
-			effects.push(quote! {
-				element.style().set_property(#property, #value).unwrap();
-			});
+			effects.push(quote! { element.css(#property, #value); });
 		}
 
 		quote! { #( #effects )* }

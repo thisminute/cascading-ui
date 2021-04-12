@@ -19,7 +19,7 @@ impl Semantics {
 		}
 	}
 
-	fn queue_classes(&self, group_id: usize) -> TokenStream {
+	pub fn queue_classes(&self, group_id: usize) -> TokenStream {
 		self.groups[group_id]
 			.classes
 			.iter()
@@ -46,8 +46,8 @@ impl Semantics {
 		self.groups[class_id]
 			.listeners
 			.iter()
-			.map(|listener_id| {
-				let rules = self.queue_all(*listener_id);
+			.map(|&listener_id| {
+				let rules = self.queue_all(listener_id);
 				quote! {
 					class.listeners.push({
 						let mut class = Class::default();
@@ -87,25 +87,19 @@ impl Semantics {
 					class.properties.insert(Property::Css(#css), #value);
 				}
 			});
-		let cwl =
-			self.groups[class_id]
-				.properties
-				.cwl
-				.iter()
-				.map(|(property, value)| match property {
-					CwlProperty::Text => quote! {
-						class.properties.insert(Property::Text, #value);
-					},
-					CwlProperty::Link => quote! {
-						class.properties.insert(Property::Link, #value);
-					},
-					CwlProperty::Tooltip => quote! {
-						class.properties.insert(Property::Tooltip, #value);
-					},
-					CwlProperty::Image => quote! {
-						class.properties.insert(Property::Image, #value);
-					},
-				});
+		let cwl = self.groups[class_id]
+			.properties
+			.cwl
+			.iter()
+			.map(|(property, value)| {
+				let property = match property {
+					CwlProperty::Text => quote! { Property::Text },
+					CwlProperty::Link => quote! { Property::Link },
+					CwlProperty::Tooltip => quote! { Property::Tooltip },
+					CwlProperty::Image => quote! { Property::Image },
+				};
+				quote! { class.properties.insert(#property, #value); }
+			});
 		quote! {
 			#( #css )*
 			#( #cwl )*
