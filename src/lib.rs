@@ -1,4 +1,3 @@
-extern crate html_minifier;
 extern crate proc_macro;
 extern crate proc_macro2;
 extern crate quote;

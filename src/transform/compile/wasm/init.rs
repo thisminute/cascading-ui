@@ -170,6 +170,7 @@ impl Semantics {
 			.elements
 			.iter()
 			.enumerate()
+			.filter(|(_, child_id)| self.groups[**child_id].r#static)
 			.map(|(i, child_id)| {
 				let child_id = *child_id;
 				let i: u32 = i.try_into().unwrap();
