@@ -42,7 +42,6 @@ impl Semantics {
 				.get_or_insert_with(id_gen)
 				.clone();
 			if self.groups[source_id].r#static {
-				eprintln!("am i crazy");
 				self.cascade(source_id, element_id);
 				if !self.groups[source_id].properties.css.is_empty() {
 					self.styles.insert(

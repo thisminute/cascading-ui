@@ -76,18 +76,19 @@ impl Semantics {
 			}
 		}
 
-		eprintln!("{}", source_id);
-		if self.groups[source_id].r#static {
-			if self.groups[source_id].elements.len() > 0 {
-				if self.groups[target_id].elements.len() > 0 {
-					panic!("Source and target group both have elements; their ordering cannot be determined")
-				}
-				for source_id in self.groups[source_id].elements.clone() {
-					eprintln!(
-						" Cascading element with name {}",
-						self.groups[source_id].name.clone().unwrap()
-					);
+		if self.groups[source_id].elements.len() > 0 {
+			if self.groups[target_id].elements.len() > 0 {
+				panic!("Source and target group both have elements; their ordering cannot be determined")
+			}
+			for source_id in self.groups[source_id].elements.clone() {
+				eprintln!(
+					" Cascading element with name {}",
+					self.groups[source_id].name.clone().unwrap()
+				);
+				if self.groups[source_id].r#static {
 					self.create_element_from_group(source_id, target_id);
+				} else {
+					self.groups[target_id].elements.push(source_id);
 				}
 			}
 		}

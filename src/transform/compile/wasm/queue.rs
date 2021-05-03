@@ -19,7 +19,7 @@ impl Semantics {
 		}
 	}
 
-	fn queue_classes(&self, group_id: usize) -> TokenStream {
+	pub fn queue_classes(&self, group_id: usize) -> TokenStream {
 		self.groups[group_id]
 			.classes
 			.iter()
@@ -34,7 +34,7 @@ impl Semantics {
 					{
 						let mut class = class.classes
 							.entry(#selector)
-							.or_insert(Class::default());
+							.or_insert(Group::default());
 						#rules
 					}
 				}
@@ -46,11 +46,11 @@ impl Semantics {
 		self.groups[class_id]
 			.listeners
 			.iter()
-			.map(|listener_id| {
-				let rules = self.queue_all(*listener_id);
+			.map(|&listener_id| {
+				let rules = self.queue_all(listener_id);
 				quote! {
 					class.listeners.push({
-						let mut class = Class::default();
+						let mut class = Group::default();
 						#rules
 						class
 					});
@@ -67,9 +67,9 @@ impl Semantics {
 				let rules = self.queue_all(element_id);
 				quote! {
 					class.elements.push({
-						let mut class = Class::default();
+						let mut element = Group::default();
 						#rules
-						class
+						element
 					});
 				}
 			})
@@ -87,25 +87,19 @@ impl Semantics {
 					class.properties.insert(Property::Css(#css), #value);
 				}
 			});
-		let cwl =
-			self.groups[class_id]
-				.properties
-				.cwl
-				.iter()
-				.map(|(property, value)| match property {
-					CwlProperty::Text => quote! {
-						class.properties.insert(Property::Text, #value);
-					},
-					CwlProperty::Link => quote! {
-						class.properties.insert(Property::Link, #value);
-					},
-					CwlProperty::Tooltip => quote! {
-						class.properties.insert(Property::Tooltip, #value);
-					},
-					CwlProperty::Image => quote! {
-						class.properties.insert(Property::Image, #value);
-					},
-				});
+		let cwl = self.groups[class_id]
+			.properties
+			.cwl
+			.iter()
+			.map(|(property, value)| {
+				let property = match property {
+					CwlProperty::Text => quote! { Text },
+					CwlProperty::Link => quote! { Link },
+					CwlProperty::Tooltip => quote! { Tooltip },
+					CwlProperty::Image => quote! { Image },
+				};
+				quote! { class.properties.insert(Property::#property, #value); }
+			});
 		quote! {
 			#( #css )*
 			#( #cwl )*
