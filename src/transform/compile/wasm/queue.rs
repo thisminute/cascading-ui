@@ -34,7 +34,7 @@ impl Semantics {
 					{
 						let mut class = class.classes
 							.entry(#selector)
-							.or_insert(Class::default());
+							.or_insert(Group::default());
 						#rules
 					}
 				}
@@ -50,7 +50,7 @@ impl Semantics {
 				let rules = self.queue_all(listener_id);
 				quote! {
 					class.listeners.push({
-						let mut class = Class::default();
+						let mut class = Group::default();
 						#rules
 						class
 					});
@@ -67,9 +67,9 @@ impl Semantics {
 				let rules = self.queue_all(element_id);
 				quote! {
 					class.elements.push({
-						let mut class = Class::default();
+						let mut element = Group::default();
 						#rules
-						class
+						element
 					});
 				}
 			})
@@ -93,12 +93,12 @@ impl Semantics {
 			.iter()
 			.map(|(property, value)| {
 				let property = match property {
-					CwlProperty::Text => quote! { Property::Text },
-					CwlProperty::Link => quote! { Property::Link },
-					CwlProperty::Tooltip => quote! { Property::Tooltip },
-					CwlProperty::Image => quote! { Property::Image },
+					CwlProperty::Text => quote! { Text },
+					CwlProperty::Link => quote! { Link },
+					CwlProperty::Tooltip => quote! { Tooltip },
+					CwlProperty::Image => quote! { Image },
 				};
-				quote! { class.properties.insert(#property, #value); }
+				quote! { class.properties.insert(Property::#property, #value); }
 			});
 		quote! {
 			#( #css )*

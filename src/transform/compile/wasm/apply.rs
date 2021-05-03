@@ -62,7 +62,7 @@ impl Semantics {
 				};
 				quote! {
 					let closure = {
-						let element = element.clone();
+						let mut element = element.clone();
 						Closure::wrap(Box::new(move |_e: Event| {
 							let window = web_sys::window().expect("getting window");
 							let document = window.document().expect("getting `window.document`");
@@ -90,7 +90,7 @@ impl Semantics {
 					.collect::<TokenStream>();
 				quote! {
 					element.append_child({
-						let mut element = create_element(&mut classes, #tag, vec![#class_names]);
+						let mut element = create_element(#tag, vec![#class_names]);
 						#rules
 						&element.into()
 					}).unwrap();

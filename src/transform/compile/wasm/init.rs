@@ -11,10 +11,15 @@ impl Semantics {
 		};
 
 		quote! {
+			#[macro_use]
+			extern crate lazy_static;
 			extern crate wasm_bindgen;
 			extern crate web_sys;
 			use {
-				std::collections::HashMap,
+				std::{
+					collections::HashMap,
+					sync::Mutex,
+				},
 				wasm_bindgen::{
 					prelude::*,
 					JsCast,
@@ -49,20 +54,13 @@ impl Semantics {
 			}
 			impl Eq for Property {}
 
-			#[derive(Default)]
-			struct Element {
+			#[derive(Clone, Default)]
+			struct Group {
 				class_names: Vec<&'static str>,
-				classes: HashMap<&'static str, Class>,
-				listeners: Vec<Class>,
-				elements: Vec<Element>,
-				properties: HashMap<Property, &'static str>,
-			}
 
-			#[derive(Default)]
-			struct Class {
-				classes: HashMap<&'static str, Class>,
-				listeners: Vec<Class>,
-				elements: Vec<Element>,
+				classes: HashMap<&'static str, Group>,
+				listeners: Vec<Group>,
+				elements: Vec<Group>,
 				properties: HashMap<Property, &'static str>,
 			}
 
@@ -88,7 +86,6 @@ impl Semantics {
 			}
 
 			fn create_element(
-				classes: &mut HashMap<&'static str, Class>,
 				tag: &'static str,
 				class_names: Vec<&'static str>,
 			) -> HtmlElement {
@@ -101,11 +98,11 @@ impl Semantics {
 					.unwrap();
 				let mut queue = Vec::new();
 				for class_name in class_names {
-					if let Some(source) = classes.get(class_name) {
+					if let Some(source) = CLASSES.lock().unwrap().get(class_name) {
 						for class in &source.classes {
 							// let mut class = class.classes
 							// 	.entry(#selector)
-							// 	.or_insert(Class::default());
+							// 	.or_insert(Group::default());
 						}
 						for class in &source.listeners {
 						}
@@ -131,12 +128,16 @@ impl Semantics {
 
 				for (tag, class_names) in queue {
 					element
-						.append_child(&create_element(classes, tag, class_names))
+						.append_child(&create_element(tag, class_names))
 						.unwrap();
 				}
 
 				element
 			}
+
+			lazy_static! {
+				static ref CLASSES: Mutex<HashMap<&'static str, Group>> = Mutex::new(HashMap::new());
+		   }
 		}
 	}
 
@@ -151,7 +152,6 @@ impl Semantics {
 			let document = &window.document().expect("getting `window.document`");
 			let head = &document.head().expect("getting `window.document.head`");
 			let body = &document.body().expect("getting `window.document.body`");
-			let mut classes: HashMap<&'static str, Class> = HashMap::new();
 
 			let element = body
 				.children()
@@ -159,7 +159,7 @@ impl Semantics {
 				.expect("body should have a root element")
 				.dyn_into::<HtmlElement>()
 				.unwrap();
-				#( #executable )*
+			#( #executable )*
 		}
 	}
 
@@ -208,9 +208,12 @@ impl Semantics {
 				let rules = self.queue_all(class_id);
 				quote! {
 					{
-						let mut class = classes
+						let mut class = CLASSES
+							.lock()
+							.unwrap();
+						let mut class = class
 							.entry(#selector)
-							.or_insert(Class::default());
+							.or_insert(Group::default());
 						#rules
 					}
 				}
