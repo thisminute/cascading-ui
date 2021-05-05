@@ -33,7 +33,7 @@ impl Semantics {
 
 		for source_id in self.groups[element_id].member_of.clone() {
 			// eventually we want to be able to uncomment this
-			// if self.groups[element_id].r#static && self.groups[source_id].properties.css.is_empty() {
+			// if self.groups[element_id].is_static() && self.groups[source_id].properties.css.is_empty() {
 			// 	continue;
 			// }
 
@@ -41,7 +41,7 @@ impl Semantics {
 				.selector
 				.get_or_insert_with(id_gen)
 				.clone();
-			if self.groups[source_id].r#static {
+			if self.groups[source_id].is_static() {
 				self.cascade(source_id, element_id);
 				if !self.groups[source_id].properties.css.is_empty() {
 					self.styles.insert(

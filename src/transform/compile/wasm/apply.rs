@@ -58,6 +58,9 @@ impl Semantics {
 				{
 					"click" => quote! { set_onclick },
 					"mouseover" => quote! { set_onmouseover },
+					"mouseenter" => quote! { set_onmouseenter },
+					"mouseleave" => quote! { set_onmouseleave },
+					"mouseout" => quote! { set_onmouseout },
 					_ => panic!("unknown event id"),
 				};
 				quote! {
@@ -77,26 +80,29 @@ impl Semantics {
 	}
 
 	fn apply_elements(&self, group_id: usize) -> TokenStream {
-		self.groups[group_id]
-			.elements
-			.iter()
-			.map(|&element_id| {
+		if self.groups[group_id].elements.len() > 0 {
+			let elements = self.groups[group_id].elements.iter().map(|&element_id| {
 				let rules = self.apply_all(element_id);
 				let tag = self.groups[element_id].tag();
-				let class_names = &self.groups[element_id]
-					.class_names
-					.iter()
-					.map(|class_name| quote! { #class_name, })
-					.collect::<TokenStream>();
+				let class_names = &self.groups[element_id].class_names;
 				quote! {
 					element.append_child({
-						let mut element = create_element(#tag, vec![#class_names]);
+						let mut element = create_element(#tag, vec![#( #class_names ),*]);
 						#rules
 						&element.into()
 					}).unwrap();
 				}
-			})
-			.collect()
+			});
+			quote! {
+				while let Some(child) = element.last_element_child() {
+					element.remove_child(&child.dyn_into::<Node>().unwrap()).unwrap();
+				}
+
+				#( #elements )*
+			}
+		} else {
+			quote! {}
+		}
 	}
 
 	fn apply_properties(&self, group_id: usize) -> TokenStream {

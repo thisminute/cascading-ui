@@ -2,14 +2,6 @@ use {data::semantics::Semantics, proc_macro2::TokenStream, quote::quote, std::co
 
 impl Semantics {
 	pub fn header() -> TokenStream {
-		let web_sys_includes = quote! {
-			console,
-			Document,
-			Event,
-			EventListener,
-			HtmlElement,
-		};
-
 		quote! {
 			#[macro_use]
 			extern crate lazy_static;
@@ -26,7 +18,12 @@ impl Semantics {
 					JsValue,
 				},
 				web_sys::{
-					#web_sys_includes
+					console,
+					Document,
+					Event,
+					EventListener,
+					HtmlElement,
+					Node,
 				},
 			};
 
@@ -170,7 +167,7 @@ impl Semantics {
 			.elements
 			.iter()
 			.enumerate()
-			.filter(|(_, child_id)| self.groups[**child_id].r#static)
+			.filter(|(_, child_id)| self.groups[**child_id].is_static())
 			.map(|(i, child_id)| {
 				let child_id = *child_id;
 				let i: u32 = i.try_into().unwrap();

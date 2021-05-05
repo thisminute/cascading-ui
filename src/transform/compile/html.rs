@@ -63,7 +63,7 @@ impl Group {
 		let children = self
 			.elements
 			.iter()
-			.filter(|&&element_id| groups[element_id].r#static)
+			.filter(|&&element_id| groups[element_id].is_static())
 			.map(|&child_id| groups[child_id].html(groups))
 			.collect::<Vec<String>>()
 			.join("");

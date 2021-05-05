@@ -1,5 +1,5 @@
 mod apply;
-mod init;
+mod initialize;
 mod queue;
 
 use {

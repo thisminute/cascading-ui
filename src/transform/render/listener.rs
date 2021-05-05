@@ -28,7 +28,8 @@ impl Semantics {
 				.selector
 				.get_or_insert_with(id_gen)
 				.clone();
-			if self.groups[listener_id].r#static && !self.groups[class_id].properties.css.is_empty()
+			if self.groups[listener_id].is_static()
+				&& !self.groups[class_id].properties.css.is_empty()
 			{
 				self.styles.insert(
 					format!(".{}", selector),
