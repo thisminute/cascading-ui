@@ -3,7 +3,7 @@ use data::semantics::Semantics;
 impl Semantics {
 	fn create_element_from_group(&mut self, source_id: usize, parent_id: usize) {
 		let element_id = self.groups.len();
-		eprintln!(" Creating new element group {}", element_id);
+		log::debug!(" Creating new element group {}", element_id);
 		let source = &mut self.groups[source_id];
 		let element = source.class_to_new_static_element(source_id);
 		source.members.push(element_id);
@@ -12,9 +12,10 @@ impl Semantics {
 	}
 
 	pub fn cascade(&mut self, source_id: usize, target_id: usize) {
-		eprintln!(
+		log::debug!(
 			"Cascading from group {} into group {}",
-			source_id, target_id
+			source_id,
+			target_id
 		);
 		if source_id == target_id {
 			panic!("the build process should never try to cascade a group into itself")
@@ -22,7 +23,7 @@ impl Semantics {
 
 		if self.groups[source_id].is_static() {
 			for (property, value) in self.groups[source_id].properties.cwl.clone() {
-				eprintln!(" Cascading cwl property {:?}:{}", property, value);
+				log::debug!(" Cascading cwl property {:?}:{}", property, value);
 				self.groups[target_id]
 					.properties
 					.cwl
@@ -30,16 +31,17 @@ impl Semantics {
 					.or_insert(value.clone());
 			}
 			for listener_id in self.groups[source_id].listeners.clone() {
-				eprintln!(
+				log::debug!(
 					" Cascading scoped listener {} with properties {:?}",
-					listener_id, self.groups[listener_id].properties
+					listener_id,
+					self.groups[listener_id].properties
 				);
 				self.groups[target_id].listeners.push(listener_id);
 			}
 		}
 		for (name, class_ids) in self.groups[source_id].classes.clone() {
 			for class_id in class_ids {
-				eprintln!(" Cascading scoped class with name {}", name);
+				log::debug!(" Cascading scoped class with name {}", name);
 				self.groups[target_id]
 					.classes
 					.entry(name.clone())
@@ -58,7 +60,7 @@ impl Semantics {
 
 		if self.groups[source_id].elements.len() > 0 {
 			for source_id in self.groups[source_id].elements.clone() {
-				eprintln!(
+				log::debug!(
 					" Cascading element with name {}",
 					self.groups[source_id].name.clone().unwrap()
 				);

@@ -6,7 +6,7 @@ use {
 
 impl Semantics {
 	pub fn html(&self) -> (String, HashMap<String, String>) {
-		eprintln!("...Writing HTML...");
+		log::debug!("...Writing HTML...");
 		let (contents, styles) = self.html_parts();
 		let homepage = contents.get(&String::from("/")).unwrap();
 		let root = &self.pages[self.pages[0].root_id];

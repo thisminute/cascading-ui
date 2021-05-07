@@ -2,10 +2,10 @@ use {data::semantics::Semantics, misc::id_gen::id_gen};
 
 impl Semantics {
 	pub fn render_listener(&mut self, listener_id: usize, ancestors: &mut Vec<usize>) {
-		eprintln!("Rendering listener {}", listener_id);
+		log::debug!("Rendering listener {}", listener_id);
 
 		let &parent_id = ancestors.last().unwrap();
-		eprintln!(" Attaching to parent: {}", parent_id);
+		log::debug!(" Attaching to parent: {}", parent_id);
 		for class_id in self.groups[parent_id]
 			.classes
 			.get(

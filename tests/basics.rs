@@ -1,5 +1,5 @@
 extern crate cascading_wasm_language;
-use cascading_wasm_language::{cwl_document, cwl_header};
+use cascading_wasm_language::{cwl_header, cwl_test_setup};
 
 extern crate wasm_bindgen_test;
 use wasm_bindgen_test::*;
@@ -10,32 +10,18 @@ cwl_header!();
 
 #[wasm_bindgen_test]
 fn empty() {
-	cwl_document! {
-		title: "just a title";
-	}
-	assert_eq!(
-		body.first_child()
-			.unwrap()
-			.dyn_into::<HtmlElement>()
-			.unwrap()
-			.inner_html(),
-		""
-	);
+	cwl_test_setup! {}
+	assert_eq!(root.inner_html(), "", "the root node should be empty");
 }
 
 #[wasm_bindgen_test]
 fn element() {
-	cwl_document! {
-		title: "one empty element";
+	cwl_test_setup! {
 		thingy {}
 	}
 	assert_eq!(
-		body.first_child()
-			.unwrap()
-			.first_child()
-			.unwrap()
-			.dyn_into::<HtmlElement>()
-			.unwrap()
+		root.first_element_child()
+			.expect("the root should contain an element")
 			.inner_html(),
 		""
 	);
@@ -43,19 +29,14 @@ fn element() {
 
 #[wasm_bindgen_test]
 fn property() {
-	cwl_document! {
-		title: "an element with one property";
+	cwl_test_setup! {
 		thingy {
 			text: "hello world";
 		}
 	}
 	assert_eq!(
-		body.first_child()
-			.unwrap()
-			.first_child()
-			.unwrap()
-			.dyn_into::<HtmlElement>()
-			.unwrap()
+		root.first_element_child()
+			.expect("the root should contain an element")
 			.inner_html(),
 		"hello world"
 	);
@@ -63,20 +44,15 @@ fn property() {
 
 #[wasm_bindgen_test]
 fn class() {
-	cwl_document! {
-		title: "a class with one property applied to one element";
+	cwl_test_setup! {
 		.thingy {
 			text: "hello world";
 		}
 		thingy {}
 	}
 	assert_eq!(
-		body.first_child()
-			.unwrap()
-			.first_child()
-			.unwrap()
-			.dyn_into::<HtmlElement>()
-			.unwrap()
+		root.first_element_child()
+			.expect("the root should contain an element")
 			.inner_html(),
 		"hello world"
 	);

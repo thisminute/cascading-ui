@@ -2,10 +2,10 @@ use {data::semantics::Semantics, misc::id_gen::id_gen};
 
 impl Semantics {
 	pub fn render_element(&mut self, element_id: usize, ancestors: &mut Vec<usize>) {
-		eprintln!("Rendering element {}", element_id);
+		log::debug!("Rendering element {}", element_id);
 
 		for ancestor_id in ancestors.clone() {
-			eprintln!(" Looking at ancestor: {}", ancestor_id);
+			log::debug!(" Looking at ancestor: {}", ancestor_id);
 			for class_id in self.groups[ancestor_id]
 				.classes
 				.get(
@@ -17,16 +17,17 @@ impl Semantics {
 				.unwrap_or(&Vec::new())
 				.clone()
 			{
-				eprintln!("  Attaching class {} to element {}", class_id, element_id);
+				log::debug!("  Attaching class {} to element {}", class_id, element_id);
 				self.groups[class_id].members.push(element_id);
 				self.groups[element_id].member_of.push(class_id);
 			}
 		}
 
 		for listener_id in self.groups[element_id].listeners.clone() {
-			eprintln!(
+			log::debug!(
 				" Attaching listener {} to element {}",
-				listener_id, element_id,
+				listener_id,
+				element_id,
 			);
 			self.cascade(listener_id, element_id);
 		}

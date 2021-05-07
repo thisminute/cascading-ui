@@ -26,7 +26,7 @@ impl Document {
 				.cloned()
 				.collect(),
 		);
-		eprintln!("...Creating groups...");
+		log::debug!("...Creating groups...");
 		semantics.create_group_from_block(self.root, None, None, true);
 		semantics
 	}
@@ -40,7 +40,7 @@ impl Semantics {
 		parent_id: Option<usize>,
 		mut r#static: bool,
 	) -> usize {
-		eprintln!(
+		log::debug!(
 			"Analyzing {:?} block with identifier {}",
 			block.prefix,
 			block.identifier.to_string()
@@ -104,9 +104,11 @@ impl Semantics {
 			property.value.to_token_stream().to_string(),
 		);
 		let value = value[1..value.len() - 1].to_string();
-		eprintln!(
+		log::debug!(
 			" Applying property {}:{} to group {}",
-			property, value, group_id
+			property,
+			value,
+			group_id
 		);
 
 		if let Some(value) = match &*property {
@@ -126,11 +128,11 @@ impl Semantics {
 			"tooltip" => properties.cwl.insert(CwlProperty::Tooltip, value),
 			"image" => properties.cwl.insert(CwlProperty::Image, value),
 			_ => {
-				eprintln!("Unrecognized property {}", property);
-				panic!("Unrecognized property");
+				panic!("Unrecognized property {}", property);
 			}
 		} {
-			eprintln!("Overwrote old value of {}", value)
+			log::debug!("Overwrote old value of {}", value);
+			panic!("Does this ever happen?");
 		}
 	}
 }

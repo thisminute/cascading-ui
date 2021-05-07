@@ -1,6 +1,8 @@
+extern crate log;
 extern crate proc_macro;
 extern crate proc_macro2;
 extern crate quote;
+extern crate simple_logger;
 extern crate syn;
 mod data;
 mod misc;
@@ -8,9 +10,11 @@ mod transform;
 
 use {
 	data::{ast::Document, semantics::Semantics},
+	log::LevelFilter,
 	proc_macro::TokenStream,
 	proc_macro2::TokenStream as TokenStream2,
 	quote::{quote, ToTokens},
+	simple_logger::SimpleLogger,
 	std::{
 		fs::{read_dir, read_to_string, write},
 		path::Path,
@@ -23,14 +27,15 @@ use {
 fn pipeline(document: Document) -> (String, TokenStream2) {
 	let mut semantics = document.analyze();
 	semantics.render();
-	for (i, group) in semantics.groups.iter().enumerate() {
-		eprintln!("{} {:?}", i, group);
-	}
 	(semantics.html().0, semantics.wasm(true))
 }
 
 #[proc_macro]
 pub fn cwl(input: TokenStream) -> TokenStream {
+	SimpleLogger::new()
+		.with_level(LevelFilter::Debug)
+		.init()
+		.unwrap();
 	let mut input = input.into();
 
 	// if it exists, import .cwl files from the `cwl` directory and attach them to the input
@@ -56,7 +61,9 @@ pub fn cwl(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn cwl_document(input: TokenStream) -> TokenStream {
+pub fn cwl_test_setup(input: TokenStream) -> TokenStream {
+	if let Ok(_) = SimpleLogger::new().with_level(LevelFilter::Error).init() {}
+
 	let document = parse_macro_input!(input as Document);
 	let mut semantics = document.analyze();
 	semantics.render();
@@ -72,23 +79,30 @@ pub fn cwl_document(input: TokenStream) -> TokenStream {
 		let body = &document.body().expect("getting `window.document.body`");
 		{
 			let style = document
-				.create_element("style")
-				.unwrap()
-				.dyn_into::<HtmlElement>()
-				.unwrap();
+					.create_element("style")
+					.unwrap()
+					.dyn_into::<HtmlElement>()
+					.unwrap();
 			style.set_inner_text(#styles);
 			head.append_child(&style).unwrap();
 
-			let content = document.create_element("div").unwrap();
-			body.prepend_with_node_1(&content).unwrap();
-			content.set_outer_html(#content);
+			let root = document.create_element("div").unwrap();
+			body.prepend_with_node_1(&root).unwrap();
+			root.set_outer_html(#content);
 		}
+
 		#wasm
+
+		let root = body
+			.first_child()
+			.expect("body should contain the root node")
+			.dyn_into::<HtmlElement>()
+			.expect("the root node should be an element");
 	};
 
-	eprintln!("***************************");
-	eprintln!("{}", wasm);
-	eprintln!("***************************");
+	log::debug!("***************************");
+	log::debug!("{}", wasm);
+	log::debug!("***************************");
 
 	wasm.into()
 }
