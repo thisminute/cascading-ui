@@ -32,9 +32,8 @@ impl Semantics {
 				let rules = self.queue_all(class_id);
 				quote! {
 					{
-						let mut class = class.classes
-							.entry(#selector)
-							.or_insert(Group::default());
+						let mut classes = CLASSES.lock().unwrap();
+						let mut class = classes.entry(#selector).or_insert(Group::default());
 						#rules
 					}
 				}
@@ -67,9 +66,9 @@ impl Semantics {
 				let rules = self.queue_all(element_id);
 				quote! {
 					class.elements.push({
-						let mut element = Group::default();
+						let mut class = Group::default();
 						#rules
-						element
+						class
 					});
 				}
 			})

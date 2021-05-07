@@ -36,10 +36,39 @@ impl Group {
 		}
 	}
 
+	pub fn class_to_new_static_element(&mut self, source_id: usize) -> Self {
+		Group {
+			name: Some(
+				self.name
+					.clone()
+					.expect("should never try to make an instance of a class with no name"),
+			),
+			selector: None,
+			class_names: Vec::new(),
+			r#static: true,
+
+			properties: Properties {
+				cwl: self.properties.cwl.clone(),
+				css: HashMap::new(),
+				page: HashMap::new(),
+			},
+			elements: self.elements.clone(),
+			classes: self.classes.clone(),
+			listeners: self.listeners.clone(),
+
+			members: Vec::new(),
+			member_of: vec![source_id],
+		}
+	}
+
 	pub fn tag(&self) -> &'static str {
 		match self.properties.cwl.get(&CwlProperty::Link) {
 			Some(_) => "a",
 			None => "div",
 		}
+	}
+
+	pub fn is_static(&self) -> bool {
+		self.r#static
 	}
 }

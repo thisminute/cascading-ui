@@ -2,14 +2,6 @@ use {data::semantics::Semantics, proc_macro2::TokenStream, quote::quote, std::co
 
 impl Semantics {
 	pub fn header() -> TokenStream {
-		let web_sys_includes = quote! {
-			console,
-			Document,
-			Event,
-			EventListener,
-			HtmlElement,
-		};
-
 		quote! {
 			#[macro_use]
 			extern crate lazy_static;
@@ -26,7 +18,12 @@ impl Semantics {
 					JsValue,
 				},
 				web_sys::{
-					#web_sys_includes
+					console,
+					Document,
+					Event,
+					EventListener,
+					HtmlElement,
+					Node,
 				},
 			};
 
@@ -88,6 +85,7 @@ impl Semantics {
 			fn create_element(
 				tag: &'static str,
 				class_names: Vec<&'static str>,
+				classes: &HashMap<&'static str, Group>,
 			) -> HtmlElement {
 				let window = web_sys::window().expect("getting window");
 				let document = &window.document().expect("getting `window.document`");
@@ -96,9 +94,13 @@ impl Semantics {
 					.expect(&*format!("Failed to create `{}` element.", tag))
 					.dyn_into::<HtmlElement>()
 					.unwrap();
+
+				let class_name = &*class_names.join(" ");
+				element.set_class_name(class_name);
+
 				let mut queue = Vec::new();
 				for class_name in class_names {
-					if let Some(source) = CLASSES.lock().unwrap().get(class_name) {
+					if let Some(source) = classes.get(class_name) {
 						for class in &source.classes {
 							// let mut class = class.classes
 							// 	.entry(#selector)
@@ -128,7 +130,7 @@ impl Semantics {
 
 				for (tag, class_names) in queue {
 					element
-						.append_child(&create_element(tag, class_names))
+						.append_child(&create_element(tag, class_names, classes))
 						.unwrap();
 				}
 
@@ -170,7 +172,7 @@ impl Semantics {
 			.elements
 			.iter()
 			.enumerate()
-			.filter(|(_, child_id)| self.groups[**child_id].r#static)
+			.filter(|(_, child_id)| self.groups[**child_id].is_static())
 			.map(|(i, child_id)| {
 				let child_id = *child_id;
 				let i: u32 = i.try_into().unwrap();
@@ -200,8 +202,6 @@ impl Semantics {
 			.iter()
 			.flat_map(|(_, groups)| groups.iter())
 			.map(|&class_id| {
-				eprintln!("Class {} applies within {}", class_id, group_id);
-				eprintln!("{:?}", self.groups[class_id]);
 				let selector = self.groups[class_id]
 					.selector
 					.clone()
@@ -209,12 +209,8 @@ impl Semantics {
 				let rules = self.queue_all(class_id);
 				quote! {
 					{
-						let mut class = CLASSES
-							.lock()
-							.unwrap();
-						let mut class = class
-							.entry(#selector)
-							.or_insert(Group::default());
+						let mut classes = CLASSES.lock().unwrap();
+						let mut class = classes.entry(#selector).or_insert(Group::default());
 						#rules
 					}
 				}

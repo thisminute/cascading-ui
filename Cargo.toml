@@ -10,8 +10,10 @@ version = "0.0.2"
 proc-macro = true
 
 [dependencies]
+log = "0.4"
 proc-macro2 = {version = "1.0", features = ["nightly"]}
 quote = "1.0"
+simple_logger = "1.11.0"
 
 [dependencies.syn]
 features = [
@@ -24,9 +26,9 @@ features = [
 version = "1.0"
 
 [dev-dependencies]
-lazy_static = "1.4.0"
+lazy_static = "1.4"
 wasm-bindgen = "0.2"
-wasm-bindgen-test = "0.3.0"
+wasm-bindgen-test = "0.3"
 
 [dev-dependencies.web-sys]
 features = [

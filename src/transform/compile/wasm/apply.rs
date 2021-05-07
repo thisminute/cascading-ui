@@ -6,7 +6,7 @@ use {
 };
 
 impl Semantics {
-	fn apply_all(&self, group_id: usize) -> TokenStream {
+	pub fn apply_all(&self, group_id: usize) -> TokenStream {
 		let classes = self.apply_classes(group_id);
 		let listeners = self.apply_listeners(group_id);
 		let elements = self.apply_elements(group_id);
@@ -30,6 +30,7 @@ impl Semantics {
 					.as_ref()
 					.expect("dynamic classes should have a selector");
 				let rules = self.apply_all(class_id);
+				let class = self.queue_classes(class_id);
 				quote! {
 					let elements = document.get_elements_by_class_name(#selector);
 					for i in 0..elements.length() {
@@ -39,6 +40,7 @@ impl Semantics {
 							.dyn_into::<HtmlElement>()
 							.unwrap();
 						#rules
+						#class
 					}
 				}
 			})
@@ -56,8 +58,13 @@ impl Semantics {
 					.as_ref()
 					.expect("every listener should have an event id")
 				{
+					"blur" => quote! { set_onblur },
+					"focus" => quote! { set_onfocus },
 					"click" => quote! { set_onclick },
 					"mouseover" => quote! { set_onmouseover },
+					"mouseenter" => quote! { set_onmouseenter },
+					"mouseleave" => quote! { set_onmouseleave },
+					"mouseout" => quote! { set_onmouseout },
 					_ => panic!("unknown event id"),
 				};
 				quote! {
@@ -77,31 +84,33 @@ impl Semantics {
 	}
 
 	fn apply_elements(&self, group_id: usize) -> TokenStream {
-		self.groups[group_id]
-			.elements
-			.iter()
-			.map(|&element_id| {
+		if self.groups[group_id].elements.len() > 0 {
+			let elements = self.groups[group_id].elements.iter().map(|&element_id| {
 				let rules = self.apply_all(element_id);
 				let tag = self.groups[element_id].tag();
-				let class_names = &self.groups[element_id]
-					.class_names
-					.iter()
-					.map(|class_name| quote! { #class_name, })
-					.collect::<TokenStream>();
+				let class_names = &self.groups[element_id].class_names;
 				quote! {
 					element.append_child({
-						let mut element = create_element(#tag, vec![#class_names]);
+						let mut element = create_element(#tag, vec![#( #class_names ),*], &CLASSES.lock().unwrap());
 						#rules
 						&element.into()
 					}).unwrap();
 				}
-			})
-			.collect()
+			});
+			quote! {
+				while let Some(child) = element.last_element_child() {
+					element.remove_child(&child.dyn_into::<Node>().unwrap()).unwrap();
+				}
+
+				#( #elements )*
+			}
+		} else {
+			quote! {}
+		}
 	}
 
 	fn apply_properties(&self, group_id: usize) -> TokenStream {
 		let properties = &self.groups[group_id].properties;
-		eprintln!("applying properties of group {}", group_id);
 		let mut effects = Vec::new();
 		if let Some(value) = properties.cwl.get(&CwlProperty::Text) {
 			effects.push(quote! { element.text(#value); });

@@ -1,5 +1,5 @@
 mod apply;
-mod init;
+mod initialize;
 mod queue;
 
 use {
@@ -10,7 +10,7 @@ use {
 
 impl Semantics {
 	pub fn wasm(&self, full: bool) -> TokenStream {
-		eprintln!("...Writing Wasm...");
+		log::debug!("...Writing Wasm...");
 
 		let warnings = self.warnings.iter().map(|error| {
 			quote_spanned! {Span::call_site()=>

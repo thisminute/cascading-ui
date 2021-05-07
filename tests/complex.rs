@@ -1,5 +1,5 @@
 extern crate cascading_wasm_language;
-use cascading_wasm_language::{cwl_document, cwl_header};
+use cascading_wasm_language::{cwl_header, cwl_test_setup};
 
 extern crate wasm_bindgen_test;
 use wasm_bindgen_test::*;
@@ -10,16 +10,15 @@ cwl_header!();
 
 #[wasm_bindgen_test]
 fn element() {
-	cwl_document! {
-		title: "hello world";
+	cwl_test_setup! {
 		text: "hi";
 		.bongo {
-			// ?click {
-			// 	text: "click the text under this";
-			// 	sdaf {
-			// 		text: "nope";
-			// 	}
-			// }
+			?click {
+				text: "click the text under this";
+				sdaf {
+					text: "nope";
+				}
+			}
 			color: "blue";
 			text: "yeaaaa";
 		}
