@@ -201,6 +201,7 @@ impl Semantics {
 			.classes
 			.iter()
 			.flat_map(|(_, groups)| groups.iter())
+			.filter(|&&class_id| self.groups[class_id].is_static())
 			.map(|&class_id| {
 				let selector = self.groups[class_id]
 					.selector

@@ -20,7 +20,7 @@ impl Semantics {
 	}
 
 	pub fn apply_classes(&self, group_id: usize) -> TokenStream {
-		self.groups[group_id]
+		let apply = self.groups[group_id]
 			.classes
 			.iter()
 			.flat_map(|(_, groups)| groups.iter())
@@ -30,7 +30,6 @@ impl Semantics {
 					.as_ref()
 					.expect("dynamic classes should have a selector");
 				let rules = self.apply_all(class_id);
-				let class = self.queue_classes(class_id);
 				quote! {
 					let elements = document.get_elements_by_class_name(#selector);
 					for i in 0..elements.length() {
@@ -40,11 +39,15 @@ impl Semantics {
 							.dyn_into::<HtmlElement>()
 							.unwrap();
 						#rules
-						#class
 					}
 				}
 			})
-			.collect()
+			.collect::<TokenStream>();
+		let queue = self.queue_classes(group_id);
+		quote! {
+			#apply
+			#queue
+		}
 	}
 
 	pub fn apply_listeners(&self, group_id: usize) -> TokenStream {
