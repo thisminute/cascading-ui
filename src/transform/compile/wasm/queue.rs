@@ -28,7 +28,7 @@ impl Semantics {
 				let selector = self.groups[class_id]
 					.selector
 					.clone()
-					.expect("static and dynamic classes should have a selector");
+					.expect("static and dynamic classes should have selectors");
 				let rules = self.queue_all(class_id);
 				quote! {
 					{

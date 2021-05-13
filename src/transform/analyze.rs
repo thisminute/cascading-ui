@@ -39,7 +39,7 @@ impl Semantics {
 		mut page_id: Option<usize>,
 		parent_id: Option<usize>,
 		mut r#static: bool,
-	) -> usize {
+	) {
 		log::debug!(
 			"Analyzing {:?} block with identifier {}",
 			block.prefix,
@@ -83,17 +83,15 @@ impl Semantics {
 			self.apply_static_property(property, group_id);
 		}
 
-		for block in block.classes {
+		for block in block.listeners {
 			self.create_group_from_block(block, page_id, Some(group_id), r#static);
 		}
-		for block in block.listeners {
+		for block in block.classes {
 			self.create_group_from_block(block, page_id, Some(group_id), r#static);
 		}
 		for block in block.elements {
 			self.create_group_from_block(block, page_id, Some(group_id), r#static);
 		}
-
-		group_id
 	}
 
 	fn apply_static_property(&mut self, property: Property, group_id: usize) {

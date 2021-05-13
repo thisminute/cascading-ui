@@ -30,15 +30,18 @@ impl Semantics {
 					.entry(property)
 					.or_insert(value.clone());
 			}
-			for listener_id in self.groups[source_id].listeners.clone() {
-				log::debug!(
-					" Cascading scoped listener {} with properties {:?}",
-					listener_id,
-					self.groups[listener_id].properties
-				);
-				self.groups[target_id].listeners.push(listener_id);
-			}
 		}
+
+		for listener_id in self.groups[source_id].listeners.clone() {
+			log::debug!(
+				" Cascading scoped listener {} with properties {:?}",
+				listener_id,
+				self.groups[listener_id].properties
+			);
+			self.groups[target_id].listeners.push(listener_id);
+			self.cascade(listener_id, target_id);
+		}
+
 		for (name, class_ids) in self.groups[source_id].classes.clone() {
 			for class_id in class_ids {
 				log::debug!(" Cascading scoped class with name {}", name);

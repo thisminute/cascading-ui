@@ -28,7 +28,7 @@ impl Semantics {
 				let selector = self.groups[class_id]
 					.selector
 					.as_ref()
-					.expect("dynamic classes should have a selector");
+					.expect("dynamic classes should have selectors");
 				let rules = self.apply_all(class_id);
 				quote! {
 					let elements = document.get_elements_by_class_name(#selector);

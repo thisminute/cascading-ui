@@ -4,6 +4,20 @@ impl Semantics {
 	pub fn render_element(&mut self, element_id: usize, ancestors: &mut Vec<usize>) {
 		log::debug!("Rendering element {}", element_id);
 
+		// TODO: verify that this does anything
+		// cascading can add more listeners, so this should ensure that the loop also iterates over those
+		let mut last_idx = 0;
+		while last_idx < self.groups[element_id].listeners.len() {
+			let listener_id = self.groups[element_id].listeners[last_idx];
+			log::debug!(
+				" Attaching listener {} to element {}",
+				listener_id,
+				element_id,
+			);
+			self.cascade(listener_id, element_id);
+			last_idx += 1;
+		}
+
 		for ancestor_id in ancestors.clone() {
 			log::debug!(" Looking at ancestor: {}", ancestor_id);
 			for class_id in self.groups[ancestor_id]
@@ -23,17 +37,8 @@ impl Semantics {
 			}
 		}
 
-		for listener_id in self.groups[element_id].listeners.clone() {
-			log::debug!(
-				" Attaching listener {} to element {}",
-				listener_id,
-				element_id,
-			);
-			self.cascade(listener_id, element_id);
-		}
-
 		for source_id in self.groups[element_id].member_of.clone() {
-			// eventually we want to be able to uncomment this
+			// not having this causes extra classes and would be good to be able to uncomment without breaking tests
 			// if self.groups[element_id].is_static() && self.groups[source_id].properties.css.is_empty() {
 			// 	continue;
 			// }
