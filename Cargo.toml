@@ -13,7 +13,7 @@ proc-macro = true
 log = "0.4"
 proc-macro2 = {version = "1.0", features = ["nightly"]}
 quote = "1.0"
-simple_logger = "1.11.0"
+simple_logger = "1.11"
 
 [dependencies.syn]
 features = [

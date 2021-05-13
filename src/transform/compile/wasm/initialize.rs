@@ -201,11 +201,12 @@ impl Semantics {
 			.classes
 			.iter()
 			.flat_map(|(_, groups)| groups.iter())
+			.filter(|&&class_id| self.groups[class_id].is_static())
 			.map(|&class_id| {
 				let selector = self.groups[class_id]
 					.selector
 					.clone()
-					.expect("static classes should have a selector");
+					.expect("static classes should have selectors");
 				let rules = self.queue_all(class_id);
 				quote! {
 					{
