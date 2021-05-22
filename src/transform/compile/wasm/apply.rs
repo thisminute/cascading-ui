@@ -73,7 +73,8 @@ impl Semantics {
 				quote! {
 					let closure = {
 						let mut element = element.clone();
-						Closure::wrap(Box::new(move |_e: Event| {
+						Closure::wrap(Box::new(move |e: Event| {
+							e.stop_propagation();
 							let window = web_sys::window().expect("getting window");
 							let document = window.document().expect("getting `window.document`");
 							#rules
