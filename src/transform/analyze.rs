@@ -27,7 +27,7 @@ impl Document {
 				.collect(),
 		);
 		log::debug!("...Creating groups...");
-		semantics.create_group_from_block(self.root, None, None, true);
+		semantics.create_group_from_block(self.root, None, None, None);
 		semantics
 	}
 }
@@ -38,7 +38,7 @@ impl Semantics {
 		block: Block,
 		mut page_id: Option<usize>,
 		parent_id: Option<usize>,
-		mut r#static: bool,
+		mut listener_scope: Option<usize>,
 	) {
 		log::debug!(
 			"Analyzing {:?} block with identifier {}",
@@ -50,6 +50,7 @@ impl Semantics {
 		let group_id = self.groups.len();
 		let group = if let Some(parent_id) = parent_id {
 			let parent = &mut self.groups[parent_id];
+			let group = Group::new(Some(identifier.clone()), listener_scope);
 			match block.prefix {
 				Prefix::Element => {
 					parent.elements.push(group_id);
@@ -62,13 +63,13 @@ impl Semantics {
 						.push(group_id);
 				}
 				Prefix::Listener => {
-					r#static = false;
+					listener_scope = Some(group_id);
 					parent.listeners.push(group_id);
 				}
 			}
-			Group::new(Some(identifier.clone()), r#static)
+			group
 		} else {
-			let group = Group::new(None, r#static);
+			let group = Group::new(None, None);
 			page_id = Some(self.pages.len());
 			self.pages.push(Page {
 				title: String::from(""),
@@ -84,13 +85,13 @@ impl Semantics {
 		}
 
 		for block in block.listeners {
-			self.create_group_from_block(block, page_id, Some(group_id), r#static);
+			self.create_group_from_block(block, page_id, Some(group_id), listener_scope);
 		}
 		for block in block.classes {
-			self.create_group_from_block(block, page_id, Some(group_id), r#static);
+			self.create_group_from_block(block, page_id, Some(group_id), listener_scope);
 		}
 		for block in block.elements {
-			self.create_group_from_block(block, page_id, Some(group_id), r#static);
+			self.create_group_from_block(block, page_id, Some(group_id), listener_scope);
 		}
 	}
 
