@@ -3,14 +3,12 @@ use {data::semantics::Semantics, proc_macro2::TokenStream, quote::quote, std::co
 impl Semantics {
 	pub fn header() -> TokenStream {
 		quote! {
-			#[macro_use]
-			extern crate lazy_static;
 			extern crate wasm_bindgen;
 			extern crate web_sys;
 			use {
 				std::{
+					cell::RefCell,
 					collections::HashMap,
-					sync::Mutex,
 				},
 				wasm_bindgen::{
 					prelude::*,
@@ -19,9 +17,7 @@ impl Semantics {
 				},
 				web_sys::{
 					console,
-					Document,
 					Event,
-					EventListener,
 					HtmlElement,
 					Node,
 				},
@@ -137,8 +133,8 @@ impl Semantics {
 				element
 			}
 
-			lazy_static! {
-				static ref CLASSES: Mutex<HashMap<&'static str, Group>> = Mutex::new(HashMap::new());
+			thread_local! {
+				static CLASSES: RefCell<HashMap<&'static str, Group>> = RefCell::new(HashMap::new());
 		   }
 		}
 	}
@@ -150,18 +146,21 @@ impl Semantics {
 			.map(|page| self.static_element(page.root_id));
 
 		quote! {
-			let window = web_sys::window().expect("getting window");
-			let document = &window.document().expect("getting `window.document`");
-			let head = &document.head().expect("getting `window.document.head`");
-			let body = &document.body().expect("getting `window.document.body`");
+			CLASSES.with(|classes| {
+				let window = web_sys::window().expect("getting window");
+				let document = &window.document().expect("getting `window.document`");
+				let head = &document.head().expect("getting `window.document.head`");
+				let body = &document.body().expect("getting `window.document.body`");
+				let mut classes = classes.borrow_mut();
 
-			let element = body
-				.children()
-				.item(0)
-				.expect("body should have a root element")
-				.dyn_into::<HtmlElement>()
-				.unwrap();
-			#( #executable )*
+				let element = body
+					.children()
+					.item(0)
+					.expect("body should have a root element")
+					.dyn_into::<HtmlElement>()
+					.unwrap();
+				#( #executable )*
+			});
 		}
 	}
 
@@ -210,7 +209,6 @@ impl Semantics {
 				let rules = self.queue_all(class_id);
 				quote! {
 					{
-						let mut classes = CLASSES.lock().unwrap();
 						let mut class = classes.entry(#selector).or_insert(Group::default());
 						#rules
 					}

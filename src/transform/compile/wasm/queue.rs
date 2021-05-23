@@ -7,15 +7,17 @@ use {
 
 impl Semantics {
 	pub fn queue_all(&self, group_id: usize) -> TokenStream {
-		let classes = self.queue_classes(group_id);
 		let listeners = self.queue_listeners(group_id);
 		let elements = self.queue_elements(group_id);
 		let properties = self.queue_properties(group_id);
+		let classes = self.queue_classes(group_id);
 		quote! {
-			#classes
 			#listeners
 			#elements
 			#properties
+
+			// classes must go last so the others can finish using the classes map before we borrow from it again
+			#classes
 		}
 	}
 
@@ -31,11 +33,8 @@ impl Semantics {
 					.expect("static and dynamic classes should have selectors");
 				let rules = self.queue_all(class_id);
 				quote! {
-					{
-						let mut classes = CLASSES.lock().unwrap();
-						let mut class = classes.entry(#selector).or_insert(Group::default());
-						#rules
-					}
+					let mut class = classes.entry(#selector).or_insert(Group::default());
+					#rules
 				}
 			})
 			.collect()

@@ -74,10 +74,13 @@ impl Semantics {
 					let closure = {
 						let mut element = element.clone();
 						Closure::wrap(Box::new(move |e: Event| {
-							e.stop_propagation();
-							let window = web_sys::window().expect("getting window");
-							let document = window.document().expect("getting `window.document`");
-							#rules
+							CLASSES.with(|classes| {
+								e.stop_propagation();
+								let window = web_sys::window().expect("getting window");
+								let document = window.document().expect("getting `window.document`");
+								let mut classes = classes.borrow_mut();
+								#rules
+							});
 						}) as Box<dyn FnMut(Event)>)
 					};
 					element.#event(Some(closure.as_ref().unchecked_ref()));
@@ -95,7 +98,7 @@ impl Semantics {
 				let class_names = &self.groups[element_id].class_names;
 				quote! {
 					element.append_child({
-						let mut element = create_element(#tag, vec![#( #class_names ),*], &CLASSES.lock().unwrap());
+						let mut element = create_element(#tag, vec![#( #class_names ),*], &classes);
 						#rules
 						&element.into()
 					}).unwrap();

@@ -129,9 +129,7 @@ The semantics tree compiles to an HTML document and a TokenStream of Rust code t
 
 ## Tests
 
-Tests currently broken from adding a global static CLASSES variable :(
-
-`./tests` has a collection of CWL examples that render different features, and then checks the DOM to see that it rendered as expected! Run them with `wasm-pack test --headless --firefox`. `--chrome` works too, and you'll have to have installed the browser you choose.
+`./tests` has a collection of CWL examples that render different features, and then checks the DOM to see that it rendered as expected! Run them with `wasm-pack test --headless --firefox`. `--chrome` works too. See `./tests/README.md` for details.
 
 ## Debugging
 
