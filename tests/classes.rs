@@ -24,48 +24,39 @@ fn hoisting() {
 	);
 }
 
-// #[wasm_bindgen_test]
-// fn compile() {
-// 	cwl_test_setup! {
-// 		.a {
-// 			.c {
-// 				color: "red";
-// 			}
-// 			b {}
-// 			b {
-// 				background_color: "brown";
-// 			}
-// 		}
+#[wasm_bindgen_test]
+fn compile() {
+	cwl_test_setup! {
+		.a {
+			b {
+				.c {
+					color: "red";
+				}
+			}
+		}
 
-// 		a {
-// 			.b {
-// 				text: "hello";
-// 				background_color: "green";
-// 				c {
-// 					text: "yeaaaa";
-// 				}
-// 			}
-// 		}
-// 	}
-// 	// let element = body
-// 	// 	.first_child()
-// 	// 	.unwrap()
-// 	// 	.first_child()
-// 	// 	.unwrap()
-// 	// 	.first_child()
-// 	// 	.unwrap()
-// 	// 	.last_child()
-// 	// 	.unwrap()
-// 	// 	.dyn_into::<HtmlElement>()
-// 	// 	.unwrap();
-// 	// assert_eq!(element.inner_html(), "yeaaaa");
-// 	// assert_eq!(
-// 	// 	window
-// 	// 		.get_computed_style(&element)
-// 	// 		.unwrap()
-// 	// 		.unwrap()
-// 	// 		.get_property_value("color")
-// 	// 		.unwrap(),
-// 	// 	"rgb(255, 0, 0)"
-// 	// );
-// }
+		a {
+			.b {
+				c {
+					text: "yeaaaa";
+				}
+			}
+		}
+	}
+	let element = root
+		.first_element_child()
+		.unwrap()
+		.first_element_child()
+		.unwrap()
+		.first_element_child()
+		.unwrap();
+	assert_eq!(
+		window
+			.get_computed_style(&element)
+			.unwrap()
+			.unwrap()
+			.get_property_value("color")
+			.unwrap(),
+		"rgb(255, 0, 0)"
+	);
+}
