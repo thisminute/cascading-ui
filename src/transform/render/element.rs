@@ -4,7 +4,7 @@ impl Semantics {
 	pub fn render_element(&mut self, element_id: usize, ancestors: &mut Vec<usize>) {
 		log::debug!("Rendering element {}", element_id);
 
-		// TODO: verify that this does anything
+		// TODO: verify that this precaution does anything
 		// cascading can add more listeners, so this should ensure that the loop also iterates over those
 		let mut last_idx = 0;
 		while last_idx < self.groups[element_id].listeners.len() {
@@ -64,5 +64,25 @@ impl Semantics {
 			self.render_element(element_id, ancestors);
 		}
 		ancestors.pop();
+
+		log::debug!(" Removing virtual groups from element {}", element_id);
+		let listener_scope = self.groups[element_id].listener_scope;
+		self.groups[element_id].elements = self.groups[element_id]
+			.elements
+			.clone()
+			.into_iter()
+			.filter(|&group_id| listener_scope == self.groups[group_id].listener_scope)
+			.collect();
+		let mut classes = self.groups[element_id].classes.clone();
+		for (_, groups) in &mut classes {
+			groups.retain(|&group_id| listener_scope == self.groups[group_id].listener_scope)
+		}
+		self.groups[element_id].classes = classes;
+		self.groups[element_id].listeners = self.groups[element_id]
+			.listeners
+			.clone()
+			.into_iter()
+			.filter(|&group_id| listener_scope == self.groups[group_id].listener_scope)
+			.collect();
 	}
 }

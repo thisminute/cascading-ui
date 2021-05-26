@@ -91,7 +91,9 @@ pub fn cwl_test_setup(input: TokenStream) -> TokenStream {
 			root.set_outer_html(#content);
 		}
 
-		#wasm
+		{
+			#wasm
+		}
 
 		let root = body
 			.first_child()

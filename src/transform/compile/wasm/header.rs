@@ -1,16 +1,14 @@
-use {data::semantics::Semantics, proc_macro2::TokenStream, quote::quote, std::convert::TryInto};
+use {data::semantics::Semantics, proc_macro2::TokenStream, quote::quote};
 
 impl Semantics {
 	pub fn header() -> TokenStream {
 		quote! {
-			#[macro_use]
-			extern crate lazy_static;
 			extern crate wasm_bindgen;
 			extern crate web_sys;
 			use {
 				std::{
+					cell::RefCell,
 					collections::HashMap,
-					sync::Mutex,
 				},
 				wasm_bindgen::{
 					prelude::*,
@@ -19,15 +17,13 @@ impl Semantics {
 				},
 				web_sys::{
 					console,
-					Document,
 					Event,
-					EventListener,
 					HtmlElement,
 					Node,
 				},
 			};
 
-			#[derive(Clone, Hash)]
+			#[derive(Clone, Hash, PartialEq, Eq)]
 			pub enum Property {
 				Css(&'static str),
 				Link,
@@ -35,21 +31,6 @@ impl Semantics {
 				Tooltip,
 				Image,
 			}
-			impl PartialEq for Property {
-				fn eq(&self, other: &Self) -> bool {
-					match self {
-						Self::Css(a) => match other {
-							Self::Css(b) => a == b,
-							_ => false,
-						},
-						a => match other {
-							Self::Css(_) => false,
-							b => a == b,
-						},
-					}
-				}
-			}
-			impl Eq for Property {}
 
 			#[derive(Clone, Default)]
 			struct Group {
@@ -137,85 +118,9 @@ impl Semantics {
 				element
 			}
 
-			lazy_static! {
-				static ref CLASSES: Mutex<HashMap<&'static str, Group>> = Mutex::new(HashMap::new());
+			thread_local! {
+				static CLASSES: RefCell<HashMap<&'static str, Group>> = RefCell::new(HashMap::new());
 		   }
 		}
-	}
-
-	pub fn document(&self) -> TokenStream {
-		let executable = self
-			.pages
-			.iter()
-			.map(|page| self.static_element(page.root_id));
-
-		quote! {
-			let window = web_sys::window().expect("getting window");
-			let document = &window.document().expect("getting `window.document`");
-			let head = &document.head().expect("getting `window.document.head`");
-			let body = &document.body().expect("getting `window.document.body`");
-
-			let element = body
-				.children()
-				.item(0)
-				.expect("body should have a root element")
-				.dyn_into::<HtmlElement>()
-				.unwrap();
-			#( #executable )*
-		}
-	}
-
-	fn static_element(&self, element_id: usize) -> TokenStream {
-		let classes = self.static_classes(element_id);
-		let listeners = self.apply_listeners(element_id);
-		let children = self.groups[element_id]
-			.elements
-			.iter()
-			.enumerate()
-			.filter(|(_, child_id)| self.groups[**child_id].is_static())
-			.map(|(i, child_id)| {
-				let child_id = *child_id;
-				let i: u32 = i.try_into().unwrap();
-				let element = self.static_element(child_id);
-				quote! {
-					{
-						let element = element
-							.children()
-							.item(#i)
-							.expect("should never try to index into an empty element")
-							.dyn_into::<HtmlElement>()
-							.unwrap();
-						#element
-					}
-				}
-			});
-		quote! {
-			#classes
-			#listeners
-			#( #children )*
-		}
-	}
-
-	fn static_classes(&self, group_id: usize) -> TokenStream {
-		self.groups[group_id]
-			.classes
-			.iter()
-			.flat_map(|(_, groups)| groups.iter())
-			.filter(|&&class_id| self.groups[class_id].is_static())
-			.map(|&class_id| {
-				let selector = self.groups[class_id]
-					.selector
-					.clone()
-					.expect("static classes should have selectors");
-				let rules = self.queue_all(class_id);
-				quote! {
-					{
-						let mut classes = CLASSES.lock().unwrap();
-						let mut class = classes.entry(#selector).or_insert(Group::default());
-						#rules
-					}
-				}
-			})
-			.collect()
 	}
 }

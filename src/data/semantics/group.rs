@@ -8,7 +8,7 @@ pub struct Group {
 	pub name: Option<String>,
 	pub selector: Option<String>,
 	pub class_names: Vec<String>,
-	pub r#static: bool,
+	pub listener_scope: Option<usize>,
 
 	pub properties: Properties,
 	pub elements: Vec<usize>,
@@ -19,12 +19,12 @@ pub struct Group {
 	pub member_of: Vec<usize>,
 }
 impl Group {
-	pub fn new(name: Option<String>, r#static: bool) -> Self {
+	pub fn new(name: Option<String>, listener_scope: Option<usize>) -> Self {
 		Self {
 			name,
 			selector: None,
 			class_names: Vec::new(),
-			r#static,
+			listener_scope,
 
 			properties: Properties::default(),
 			elements: Vec::new(),
@@ -45,7 +45,7 @@ impl Group {
 			),
 			selector: None,
 			class_names: Vec::new(),
-			r#static: true,
+			listener_scope: None,
 
 			properties: Properties {
 				cwl: self.properties.cwl.clone(),
@@ -69,6 +69,6 @@ impl Group {
 	}
 
 	pub fn is_static(&self) -> bool {
-		self.r#static
+		self.listener_scope.is_none()
 	}
 }

@@ -19,8 +19,34 @@ impl Semantics {
 		}
 	}
 
-	pub fn apply_classes(&self, group_id: usize) -> TokenStream {
-		let apply = self.groups[group_id]
+	fn apply_elements(&self, group_id: usize) -> TokenStream {
+		if self.groups[group_id].elements.len() == 0 {
+			return quote! {};
+		}
+
+		let elements = self.groups[group_id].elements.iter().map(|&element_id| {
+			let rules = self.apply_all(element_id);
+			let tag = self.groups[element_id].tag();
+			let class_names = &self.groups[element_id].class_names;
+			quote! {
+				element.append_child({
+					let mut element = create_element(#tag, vec![#( #class_names ),*], &classes);
+					#rules
+					&element.into()
+				}).unwrap();
+			}
+		});
+		quote! {
+			while let Some(child) = element.last_element_child() {
+				element.remove_child(&child.dyn_into::<Node>().unwrap()).unwrap();
+			}
+
+			#( #elements )*
+		}
+	}
+
+	fn apply_classes(&self, group_id: usize) -> TokenStream {
+		self.groups[group_id]
 			.classes
 			.iter()
 			.flat_map(|(_, groups)| groups.iter())
@@ -29,7 +55,8 @@ impl Semantics {
 					.selector
 					.as_ref()
 					.expect("dynamic classes should have selectors");
-				let rules = self.apply_all(class_id);
+				let apply = self.apply_all(class_id);
+				let queue = self.queue_all(class_id);
 				quote! {
 					let elements = document.get_elements_by_class_name(#selector);
 					for i in 0..elements.length() {
@@ -38,16 +65,13 @@ impl Semantics {
 							.unwrap()
 							.dyn_into::<HtmlElement>()
 							.unwrap();
-						#rules
+						#apply
 					}
+					let mut class = classes.entry(#selector).or_insert(Group::default());
+					#queue
 				}
 			})
-			.collect::<TokenStream>();
-		let queue = self.queue_classes(group_id);
-		quote! {
-			#apply
-			#queue
-		}
+			.collect::<TokenStream>()
 	}
 
 	pub fn apply_listeners(&self, group_id: usize) -> TokenStream {
@@ -73,10 +97,14 @@ impl Semantics {
 				quote! {
 					let closure = {
 						let mut element = element.clone();
-						Closure::wrap(Box::new(move |_e: Event| {
-							let window = web_sys::window().expect("getting window");
-							let document = window.document().expect("getting `window.document`");
-							#rules
+						Closure::wrap(Box::new(move |e: Event| {
+							CLASSES.with(|classes| {
+								e.stop_propagation();
+								let window = web_sys::window().expect("getting window");
+								let document = window.document().expect("getting `window.document`");
+								let mut classes = classes.borrow_mut();
+								#rules
+							});
 						}) as Box<dyn FnMut(Event)>)
 					};
 					element.#event(Some(closure.as_ref().unchecked_ref()));
@@ -84,32 +112,6 @@ impl Semantics {
 				}
 			})
 			.collect()
-	}
-
-	fn apply_elements(&self, group_id: usize) -> TokenStream {
-		if self.groups[group_id].elements.len() > 0 {
-			let elements = self.groups[group_id].elements.iter().map(|&element_id| {
-				let rules = self.apply_all(element_id);
-				let tag = self.groups[element_id].tag();
-				let class_names = &self.groups[element_id].class_names;
-				quote! {
-					element.append_child({
-						let mut element = create_element(#tag, vec![#( #class_names ),*], &CLASSES.lock().unwrap());
-						#rules
-						&element.into()
-					}).unwrap();
-				}
-			});
-			quote! {
-				while let Some(child) = element.last_element_child() {
-					element.remove_child(&child.dyn_into::<Node>().unwrap()).unwrap();
-				}
-
-				#( #elements )*
-			}
-		} else {
-			quote! {}
-		}
 	}
 
 	fn apply_properties(&self, group_id: usize) -> TokenStream {
