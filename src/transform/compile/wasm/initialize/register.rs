@@ -64,10 +64,15 @@ impl Semantics {
 			.listeners
 			.iter()
 			.map(|&listener_id| {
+				let selector = self.groups[listener_id]
+					.name
+					.clone()
+					.expect("static and dynamic classes should have selectors");
 				let rules = self.static_register_all(listener_id);
 				quote! {
 					class.listeners.push({
 						let mut class = Group::default();
+						class.selector = #selector;
 						#rules
 						class
 					});

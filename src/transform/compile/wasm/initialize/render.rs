@@ -98,10 +98,10 @@ impl Semantics {
 					let closure = {
 						let mut element = element.clone();
 						Closure::wrap(Box::new(move |e: Event| {
+							e.stop_propagation();
+							let window = web_sys::window().unwrap();
+							let document = window.document().unwrap();
 							CLASSES.with(|classes| {
-								e.stop_propagation();
-								let window = web_sys::window().unwrap();
-								let document = window.document().unwrap();
 								let mut classes = classes.borrow_mut();
 								#rules
 							});

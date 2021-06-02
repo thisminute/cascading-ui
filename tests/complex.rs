@@ -49,13 +49,12 @@ fn dynamic() {
 		.dyn_into::<HtmlElement>()
 		.expect("this cast should work")
 		.click();
-	// TODO: syntax that can make this happen
-	// assert_eq!(
-	// 	root.first_element_child()
-	// 		.expect("the root should still contain an element")
-	// 		.first_element_child()
-	// 		.expect("that element should now contain an element")
-	// 		.inner_html(),
-	// 	"hello world"
-	// );
+	assert_eq!(
+		root.first_element_child()
+			.expect("the root should still contain an element")
+			.first_element_child()
+			.expect("that element should now contain an element")
+			.inner_html(),
+		"hello world"
+	);
 }
