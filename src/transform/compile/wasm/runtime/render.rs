@@ -81,7 +81,12 @@ impl Semantics {
 							// });
 						}) as Box<dyn FnMut(Event)>)
 					};
-					target.add_event_listener_with_callback(listener.selector, closure.as_ref().unchecked_ref());
+					target
+						.add_event_listener_with_callback(
+							listener.selector,
+							closure.as_ref().unchecked_ref()
+						)
+						.unwrap();
 					closure.forget();
 				}
 			}
