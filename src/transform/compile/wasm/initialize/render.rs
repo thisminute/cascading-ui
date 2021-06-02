@@ -6,31 +6,31 @@ use {
 };
 
 impl Semantics {
-	pub fn apply_all(&self, group_id: usize) -> TokenStream {
-		let classes = self.apply_classes(group_id);
-		let listeners = self.apply_listeners(group_id);
-		let elements = self.apply_elements(group_id);
-		let properties = self.apply_properties(group_id);
+	pub fn static_render_all(&self, group_id: usize) -> TokenStream {
+		let elements = self.static_render_elements(group_id);
+		let classes = self.static_render_classes(group_id);
+		let listeners = self.static_render_listeners(group_id);
+		let properties = self.static_render_properties(group_id);
 		quote! {
+			#elements
 			#classes
 			#listeners
-			#elements
 			#properties
 		}
 	}
 
-	fn apply_elements(&self, group_id: usize) -> TokenStream {
+	fn static_render_elements(&self, group_id: usize) -> TokenStream {
 		if self.groups[group_id].elements.len() == 0 {
 			return quote! {};
 		}
 
 		let elements = self.groups[group_id].elements.iter().map(|&element_id| {
-			let rules = self.apply_all(element_id);
+			let rules = self.static_render_all(element_id);
 			let tag = self.groups[element_id].tag();
 			let class_names = &self.groups[element_id].class_names;
 			quote! {
 				element.append_child({
-					let mut element = create_element(#tag, vec![#( #class_names ),*], &classes);
+					let mut element = static_render_element(#tag, vec![#( #class_names ),*], &mut classes);
 					#rules
 					&element.into()
 				}).unwrap();
@@ -45,7 +45,7 @@ impl Semantics {
 		}
 	}
 
-	fn apply_classes(&self, group_id: usize) -> TokenStream {
+	fn static_render_classes(&self, group_id: usize) -> TokenStream {
 		self.groups[group_id]
 			.classes
 			.iter()
@@ -55,8 +55,8 @@ impl Semantics {
 					.selector
 					.as_ref()
 					.expect("dynamic classes should have selectors");
-				let apply = self.apply_all(class_id);
-				let queue = self.queue_all(class_id);
+				let render = self.static_render_all(class_id);
+				let queue = self.static_register_all(class_id);
 				quote! {
 					let elements = document.get_elements_by_class_name(#selector);
 					for i in 0..elements.length() {
@@ -65,7 +65,7 @@ impl Semantics {
 							.unwrap()
 							.dyn_into::<HtmlElement>()
 							.unwrap();
-						#apply
+						#render
 					}
 					let mut class = classes.entry(#selector).or_insert(Group::default());
 					#queue
@@ -74,12 +74,12 @@ impl Semantics {
 			.collect::<TokenStream>()
 	}
 
-	pub fn apply_listeners(&self, group_id: usize) -> TokenStream {
+	pub fn static_render_listeners(&self, group_id: usize) -> TokenStream {
 		self.groups[group_id]
 			.listeners
 			.iter()
 			.map(|&listener_id| {
-				let rules = self.apply_all(listener_id);
+				let rules = self.static_render_all(listener_id);
 				let event = match &**self.groups[listener_id]
 					.name
 					.as_ref()
@@ -100,8 +100,8 @@ impl Semantics {
 						Closure::wrap(Box::new(move |e: Event| {
 							CLASSES.with(|classes| {
 								e.stop_propagation();
-								let window = web_sys::window().expect("getting window");
-								let document = window.document().expect("getting `window.document`");
+								let window = web_sys::window().unwrap();
+								let document = window.document().unwrap();
 								let mut classes = classes.borrow_mut();
 								#rules
 							});
@@ -114,7 +114,7 @@ impl Semantics {
 			.collect()
 	}
 
-	fn apply_properties(&self, group_id: usize) -> TokenStream {
+	fn static_render_properties(&self, group_id: usize) -> TokenStream {
 		let properties = &self.groups[group_id].properties;
 		let mut effects = Vec::new();
 		if let Some(value) = properties.cwl.get(&CwlProperty::Text) {

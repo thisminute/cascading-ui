@@ -6,11 +6,11 @@ use {
 };
 
 impl Semantics {
-	pub fn queue_all(&self, group_id: usize) -> TokenStream {
-		let elements = self.queue_elements(group_id);
-		let classes = self.queue_classes(group_id);
-		let listeners = self.queue_listeners(group_id);
-		let properties = self.queue_properties(group_id);
+	pub fn static_register_all(&self, group_id: usize) -> TokenStream {
+		let elements = self.static_register_elements(group_id);
+		let classes = self.static_register_classes(group_id);
+		let listeners = self.static_register_listeners(group_id);
+		let properties = self.static_register_properties(group_id);
 		quote! {
 			#elements
 			#classes
@@ -19,12 +19,12 @@ impl Semantics {
 		}
 	}
 
-	fn queue_elements(&self, class_id: usize) -> TokenStream {
+	fn static_register_elements(&self, class_id: usize) -> TokenStream {
 		self.groups[class_id]
 			.elements
 			.iter()
 			.map(|&element_id| {
-				let rules = self.queue_all(element_id);
+				let rules = self.static_register_all(element_id);
 				quote! {
 					class.elements.push({
 						let mut class = Group::default();
@@ -36,7 +36,7 @@ impl Semantics {
 			.collect()
 	}
 
-	fn queue_classes(&self, group_id: usize) -> TokenStream {
+	fn static_register_classes(&self, group_id: usize) -> TokenStream {
 		self.groups[group_id]
 			.classes
 			.iter()
@@ -46,10 +46,11 @@ impl Semantics {
 					.selector
 					.clone()
 					.expect("static and dynamic classes should have selectors");
-				let rules = self.queue_all(class_id);
+				let rules = self.static_register_all(class_id);
 				quote! {
-					class.classes.insert(#selector, {
+					class.classes.push({
 						let mut class = Group::default();
+						class.selector = #selector;
 						#rules
 						class
 					});
@@ -58,12 +59,12 @@ impl Semantics {
 			.collect()
 	}
 
-	fn queue_listeners(&self, class_id: usize) -> TokenStream {
+	fn static_register_listeners(&self, class_id: usize) -> TokenStream {
 		self.groups[class_id]
 			.listeners
 			.iter()
 			.map(|&listener_id| {
-				let rules = self.queue_all(listener_id);
+				let rules = self.static_register_all(listener_id);
 				quote! {
 					class.listeners.push({
 						let mut class = Group::default();
@@ -75,7 +76,7 @@ impl Semantics {
 			.collect()
 	}
 
-	fn queue_properties(&self, class_id: usize) -> TokenStream {
+	fn static_register_properties(&self, class_id: usize) -> TokenStream {
 		let css = self.groups[class_id]
 			.properties
 			.css

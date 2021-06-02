@@ -1,3 +1,6 @@
+mod register;
+mod render;
+
 use {data::semantics::Semantics, proc_macro2::TokenStream, quote::quote, std::convert::TryInto};
 
 impl Semantics {
@@ -44,7 +47,7 @@ impl Semantics {
 			})
 			.collect::<TokenStream>();
 		let classes = self.static_classes(element_id);
-		let listeners = self.apply_listeners(element_id);
+		let listeners = self.static_render_listeners(element_id);
 		quote! {
 			#elements
 			#classes
@@ -62,7 +65,7 @@ impl Semantics {
 					.selector
 					.clone()
 					.expect("static and dynamic classes should have selectors");
-				let rules = self.queue_all(class_id);
+				let rules = self.static_register_all(class_id);
 				quote! {
 					{
 						let mut class = classes.entry(#selector).or_insert(Group::default());
