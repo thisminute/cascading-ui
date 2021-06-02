@@ -61,17 +61,15 @@ impl Semantics {
 			panic!("Source and target group specify different contents for the same element")
 		}
 
-		if self.groups[source_id].elements.len() > 0 {
-			for source_id in self.groups[source_id].elements.clone() {
-				log::debug!(
-					" Cascading element with name {}",
-					self.groups[source_id].name.clone().unwrap()
-				);
-				if self.groups[source_id].is_static() {
-					self.create_element_from_group(source_id, target_id);
-				} else {
-					self.groups[target_id].elements.push(source_id);
-				}
+		for source_id in self.groups[source_id].elements.clone() {
+			log::debug!(
+				" Cascading element with name {}",
+				self.groups[source_id].name.clone().unwrap()
+			);
+			if self.groups[source_id].is_static() {
+				self.create_element_from_group(source_id, target_id);
+			} else {
+				self.groups[target_id].elements.push(source_id);
 			}
 		}
 	}

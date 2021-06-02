@@ -30,25 +30,26 @@ fn dynamic() {
 			}
 		}
 	}
-	// assert_eq!(
-	// 	root.first_child()
-	// 		.expect("the root should contain a node")
-	// 		.text_content()
-	// 		.expect("the node should contain text"),
-	// 	"click me"
-	// );
-	// root.click();
-	// assert_eq!(
-	// 	root.first_element_child()
-	// 		.expect("the root should now contain an element")
-	// 		.inner_html(),
-	// 	"click me too"
-	// );
-	// root.first_element_child()
-	// 	.expect("the root should now contain an element")
-	// 	.dyn_into::<HtmlElement>()
-	// 	.expect("this cast should work")
-	// 	.click();
+	assert_eq!(
+		root.first_child()
+			.expect("the root should contain a node")
+			.text_content()
+			.expect("the node should contain text"),
+		"click me"
+	);
+	root.click();
+	assert_eq!(
+		root.first_element_child()
+			.expect("the root should now contain an element")
+			.inner_html(),
+		"click me too"
+	);
+	root.first_element_child()
+		.expect("the root should now contain an element")
+		.dyn_into::<HtmlElement>()
+		.expect("this cast should work")
+		.click();
+	// TODO: syntax that can make this happen
 	// assert_eq!(
 	// 	root.first_element_child()
 	// 		.expect("the root should still contain an element")
