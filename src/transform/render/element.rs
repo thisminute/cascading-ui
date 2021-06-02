@@ -38,7 +38,7 @@ impl Semantics {
 		}
 
 		for source_id in self.groups[element_id].member_of.clone() {
-			// not having this causes extra classes and would be good to be able to uncomment without breaking tests
+			// TODO: not having this causes extra classes and would be good to be able to uncomment without breaking tests
 			// if self.groups[element_id].is_static() && self.groups[source_id].properties.css.is_empty() {
 			// 	continue;
 			// }

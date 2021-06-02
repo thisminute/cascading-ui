@@ -111,5 +111,5 @@ pub fn cwl_test_setup(input: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn cwl_header(_input: TokenStream) -> TokenStream {
-	Semantics::header().into()
+	Semantics::runtime().into()
 }
