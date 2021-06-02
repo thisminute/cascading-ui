@@ -66,19 +66,20 @@ impl Semantics {
 				for listener in &group.listeners {
 					let closure = {
 						let mut element = target.clone();
+						let group = group.clone();
 						Closure::wrap(Box::new(move |e: Event| {
-							// CLASSES.with(move |classes| {
-							// 	e.stop_propagation();
-							// 	let window = web_sys::window().unwrap();
-							// 	let document = window.document().unwrap();
-							// 	let mut classes = classes.borrow_mut();
+							CLASSES.with(|classes| {
+								e.stop_propagation();
+								let window = web_sys::window().unwrap();
+								let document = window.document().unwrap();
+								let mut classes = classes.borrow_mut();
 
-							// 	// TODO: does this make sense if something else changes the group?
-							// 	render_classes(group, &mut classes);
-							// 	render_elements(group, &mut element, &mut classes);
-							// 	render_listeners(group, &mut element);
-							// 	render_properties(group, &mut element);
-							// });
+								// TODO: does this make sense if something else changes the group?
+								render_classes(&group, &mut classes);
+								render_elements(&group, &mut element, &mut classes);
+								render_listeners(&group, &mut element);
+								render_properties(&group, &mut element);
+							});
 						}) as Box<dyn FnMut(Event)>)
 					};
 					target
