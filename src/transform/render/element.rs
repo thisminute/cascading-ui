@@ -14,7 +14,7 @@ impl Semantics {
 				listener_id,
 				element_id,
 			);
-			self.cascade(listener_id, element_id);
+			self.cascade(listener_id, element_id, true);
 			last_idx += 1;
 		}
 
@@ -48,7 +48,7 @@ impl Semantics {
 				.get_or_insert_with(id_gen)
 				.clone();
 			if self.groups[source_id].is_static() {
-				self.cascade(source_id, element_id);
+				self.cascade(source_id, element_id, false);
 				if !self.groups[source_id].properties.css.is_empty() {
 					self.styles.insert(
 						format!(".{}", selector),

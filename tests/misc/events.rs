@@ -1,12 +1,23 @@
 extern crate cascading_wasm_language;
-use cascading_wasm_language::{cwl_header, cwl_test_setup};
-
 extern crate wasm_bindgen_test;
-use wasm_bindgen_test::*;
-
-wasm_bindgen_test_configure!(run_in_browser);
+use self::{
+	cascading_wasm_language::{cwl_header, cwl_test_setup},
+	wasm_bindgen_test::*,
+};
 
 cwl_header!();
+
+#[wasm_bindgen_test]
+fn property() {
+	cwl_test_setup! {
+		?click {
+			text: "hello world";
+		}
+	}
+	assert_eq!(root.inner_html(), "");
+	root.click();
+	assert_eq!(root.inner_html(), "hello world");
+}
 
 #[wasm_bindgen_test]
 fn element() {
