@@ -30,12 +30,12 @@ impl Semantics {
 					cell::RefCell,
 					collections::HashMap,
 				},
-				wasm_bindgen::{
+				self::wasm_bindgen::{
 					prelude::*,
 					JsCast,
 					JsValue,
 				},
-				web_sys::{
+				self::web_sys::{
 					console,
 					Event,
 					HtmlElement,

@@ -11,7 +11,7 @@ impl Semantics {
 		self.groups[parent_id].elements.push(element_id);
 	}
 
-	pub fn cascade(&mut self, source_id: usize, target_id: usize) {
+	pub fn cascade(&mut self, source_id: usize, target_id: usize, virtual_: bool) {
 		log::debug!(
 			"Cascading from group {} into group {}",
 			source_id,
@@ -21,7 +21,7 @@ impl Semantics {
 			panic!("the build process should never try to cascade a group into itself")
 		}
 
-		if self.groups[source_id].is_static() {
+		if !virtual_ {
 			for (property, value) in self.groups[source_id].properties.cwl.clone() {
 				log::debug!(" Cascading cwl property {:?}:{}", property, value);
 				self.groups[target_id]
@@ -39,12 +39,12 @@ impl Semantics {
 				self.groups[listener_id].properties
 			);
 			self.groups[target_id].listeners.push(listener_id);
-			self.cascade(listener_id, target_id);
+			self.cascade(listener_id, target_id, true);
 		}
 
 		for (name, class_ids) in self.groups[source_id].classes.clone() {
 			for class_id in class_ids {
-				log::debug!(" Cascading scoped class with name {}", name);
+				log::debug!(" Cascading scoped class {} with name {}", class_id, name);
 				self.groups[target_id]
 					.classes
 					.entry(name.clone())
@@ -53,8 +53,7 @@ impl Semantics {
 			}
 		}
 
-		if self.groups[source_id].is_static()
-			&& self.groups[target_id].is_static()
+		if (self.groups[source_id].listener_scope == self.groups[target_id].listener_scope)
 			&& self.groups[source_id].elements.len() > 0
 			&& self.groups[target_id].elements.len() > 0
 		{

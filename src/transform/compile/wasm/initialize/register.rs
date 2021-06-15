@@ -67,7 +67,7 @@ impl Semantics {
 				let selector = self.groups[listener_id]
 					.name
 					.clone()
-					.expect("static and dynamic classes should have selectors");
+					.expect("listeners should have event names");
 				let rules = self.static_register_all(listener_id);
 				quote! {
 					class.listeners.push({
