@@ -11,7 +11,7 @@ impl Semantics {
 		self.groups[parent_id].elements.push(element_id);
 	}
 
-	pub fn cascade(&mut self, source_id: usize, target_id: usize, r#virtual: bool) {
+	pub fn cascade(&mut self, source_id: usize, target_id: usize, virtual_: bool) {
 		log::debug!(
 			"Cascading from group {} into group {}",
 			source_id,
@@ -21,7 +21,7 @@ impl Semantics {
 			panic!("the build process should never try to cascade a group into itself")
 		}
 
-		if !r#virtual {
+		if !virtual_ {
 			for (property, value) in self.groups[source_id].properties.cwl.clone() {
 				log::debug!(" Cascading cwl property {:?}:{}", property, value);
 				self.groups[target_id]
@@ -44,7 +44,7 @@ impl Semantics {
 
 		for (name, class_ids) in self.groups[source_id].classes.clone() {
 			for class_id in class_ids {
-				log::debug!(" Cascading scoped class with name {}", name);
+				log::debug!(" Cascading scoped class {} with name {}", class_id, name);
 				self.groups[target_id]
 					.classes
 					.entry(name.clone())

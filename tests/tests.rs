@@ -4,6 +4,7 @@ wasm_bindgen_test_configure!(run_in_browser);
 
 mod classes {
 	mod classes;
+	mod event_parallel_nesting;
 	mod parallel_nesting;
 }
 mod properties {

@@ -47,14 +47,17 @@ impl Semantics {
 				.selector
 				.get_or_insert_with(id_gen)
 				.clone();
-			if self.groups[source_id].is_static() {
-				self.cascade(source_id, element_id, false);
-				if !self.groups[source_id].properties.css.is_empty() {
-					self.styles.insert(
-						format!(".{}", selector),
-						self.groups[source_id].properties.css.clone(),
-					);
-				}
+			log::debug!("  Generated selector {} for group {}", selector, source_id);
+			self.cascade(
+				source_id,
+				element_id,
+				self.groups[element_id].listener_scope != self.groups[source_id].listener_scope,
+			);
+			if !self.groups[source_id].properties.css.is_empty() {
+				self.styles.insert(
+					format!(".{}", selector),
+					self.groups[source_id].properties.css.clone(),
+				);
 			}
 			self.groups[element_id].class_names.push(selector);
 		}

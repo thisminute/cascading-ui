@@ -86,70 +86,76 @@ fn level_3() {
 	test(&element);
 }
 
-// #[wasm_bindgen_test]
-// fn level_4() {
-// 	cwl_test_setup! {
-// 		.a {
-// 			b {
-// 				.c {
-// 					d {
-// 						color: "blue";
-// 					}
-// 				}
-// 			}
-// 		}
-// 		a {
-// 			.b {
-// 				c {
-// 					.d {
-// 						text: "hello world";
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}
-// 	let element = root
-// 		.first_element_child()
-// 		.unwrap()
-// 		.first_element_child()
-// 		.unwrap()
-// 		.first_element_child()
-// 		.unwrap();
-// 	test();
-// }
+#[wasm_bindgen_test]
+fn level_4() {
+	cwl_test_setup! {
+		.a {
+			b {
+				.c {
+					d {
+						color: "blue";
+					}
+				}
+			}
+		}
+		a {
+			.b {
+				c {
+					.d {
+						text: "hello world";
+					}
+				}
+			}
+		}
+	}
+	let element = root
+		.first_element_child()
+		.unwrap()
+		.first_element_child()
+		.unwrap()
+		.first_element_child()
+		.unwrap()
+		.first_element_child()
+		.unwrap();
+	test(&element);
+}
 
-// #[wasm_bindgen_test]
-// fn level_5() {
-// 	cwl_test_setup! {
-// 		.a {
-// 			b {
-// 				.c {
-// 					d {
-// 						.e {
-// 							color: "blue";
-// 						}
-// 					}
-// 				}
-// 			}
-// 		}
-// 		a {
-// 			.b {
-// 				c {
-// 					.d {
-// 						e {
-// 							text: "hello world";
-// 						}
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}
-// 	let element = root
-// 		.first_element_child()
-// 		.unwrap()
-// 		.first_element_child()
-// 		.unwrap()
-// 		.first_element_child()
-// 		.unwrap();
-// 	test();
-// }
+#[wasm_bindgen_test]
+fn level_5() {
+	cwl_test_setup! {
+		.a {
+			b {
+				.c {
+					d {
+						.e {
+							color: "blue";
+						}
+					}
+				}
+			}
+		}
+		a {
+			.b {
+				c {
+					.d {
+						e {
+							text: "hello world";
+						}
+					}
+				}
+			}
+		}
+	}
+	let element = root
+		.first_element_child()
+		.unwrap()
+		.first_element_child()
+		.unwrap()
+		.first_element_child()
+		.unwrap()
+		.first_element_child()
+		.unwrap()
+		.first_element_child()
+		.unwrap();
+	test(&element);
+}

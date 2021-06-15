@@ -53,7 +53,7 @@ impl Group {
 				page: HashMap::new(),
 			},
 			elements: self.elements.clone(),
-			classes: self.classes.clone(),
+			classes: HashMap::new(),
 			listeners: self.listeners.clone(),
 
 			members: Vec::new(),
