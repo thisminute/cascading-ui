@@ -1,4 +1,7 @@
-use {data::semantics::Semantics, misc::id_gen::id_gen};
+use {
+	data::semantics::{properties::CuiProperty, Semantics},
+	misc::id_gen::id_gen,
+};
 
 impl Semantics {
 	pub fn render_element(&mut self, element_id: usize, ancestors: &mut Vec<usize>) {
@@ -67,6 +70,15 @@ impl Semantics {
 			self.render_element(element_id, ancestors);
 		}
 		ancestors.pop();
+
+		self.groups[element_id].tag = match self.groups[element_id]
+			.properties
+			.cui
+			.get(&CuiProperty("link".to_string()))
+		{
+			Some(_) => "a",
+			None => "div",
+		};
 
 		log::debug!(" Removing virtual groups from element {}", element_id);
 		let listener_scope = self.groups[element_id].listener_scope;

@@ -7,12 +7,15 @@ mod classes {
 	mod event_parallel_nesting;
 	mod parallel_nesting;
 }
-mod properties {
-	mod text;
-	mod title;
+mod data {
+	// mod r#static;
 }
 mod misc {
 	mod basics;
 	mod complex;
 	mod events;
+}
+mod properties {
+	mod text;
+	mod title;
 }

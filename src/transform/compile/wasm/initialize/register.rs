@@ -1,9 +1,4 @@
-use {
-	data::semantics::{properties::CwlProperty, Semantics},
-	proc_macro2::TokenStream,
-	quote::quote,
-	transform::compile::css::Css,
-};
+use {data::semantics::Semantics, proc_macro2::TokenStream, quote::quote};
 
 impl Semantics {
 	pub fn static_register_all(&self, group_id: usize) -> TokenStream {
@@ -87,27 +82,22 @@ impl Semantics {
 			.css
 			.iter()
 			.map(|(property, value)| {
-				let css = property.css();
 				quote! {
-					class.properties.insert(Property::Css(#css), #value);
+					class.properties.insert(Property::Css(#property), #value);
 				}
 			});
-		let cwl = self.groups[class_id]
+		let cui = self.groups[class_id]
 			.properties
-			.cwl
+			.cui
 			.iter()
 			.map(|(property, value)| {
-				let property = match property {
-					CwlProperty::Text => quote! { Text },
-					CwlProperty::Link => quote! { Link },
-					CwlProperty::Tooltip => quote! { Tooltip },
-					CwlProperty::Image => quote! { Image },
-				};
-				quote! { class.properties.insert(Property::#property, #value); }
+				quote! {
+					class.properties.insert(Property::#property, #value);
+				}
 			});
 		quote! {
 			#( #css )*
-			#( #cwl )*
+			#( #cui )*
 		}
 	}
 }

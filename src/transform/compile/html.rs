@@ -1,5 +1,5 @@
 use {
-	data::semantics::{properties::CwlProperty, Group, Semantics},
+	data::semantics::{properties::CuiProperty, Group, Semantics},
 	std::collections::HashMap,
 	transform::compile::css::Css,
 };
@@ -45,14 +45,14 @@ impl Semantics {
 
 impl Group {
 	fn html(&self, groups: &Vec<Group>) -> String {
-		let link = match self.properties.cwl.get(&CwlProperty::Link) {
-			Some(value) => value,
-			None => "",
+		let link = match self.properties.cui.get(&CuiProperty("link".to_string())) {
+			Some(value) => value.to_string(),
+			None => "".to_string(),
 		};
 		let attributes = [
 			("style", &*self.properties.css.css()),
 			("class", &*self.class_names.join(" ")),
-			("href", link),
+			("href", &*link),
 		]
 		.iter()
 		.filter(|(_, value)| !value.is_empty())
@@ -68,15 +68,15 @@ impl Group {
 			.collect::<Vec<String>>()
 			.join("");
 
-		format!(
-			"<{0}{1}>{2}{3}</{0}>",
-			self.tag(),
-			attributes,
-			match self.properties.cwl.get(&CwlProperty::Text) {
-				Some(value) => value,
-				None => "",
+		let contents = format!(
+			"{}{}",
+			match self.properties.cui.get(&CuiProperty("text".to_string())) {
+				Some(value) => value.to_string(),
+				None => "".to_string(),
 			},
 			children
-		)
+		);
+
+		format!("<{0}{1}>{2}</{0}>", self.tag, attributes, contents)
 	}
 }

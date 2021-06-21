@@ -1,9 +1,6 @@
-use {
-	data::semantics::properties::{CwlProperty, Properties},
-	std::collections::HashMap,
-};
+use {data::semantics::properties::Properties, std::collections::HashMap};
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Group {
 	pub name: Option<String>,
 	pub selector: Option<String>,
@@ -17,6 +14,8 @@ pub struct Group {
 
 	pub members: Vec<usize>,
 	pub member_of: Vec<usize>,
+
+	pub tag: &'static str,
 }
 impl Group {
 	pub fn new(name: Option<String>, listener_scope: Option<usize>) -> Self {
@@ -33,13 +32,16 @@ impl Group {
 
 			members: Vec::new(),
 			member_of: Vec::new(),
+
+			tag: "div",
 		}
 	}
 
 	pub fn class_to_new_static_element(&mut self, source_id: usize) -> Self {
 		Group {
 			name: Some(
-				self.name
+				self
+					.name
 					.clone()
 					.expect("should never try to make an instance of a class with no name"),
 			),
@@ -48,7 +50,7 @@ impl Group {
 			listener_scope: None,
 
 			properties: Properties {
-				cwl: self.properties.cwl.clone(),
+				cui: self.properties.cui.clone(),
 				css: HashMap::new(),
 				page: HashMap::new(),
 			},
@@ -58,13 +60,8 @@ impl Group {
 
 			members: Vec::new(),
 			member_of: vec![source_id],
-		}
-	}
 
-	pub fn tag(&self) -> &'static str {
-		match self.properties.cwl.get(&CwlProperty::Link) {
-			Some(_) => "a",
-			None => "div",
+			tag: "div",
 		}
 	}
 

@@ -1,8 +1,7 @@
 use {
-	data::semantics::{properties::CwlProperty, Semantics},
+	data::semantics::{properties::CuiProperty, Semantics},
 	proc_macro2::TokenStream,
 	quote::quote,
-	transform::compile::css::Css,
 };
 
 impl Semantics {
@@ -26,7 +25,7 @@ impl Semantics {
 
 		let elements = self.groups[group_id].elements.iter().map(|&element_id| {
 			let rules = self.static_render_all(element_id);
-			let tag = self.groups[element_id].tag();
+			let tag = self.groups[element_id].tag;
 			let class_names = &self.groups[element_id].class_names;
 			quote! {
 				element.append_child({
@@ -117,15 +116,14 @@ impl Semantics {
 	fn static_render_properties(&self, group_id: usize) -> TokenStream {
 		let properties = &self.groups[group_id].properties;
 		let mut effects = Vec::new();
-		if let Some(value) = properties.cwl.get(&CwlProperty::Text) {
+		if let Some(value) = properties.cui.get(&CuiProperty("text".to_string())) {
 			effects.push(quote! { element.text(#value); });
 		}
-		if let Some(_value) = properties.cwl.get(&CwlProperty::Link) {
+		if let Some(_value) = properties.cui.get(&CuiProperty("link".to_string())) {
 			effects.push(quote! {});
 		}
 
 		for (property, value) in &properties.css {
-			let property = property.css();
 			effects.push(quote! { element.css(#property, #value); });
 		}
 

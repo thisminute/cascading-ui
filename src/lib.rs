@@ -22,8 +22,6 @@ use {
 	syn::parse_macro_input,
 };
 
-// type BoxResult<T> = Result<T, Box<dyn std::error::ErrorError>>;
-
 fn pipeline(document: Document) -> (String, TokenStream2) {
 	let mut semantics = document.analyze();
 	semantics.render();
@@ -31,20 +29,20 @@ fn pipeline(document: Document) -> (String, TokenStream2) {
 }
 
 #[proc_macro]
-pub fn cwl(input: TokenStream) -> TokenStream {
+pub fn cui(input: TokenStream) -> TokenStream {
 	SimpleLogger::new()
 		.with_level(LevelFilter::Debug)
 		.init()
 		.unwrap();
 	let mut input = input.into();
 
-	// if it exists, import .cwl files from the `cwl` directory and attach them to the input
-	let path = "./cwl";
+	// if it exists, import .cui files from the `cui` directory and attach them to the input
+	let path = "./cui";
 	if Path::new(path).exists() {
 		for entry in read_dir(path).expect(&*format!("reading from {}", path)) {
-			let entry = entry.expect("reading .cwl file");
+			let entry = entry.expect("reading .cui file");
 			let filename = entry.path().display().to_string();
-			if filename.ends_with(".cwl") {
+			if filename.ends_with(".cui") {
 				let contents: TokenStream2 = read_to_string(entry.path()).unwrap().parse().unwrap();
 				contents.to_tokens(&mut input);
 			}
@@ -55,13 +53,13 @@ pub fn cwl(input: TokenStream) -> TokenStream {
 	let (html, runtime) = pipeline(parse_macro_input!(input as Document));
 	let destination = format!("target/html/index.html");
 	write(&destination, html).expect(&*format!("writing output html code to {}", destination));
-	write("target/cwl_macro_output.rs", runtime.to_string()).expect("writing output rust code");
+	write("target/cui_macro_output.rs", runtime.to_string()).expect("writing output rust code");
 
 	runtime.into()
 }
 
 #[proc_macro]
-pub fn cwl_test_setup(input: TokenStream) -> TokenStream {
+pub fn test_setup(input: TokenStream) -> TokenStream {
 	if let Ok(_) = SimpleLogger::new().with_level(LevelFilter::Error).init() {}
 
 	let document = parse_macro_input!(input as Document);
@@ -110,6 +108,6 @@ pub fn cwl_test_setup(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn cwl_header(_input: TokenStream) -> TokenStream {
+pub fn test_header(_input: TokenStream) -> TokenStream {
 	Semantics::runtime().into()
 }

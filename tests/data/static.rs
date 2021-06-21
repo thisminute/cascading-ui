@@ -9,20 +9,10 @@ wasm_bindgen_test_configure!(run_in_browser);
 test_header!();
 
 #[wasm_bindgen_test]
-fn empty() {
-	test_setup! {}
-	assert_eq!(root.inner_html(), "");
-}
-
-#[wasm_bindgen_test]
-fn element() {
+fn base() {
 	test_setup! {
-		thingy {}
+		$text: "hello world";
+		text: $text;
 	}
-	assert_eq!(
-		root.first_element_child()
-			.expect("the root should contain an element")
-			.inner_html(),
-		""
-	);
+	assert_eq!(root.inner_html(), "hello world");
 }

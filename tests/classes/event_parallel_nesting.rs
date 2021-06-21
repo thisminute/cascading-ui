@@ -1,15 +1,15 @@
-extern crate cascading_wasm_language;
+extern crate cascading_ui;
 extern crate wasm_bindgen_test;
 use self::{
-	cascading_wasm_language::{cwl_header, cwl_test_setup},
+	cascading_ui::{test_header, test_setup},
 	wasm_bindgen_test::*,
 };
 
-cwl_header!();
+test_header!();
 
 #[wasm_bindgen_test]
 fn level_1() {
-	cwl_test_setup! {
+	test_setup! {
 		?click {
 			.a {
 				color: "blue";
@@ -36,7 +36,7 @@ fn level_1() {
 
 #[wasm_bindgen_test]
 fn level_2() {
-	cwl_test_setup! {
+	test_setup! {
 		?click {
 			.a {
 				b {
@@ -71,7 +71,7 @@ fn level_2() {
 
 #[wasm_bindgen_test]
 fn level_3() {
-	cwl_test_setup! {
+	test_setup! {
 		?click {
 			.a {
 				b {
@@ -112,7 +112,7 @@ fn level_3() {
 
 #[wasm_bindgen_test]
 fn level_4() {
-	cwl_test_setup! {
+	test_setup! {
 		?click {
 			.a {
 				b {
@@ -159,7 +159,7 @@ fn level_4() {
 
 #[wasm_bindgen_test]
 fn level_5() {
-	cwl_test_setup! {
+	test_setup! {
 		?click {
 			.a {
 				b {

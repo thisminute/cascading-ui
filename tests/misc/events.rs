@@ -1,15 +1,15 @@
-extern crate cascading_wasm_language;
+extern crate cascading_ui;
 extern crate wasm_bindgen_test;
 use self::{
-	cascading_wasm_language::{cwl_header, cwl_test_setup},
+	cascading_ui::{test_header, test_setup},
 	wasm_bindgen_test::*,
 };
 
-cwl_header!();
+test_header!();
 
 #[wasm_bindgen_test]
 fn property() {
-	cwl_test_setup! {
+	test_setup! {
 		?click {
 			text: "hello world";
 		}
@@ -21,7 +21,7 @@ fn property() {
 
 #[wasm_bindgen_test]
 fn element() {
-	cwl_test_setup! {
+	test_setup! {
 		text: "click me";
 		?click {
 			a {
@@ -41,7 +41,7 @@ fn element() {
 
 #[wasm_bindgen_test]
 fn element_from_class() {
-	cwl_test_setup! {
+	test_setup! {
 		text: "click me";
 		.a {
 			text: "hello world";
@@ -63,7 +63,7 @@ fn element_from_class() {
 
 #[wasm_bindgen_test]
 fn class() {
-	cwl_test_setup! {
+	test_setup! {
 		text: "click me";
 		a {}
 		?click {
@@ -91,7 +91,7 @@ fn class() {
 
 #[wasm_bindgen_test]
 fn nesting() {
-	cwl_test_setup! {
+	test_setup! {
 		text: "click me";
 		?click {
 			a {
