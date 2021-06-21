@@ -3,7 +3,7 @@ pub mod properties;
 
 pub use self::group::Group;
 
-use self::properties::CssRules;
+use data::semantics::properties::CssRules;
 
 pub struct Page {
 	pub title: String,

@@ -23,7 +23,7 @@ impl Semantics {
 
 		if !virtual_ {
 			for (property, value) in self.groups[source_id].properties.cui.clone() {
-				log::debug!(" Cascading cui property {:?}:{}", property, value);
+				log::debug!(" Cascading cui property {}:{}", property.0, value);
 				self.groups[target_id]
 					.properties
 					.cui
@@ -33,11 +33,7 @@ impl Semantics {
 		}
 
 		for listener_id in self.groups[source_id].listeners.clone() {
-			log::debug!(
-				" Cascading scoped listener {} with properties {:?}",
-				listener_id,
-				self.groups[listener_id].properties
-			);
+			log::debug!(" Cascading scoped listener {}", listener_id);
 			self.groups[target_id].listeners.push(listener_id);
 			self.cascade(listener_id, target_id, true);
 		}

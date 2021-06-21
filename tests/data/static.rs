@@ -11,8 +11,8 @@ test_header!();
 #[wasm_bindgen_test]
 fn base() {
 	test_setup! {
-	   $text: "hello world";
-	   text: $text;
+		$text: "hello world";
+		text: $text;
 	}
 	assert_eq!(root.inner_html(), "hello world");
 }

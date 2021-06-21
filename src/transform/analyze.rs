@@ -1,30 +1,30 @@
-use {
-	data::{
-		ast::{Block, Document, Prefix, Property},
-		semantics::{
-			properties::{CssProperty, CwlProperty, PageProperty},
-			Group, Page, Semantics,
-		},
+use data::{
+	ast::{Block, Document, Prefix, Property, Value},
+	semantics::{
+		properties::{is_css_property, CuiProperty},
+		Group, Page, Semantics,
 	},
-	quote::ToTokens,
 };
 
 impl Document {
 	pub fn analyze(self) -> Semantics {
 		let mut semantics = Semantics::default();
 		semantics.styles.insert(
-			"body".into(),
-			[(CssProperty::Margin, "0".into())]
+			"body".to_string(),
+			[("margin".to_string(), Value::String("0".to_string()))]
 				.iter()
 				.cloned()
 				.collect(),
 		);
 		semantics.styles.insert(
-			"a".into(),
-			[(CssProperty::Display, "block".into())]
-				.iter()
-				.cloned()
-				.collect(),
+			"a".to_string(),
+			[(
+				"display".to_string(),
+				Value::String("block".to_string()).into(),
+			)]
+			.iter()
+			.cloned()
+			.collect(),
 		);
 		log::debug!("...Creating groups...");
 		semantics.create_group_from_block(self.root, None, None, None);
@@ -98,11 +98,7 @@ impl Semantics {
 	fn apply_static_property(&mut self, property: Property, group_id: usize) {
 		let group = &mut self.groups[group_id];
 		let properties = &mut group.properties;
-		let (property, value) = (
-			property.property.to_string(),
-			property.value.to_token_stream().to_string(),
-		);
-		let value = value[1..value.len() - 1].to_string();
+		let (property, value) = (property.property.to_string(), property.value);
 		log::debug!(
 			" Applying property {}:{} to group {}",
 			property,
@@ -110,28 +106,13 @@ impl Semantics {
 			group_id
 		);
 
-		if let Some(value) = match &*property {
-			// page properties
-			"title" => properties.page.insert(PageProperty::Title, value),
-			"route" => properties.page.insert(PageProperty::Route, value),
-
-			// css properties
-			"background_color" => properties.css.insert(CssProperty::BackgroundColor, value),
-			"color" => properties.css.insert(CssProperty::Color, value),
-			"position" => properties.css.insert(CssProperty::Position, value),
-			"height" => properties.css.insert(CssProperty::Height, value),
-			"width" => properties.css.insert(CssProperty::Width, value),
-
-			"link" => properties.cwl.insert(CwlProperty::Link, value),
-			"text" => properties.cwl.insert(CwlProperty::Text, value),
-			"tooltip" => properties.cwl.insert(CwlProperty::Tooltip, value),
-			"image" => properties.cwl.insert(CwlProperty::Image, value),
-			_ => {
-				panic!("Unrecognized property {}", property);
-			}
-		} {
-			log::debug!("Overwrote old value of {}", value);
-			panic!("Does this ever happen?");
+		if is_css_property(&property) {
+			properties.css.insert(property, value);
+		} else {
+			properties.cui.insert(CuiProperty(property), value);
 		}
+
+		// page properties
+		// "title" => properties.page.insert(PageProperty::Title, value),
 	}
 }
