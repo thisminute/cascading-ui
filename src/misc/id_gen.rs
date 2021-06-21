@@ -13,7 +13,7 @@ pub fn id_gen() -> String {
 	let mut n = COUNTER.load(Ordering::Relaxed);
 	COUNTER.swap(n + 1, Ordering::Relaxed);
 
-	while {
+	loop {
 		let symbol_pool = if id.len() == 0 {
 			SYMBOLS_1.len()
 		} else {
@@ -26,7 +26,9 @@ pub fn id_gen() -> String {
 			SYMBOLS_2[digit]
 		});
 		n /= symbol_pool;
-		n > 0
-	} {}
+		if n == 0 {
+			break;
+		}
+	}
 	id
 }
