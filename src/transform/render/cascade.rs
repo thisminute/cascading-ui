@@ -22,11 +22,11 @@ impl Semantics {
 		}
 
 		if !virtual_ {
-			for (property, value) in self.groups[source_id].properties.cwl.clone() {
-				log::debug!(" Cascading cwl property {:?}:{}", property, value);
+			for (property, value) in self.groups[source_id].properties.cui.clone() {
+				log::debug!(" Cascading cui property {:?}:{}", property, value);
 				self.groups[target_id]
 					.properties
-					.cwl
+					.cui
 					.entry(property)
 					.or_insert(value.clone());
 			}

@@ -1,5 +1,5 @@
 use {
-	data::semantics::{properties::CwlProperty, Semantics},
+	data::semantics::{properties::CuiProperty, Semantics},
 	proc_macro2::TokenStream,
 	quote::quote,
 	transform::compile::css::Css,
@@ -117,10 +117,10 @@ impl Semantics {
 	fn static_render_properties(&self, group_id: usize) -> TokenStream {
 		let properties = &self.groups[group_id].properties;
 		let mut effects = Vec::new();
-		if let Some(value) = properties.cwl.get(&CwlProperty::Text) {
+		if let Some(value) = properties.cui.get(&CuiProperty::Text) {
 			effects.push(quote! { element.text(#value); });
 		}
-		if let Some(_value) = properties.cwl.get(&CwlProperty::Link) {
+		if let Some(_value) = properties.cui.get(&CuiProperty::Link) {
 			effects.push(quote! {});
 		}
 

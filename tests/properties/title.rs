@@ -1,15 +1,15 @@
-extern crate cascading_wasm_language;
+extern crate cascading_ui;
 extern crate wasm_bindgen_test;
 use self::{
-	cascading_wasm_language::{cwl_header, cwl_test_setup},
+	cascading_ui::{test_header, test_setup},
 	wasm_bindgen_test::*,
 };
 
-cwl_header!();
+test_header!();
 
 #[wasm_bindgen_test]
 fn base() {
-	cwl_test_setup! {
+	test_setup! {
 		title: "hello world";
 	}
 }

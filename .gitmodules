@@ -1,4 +1,4 @@
-[submodule "create-cwl-app"]
-	path = create-cwl-app
-	url = https://github.com/thisminute/create-cwl-app
+[submodule "cui-app-template"]
+	path = cui-app-template
+	url = https://github.com/thisminute/cui-app-template
 	branch = debug

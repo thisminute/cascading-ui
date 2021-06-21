@@ -1,5 +1,5 @@
 use {
-	data::semantics::{properties::CwlProperty, Semantics},
+	data::semantics::{properties::CuiProperty, Semantics},
 	proc_macro2::TokenStream,
 	quote::quote,
 	transform::compile::css::Css,
@@ -92,22 +92,24 @@ impl Semantics {
 					class.properties.insert(Property::Css(#css), #value);
 				}
 			});
-		let cwl = self.groups[class_id]
+		let cui = self.groups[class_id]
 			.properties
-			.cwl
+			.cui
 			.iter()
 			.map(|(property, value)| {
 				let property = match property {
-					CwlProperty::Text => quote! { Text },
-					CwlProperty::Link => quote! { Link },
-					CwlProperty::Tooltip => quote! { Tooltip },
-					CwlProperty::Image => quote! { Image },
+					CuiProperty::Text => quote! { Text },
+					CuiProperty::Link => quote! { Link },
+					CuiProperty::Tooltip => quote! { Tooltip },
+					CuiProperty::Image => quote! { Image },
 				};
-				quote! { class.properties.insert(Property::#property, #value); }
+				quote! {
+					class.properties.insert(Property::#property, #value);
+				}
 			});
 		quote! {
 			#( #css )*
-			#( #cwl )*
+			#( #cui )*
 		}
 	}
 }
