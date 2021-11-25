@@ -14,7 +14,7 @@ pub fn id_gen() -> String {
 	COUNTER.swap(n + 1, Ordering::Relaxed);
 
 	loop {
-		let symbol_pool = if id.len() == 0 {
+		let symbol_pool = if id.is_empty() {
 			SYMBOLS_1.len()
 		} else {
 			SYMBOLS_1.len() + SYMBOLS_2.len()

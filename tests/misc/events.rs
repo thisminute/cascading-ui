@@ -32,7 +32,8 @@ fn element() {
 	assert_eq!(root.inner_html(), "click me");
 	root.click();
 	assert_eq!(
-		root.first_element_child()
+		root
+			.first_element_child()
 			.expect("the root should now contain an element")
 			.inner_html(),
 		"hello world"
@@ -53,7 +54,8 @@ fn element_from_class() {
 	assert_eq!(root.inner_html(), "click me");
 	root.click();
 	assert_eq!(
-		root.first_element_child()
+		root
+			.first_element_child()
 			.expect("the root should now contain an element")
 			.text_content()
 			.expect("the element should now contain text"),
@@ -107,7 +109,8 @@ fn nesting() {
 	assert_eq!(root.inner_html(), "click me");
 	root.click();
 	assert_eq!(
-		root.first_element_child()
+		root
+			.first_element_child()
 			.expect("the root should now contain an element")
 			.inner_html(),
 		"click me too",
@@ -115,19 +118,22 @@ fn nesting() {
 	);
 	root.click();
 	assert_eq!(
-		root.first_element_child()
+		root
+			.first_element_child()
 			.expect("the root should still contain an element")
 			.inner_html(),
 		"click me too",
 		"the element should still contain the same text"
 	);
-	root.first_element_child()
+	root
+		.first_element_child()
 		.expect("the root should still contain an element")
 		.dyn_into::<HtmlElement>()
 		.expect("the element should be an html element")
 		.click();
 	assert_eq!(
-		root.first_element_child()
+		root
+			.first_element_child()
 			.expect("the root should still contain an element")
 			.first_element_child()
 			.expect("the element should now contain an element")

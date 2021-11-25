@@ -23,12 +23,17 @@ impl Semantics {
 
 		if !virtual_ {
 			for (property, value) in self.groups[source_id].properties.cui.clone() {
-				log::debug!(" Cascading cui property {}:{}", property.0, value);
+				log::debug!(" Cascading cui property {}:{:?}", property.0, value);
 				self.groups[target_id]
 					.properties
 					.cui
 					.entry(property)
-					.or_insert(value.clone());
+					.or_insert(value);
+			}
+
+			for (name, value) in self.groups[source_id].variables.clone() {
+				log::debug!(" Cascading variable {}:{:?}", name, value);
+				self.groups[target_id].variables.insert(name, value);
 			}
 		}
 
@@ -50,8 +55,8 @@ impl Semantics {
 		}
 
 		if (self.groups[source_id].listener_scope == self.groups[target_id].listener_scope)
-			&& self.groups[source_id].elements.len() > 0
-			&& self.groups[target_id].elements.len() > 0
+			&& !self.groups[source_id].elements.is_empty()
+			&& !self.groups[target_id].elements.is_empty()
 		{
 			panic!("Source and target group specify different contents for the same element")
 		}

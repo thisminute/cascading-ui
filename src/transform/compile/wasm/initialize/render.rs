@@ -19,7 +19,7 @@ impl Semantics {
 	}
 
 	fn static_render_elements(&self, group_id: usize) -> TokenStream {
-		if self.groups[group_id].elements.len() == 0 {
+		if self.groups[group_id].elements.is_empty() {
 			return quote! {};
 		}
 

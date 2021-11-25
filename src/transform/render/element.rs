@@ -65,6 +65,13 @@ impl Semantics {
 			self.groups[element_id].class_names.push(selector);
 		}
 
+		self.groups[element_id].variables = self.groups[element_id]
+			.variables
+			.clone()
+			.into_iter()
+			.map(|(identifier, value)| (identifier, self.render_value(value, ancestors)))
+			.collect();
+
 		ancestors.push(element_id);
 		for element_id in self.groups[element_id].elements.clone() {
 			self.render_element(element_id, ancestors);
@@ -89,7 +96,7 @@ impl Semantics {
 			.filter(|&group_id| listener_scope == self.groups[group_id].listener_scope)
 			.collect();
 		let mut classes = self.groups[element_id].classes.clone();
-		for (_, groups) in &mut classes {
+		for groups in &mut classes.values_mut() {
 			groups.retain(|&group_id| listener_scope == self.groups[group_id].listener_scope)
 		}
 		self.groups[element_id].classes = classes;

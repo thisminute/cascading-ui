@@ -35,7 +35,7 @@ rustup default stable-x86_64-pc-windows-gnu
 
 ### src/lib.rs
 
-Execution of the code starts in one of 3 procedural macros exported from lib.rs. `cui` is the main one, `cui_document` and `cui_header` are helpers meant to be used for writing tests.
+Execution of the code starts in one of 3 procedural macros exported from lib.rs. `cui` is the main one, `test_setup` and `test_header` are helpers used for writing tests.
 
 ### Data flow
 
@@ -61,9 +61,9 @@ This is the core of CUI (And could be fairly easy to adapt to other syntaxes!). 
 
 ## Transformations in detail
 
-Transformations are not entirely distinct from one another, and some of the tasks that a transformation does could have been placed in a different transformation to achieve the same result. For example, different kinds of blocks (class, element, or event) are written to different arrays during parsing, but the same thing could be achieved by writing to a single `blocks` array during parsing and then determining what kind of block each block is later, during analysis.
+Transformations are not entirely conceptually distinct from one another - some of the tasks that a transformation does could have been placed in a different transformation to achieve the same result. For example, different kinds of blocks (class, element, or event) are written to different arrays during parsing, but the same thing could be achieved by writing to a single `blocks` array during parsing and then determining what kind of block each block is later, during analysis.
 
-A general principle to adhere to is to place logic as early as it can happen without losing information that we need later. In our block parsing example, by determining whether a block is a class, element, or event in parsing, we lose the ability to tell whether a particular class came before or after another element. For example:
+A general principle is to place logic as early as it can happen without losing information that we need later. In our block parsing example, by determining whether a block is a class, element, or event in parsing, we lose the ability to tell whether a particular class came before or after another element. For example:
 
 ```cui
 // 1

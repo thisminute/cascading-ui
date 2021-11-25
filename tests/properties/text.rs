@@ -23,7 +23,8 @@ fn element() {
 		}
 	}
 	assert_eq!(
-		root.first_element_child()
+		root
+			.first_element_child()
 			.expect("the root should contain an element")
 			.inner_html(),
 		"hello world"
