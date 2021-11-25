@@ -96,7 +96,7 @@ impl Semantics {
 			.filter(|&group_id| listener_scope == self.groups[group_id].listener_scope)
 			.collect();
 		let mut classes = self.groups[element_id].classes.clone();
-		for (_, groups) in &mut classes {
+		for groups in &mut classes.values_mut() {
 			groups.retain(|&group_id| listener_scope == self.groups[group_id].listener_scope)
 		}
 		self.groups[element_id].classes = classes;

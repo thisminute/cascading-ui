@@ -18,13 +18,10 @@ impl Document {
 		);
 		semantics.styles.insert(
 			"a".to_string(),
-			[(
-				"display".to_string(),
-				Value::String("block".to_string()).into(),
-			)]
-			.iter()
-			.cloned()
-			.collect(),
+			[("display".to_string(), Value::String("block".to_string()))]
+				.iter()
+				.cloned()
+				.collect(),
 		);
 		log::debug!("...Creating groups...");
 		semantics.create_group_from_block(self.root, None, None, None);

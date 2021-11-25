@@ -3,7 +3,7 @@ use self::wasm_bindgen_test::*;
 wasm_bindgen_test_configure!(run_in_browser);
 
 mod classes {
-	mod classes;
+	mod basics;
 	mod event_parallel_nesting;
 	mod parallel_nesting;
 }

@@ -20,7 +20,7 @@ pub struct Properties {
 }
 
 pub fn is_css_property(name: &str) -> bool {
-	CSS_PROPERTIES.contains(&name)
+	CSS_PROPERTIES.contains(name)
 }
 
 // use {quote::quote, TokenStream};

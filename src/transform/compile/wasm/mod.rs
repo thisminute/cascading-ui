@@ -86,7 +86,7 @@ impl Semantics {
 
 			thread_local! {
 				static CLASSES: RefCell<HashMap<&'static str, Group>> = RefCell::new(HashMap::new());
-		   }
+			}
 		}
 	}
 
@@ -108,12 +108,10 @@ impl Semantics {
 			quote! {
 				#( #errors )*
 			}
+		} else if full {
+			self.full()
 		} else {
-			if full {
-				self.full()
-			} else {
-				self.document()
-			}
+			self.document()
 		};
 
 		quote! {

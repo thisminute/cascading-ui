@@ -13,7 +13,7 @@ impl Semantics {
 		(
 			format!(
 				"<html>{}{}</html>",
-				format!("<head>{}{}</head>", 
+				format!("<head>{}{}</head>",
 					format!("<title>{}</title>", root.title),
 					format!("<style>{}</style>", styles)
 				),
@@ -44,7 +44,7 @@ impl Semantics {
 }
 
 impl Group {
-	fn html(&self, groups: &Vec<Group>) -> String {
+	fn html(&self, groups: &[Group]) -> String {
 		let link = match self.properties.cui.get(&CuiProperty("link".to_string())) {
 			Some(value) => self.get_string(value.clone()),
 			None => "".to_string(),

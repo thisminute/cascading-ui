@@ -35,10 +35,10 @@ impl Group {
 }
 
 impl Semantics {
-	pub fn render_value(&self, value: Value, ancestors: &Vec<usize>) -> Value {
+	pub fn render_value(&self, value: Value, ancestors: &[usize]) -> Value {
 		match value {
 			Value::Variable(variable) => {
-				for ancestor_id in ancestors.clone() {
+				for &ancestor_id in ancestors {
 					log::debug!(" Looking at ancestor: {}", ancestor_id);
 
 					if let Some(value) = self.groups[ancestor_id]

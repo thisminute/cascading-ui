@@ -52,7 +52,7 @@ pub fn cui(input: TokenStream) -> TokenStream {
 
 	let input = input.into();
 	let (html, runtime) = pipeline(parse_macro_input!(input as Document));
-	let destination = &format!("target/html/index.html");
+	let destination = "target/html/index.html";
 	write(destination, html).expect(&*format!("writing output html code to {}", destination));
 	write("target/cui_macro_output.rs", runtime.to_string()).expect("writing output rust code");
 
@@ -61,7 +61,10 @@ pub fn cui(input: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn test_setup(input: TokenStream) -> TokenStream {
-	if let Ok(_) = SimpleLogger::new().with_level(LevelFilter::Error).init() {}
+	SimpleLogger::new()
+		.with_level(LevelFilter::Error)
+		.init()
+		.unwrap();
 
 	let document = parse_macro_input!(input as Document);
 	let mut semantics = document.analyze();
