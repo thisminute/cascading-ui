@@ -31,7 +31,8 @@ fn dynamic() {
 		}
 	}
 	assert_eq!(
-		root.first_child()
+		root
+			.first_child()
 			.expect("the root should contain a node")
 			.text_content()
 			.expect("the node should contain text"),
@@ -39,18 +40,21 @@ fn dynamic() {
 	);
 	root.click();
 	assert_eq!(
-		root.first_element_child()
+		root
+			.first_element_child()
 			.expect("the root should now contain an element")
 			.inner_html(),
 		"click me too"
 	);
-	root.first_element_child()
+	root
+		.first_element_child()
 		.expect("the root should now contain an element")
 		.dyn_into::<HtmlElement>()
 		.expect("this cast should work")
 		.click();
 	assert_eq!(
-		root.first_element_child()
+		root
+			.first_element_child()
 			.expect("the root should still contain an element")
 			.first_element_child()
 			.expect("that element should now contain an element")
