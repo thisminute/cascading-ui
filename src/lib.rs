@@ -61,10 +61,11 @@ pub fn cui(input: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn test_setup(input: TokenStream) -> TokenStream {
-	SimpleLogger::new()
+	if SimpleLogger::new()
 		.with_level(LevelFilter::Error)
 		.init()
-		.unwrap();
+		.is_ok()
+	{}
 
 	let document = parse_macro_input!(input as Document);
 	let mut semantics = document.analyze();
