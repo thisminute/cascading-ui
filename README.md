@@ -14,6 +14,7 @@ cd cascading-ui
 git submodule init
 git submodule update
 cd cui-app-template
+npm run build
 npm install
 npm start
 ```
