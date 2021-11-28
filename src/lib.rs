@@ -82,10 +82,10 @@ pub fn test_setup(input: TokenStream) -> TokenStream {
 		let body = &document.body().expect("getting `window.document.body`");
 		{
 			let style = document
-					.create_element("style")
-					.unwrap()
-					.dyn_into::<HtmlElement>()
-					.unwrap();
+				.create_element("style")
+				.unwrap()
+				.dyn_into::<HtmlElement>()
+				.unwrap();
 			style.set_inner_text(#styles);
 			head.append_child(&style).unwrap();
 
