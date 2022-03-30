@@ -17,7 +17,7 @@ use {
 	quote::{quote, ToTokens},
 	simple_logger::SimpleLogger,
 	std::{
-		fs::{read_dir, read_to_string, write},
+		fs::{create_dir_all, read_dir, read_to_string, write},
 		path::Path,
 	},
 	syn::parse_macro_input,
@@ -53,6 +53,7 @@ pub fn cui(input: TokenStream) -> TokenStream {
 	let input = input.into();
 	let (html, runtime) = pipeline(parse_macro_input!(input as Document));
 	let destination = "target/html/index.html";
+	create_dir_all("target/html").expect("unable to create target/html directory");
 	write(destination, html).expect(&*format!("writing output html code to {}", destination));
 	write("target/cui_macro_output.rs", runtime.to_string()).expect("writing output rust code");
 
