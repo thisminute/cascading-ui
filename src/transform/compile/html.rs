@@ -5,27 +5,31 @@ use {
 };
 
 impl Semantics {
+	#[allow(clippy::format_in_format_args)]
 	pub fn html(&self) -> (String, HashMap<String, String>) {
 		log::debug!("...Writing HTML...");
 		let (contents, styles) = self.html_parts();
 		let homepage = contents.get("/").unwrap();
 		let root = &self.pages[self.pages[0].root_id];
-		(
-			format!(
-				"<html>{}{}</html>",
-				format!("<head>{}{}</head>",
-					format!("<title>{}</title>", root.title),
-					format!("<style>{}</style>", styles)
-				),
-				format!(
-					"<body>{}{}{}</body>",
-					homepage,
-					"<noscript>This page contains Webassembly and Javascript content. Please make sure that you are using the latest version of a modern browser and that Javascript and Webassembly (Wasm) are enabled.</noscript>",
-					"<script src='./bootstrap.js'></script>"
-				)
+		// TODO: make this cleaner with a lightweight html!() macro
+		let html = format!(
+			"<html>{}{}</html>",
+			format!("<head>{}{}</head>",
+				format!("<title>{}</title>", root.title),
+				format!("<style>{}</style>", styles)
 			),
-			contents
-		)
+			format!(
+				"<body>{}{}{}</body>",
+				homepage,
+				"<noscript>This page contains Webassembly and Javascript content. Please make sure that you are using the latest version of a modern browser and that Javascript and Webassembly (Wasm) are enabled.</noscript>",
+				format!(
+					"<script type=\"module\">{}{}</script>",
+					"import init from './cui/cui_app_template.js';",
+					"init();"
+				)
+			)
+		);
+		(html, contents)
 	}
 
 	pub fn html_parts(&self) -> (HashMap<String, String>, String) {

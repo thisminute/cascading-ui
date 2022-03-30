@@ -2,3 +2,6 @@
 	path = cui-app-template
 	url = https://github.com/thisminute/cui-app-template
 	branch = debug
+[submodule "cui-tools"]
+	path = cui-tools
+	url = git@github.com:thisminute/cui-tools.git

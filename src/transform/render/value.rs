@@ -10,7 +10,7 @@ impl Value {
 			Value::Number(_) => panic!("tried to get string value of number"),
 			Value::Variable(variable) => panic!(
 				"tried to get string value of unrendered variable {}",
-				variable.0.to_string()
+				variable.0
 			),
 		}
 	}
