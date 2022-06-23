@@ -92,7 +92,38 @@ fn class() {
 }
 
 #[wasm_bindgen_test]
-fn nesting() {
+fn nesting_1() {
+	test_setup! {
+		text: "click me";
+		?click {
+			text: "now click me again";
+			?click {
+				text: "hello world";
+			}
+		}
+	}
+	assert_eq!(
+		root.text_content().expect("the root should contain text"),
+		"click me"
+	);
+	root.click();
+	assert_eq!(
+		root
+			.text_content()
+			.expect("the root text should have changed"),
+		"now click me again"
+	);
+	root.click();
+	assert_eq!(
+		root
+			.text_content()
+			.expect("the root text should have changed again"),
+		"hello world"
+	);
+}
+
+#[wasm_bindgen_test]
+fn nesting_2() {
 	test_setup! {
 		text: "click me";
 		?click {

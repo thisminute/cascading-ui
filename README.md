@@ -17,7 +17,7 @@ Then:
 git clone https://github.com/thisminute/cascading-ui.git
 cd cascading-ui
 
-# if you don't plan on using cui-tools, you don't need to do this submodule step
+# you only need to do this submodule step if you plan to use cui-tools
 git submodule update --init --recursive
 ```
 

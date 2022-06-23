@@ -54,7 +54,7 @@ impl Semantics {
 					.selector
 					.as_ref()
 					.expect("dynamic classes should have selectors");
-				let render = self.static_render_all(class_id);
+				let rules = self.static_render_all(class_id);
 				let queue = self.static_register_all(class_id);
 				quote! {
 					let elements = document.get_elements_by_class_name(#selector);
@@ -64,7 +64,7 @@ impl Semantics {
 							.unwrap()
 							.dyn_into::<HtmlElement>()
 							.unwrap();
-						#render
+						#rules
 					}
 					let mut class = classes.entry(#selector).or_insert(Group::default());
 					#queue
