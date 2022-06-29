@@ -2,7 +2,7 @@ mod css;
 mod cui;
 pub use self::cui::{CuiProperty, PageProperty};
 
-use {self::css::CSS_PROPERTIES, data::ast::Value, std::collections::HashMap};
+use {self::css::CSS_PROPERTIES, super::Value, std::collections::HashMap};
 
 pub type CssProperty = String;
 

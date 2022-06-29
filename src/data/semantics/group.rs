@@ -1,5 +1,5 @@
 use {
-	data::{ast::Value, semantics::properties::Properties},
+	super::{properties::Properties, Value},
 	std::collections::HashMap,
 };
 

@@ -5,7 +5,6 @@ use {
 };
 
 impl Semantics {
-	#[allow(clippy::format_in_format_args)]
 	pub fn html(&self) -> (String, HashMap<String, String>) {
 		log::debug!("...Writing HTML...");
 		let (contents, styles) = self.html_parts();
@@ -14,15 +13,15 @@ impl Semantics {
 		// TODO: make this cleaner with a lightweight html!() macro
 		let html = format!(
 			"<html>{}{}</html>",
-			format!("<head>{}{}</head>",
-				format!("<title>{}</title>", root.title),
-				format!("<style>{}</style>", styles)
+			format_args!("<head>{}{}</head>",
+				format_args!("<title>{}</title>", root.title),
+				format_args!("<style>{}</style>", styles)
 			),
-			format!(
+			format_args!(
 				"<body>{}{}{}</body>",
 				homepage,
 				"<noscript>This page contains Webassembly and Javascript content. Please make sure that you are using the latest version of a modern browser and that Javascript and Webassembly (Wasm) are enabled.</noscript>",
-				format!(
+				format_args!(
 					"<script type=\"module\">{}{}</script>",
 					"import init from './cui/cui_app_template.js';",
 					"init();"
@@ -49,9 +48,10 @@ impl Semantics {
 
 impl Group {
 	fn html(&self, groups: &[Group]) -> String {
-		let link = match self.properties.cui.get(&CuiProperty("link".to_string())) {
-			Some(value) => self.get_string(value.clone()),
-			None => "".to_string(),
+		let link = if let Some(value) = self.properties.cui.get(&CuiProperty("link".to_string())) {
+			value.get_string()
+		} else {
+			"".into()
 		};
 		let attributes = [
 			("style", &*self.properties.css.css()),
@@ -74,9 +74,10 @@ impl Group {
 
 		let contents = format!(
 			"{}{}",
-			match self.properties.cui.get(&CuiProperty("text".to_string())) {
-				Some(value) => self.get_string(value.clone()),
-				None => "".to_string(),
+			if let Some(value) = self.properties.cui.get(&CuiProperty("text".to_string())) {
+				value.get_string()
+			} else {
+				"".into()
 			},
 			children
 		);

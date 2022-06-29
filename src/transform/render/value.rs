@@ -1,56 +1,73 @@
-use data::{
-	ast::Value,
-	semantics::{Group, Semantics},
-};
+use data::semantics::{Semantics, StaticValue, Value};
 
 impl Value {
-	fn as_string(&self) -> String {
-		match self {
-			Value::String(value) => value.clone(),
-			Value::Number(_) => panic!("tried to get string value of number"),
-			Value::Variable(variable) => panic!(
-				"tried to get string value of unrendered variable {}",
-				variable.0
-			),
+	pub fn get_static(&self) -> &StaticValue {
+		match &self {
+			Value::Variable(_, Some(value), _) => value,
+			Value::Static(value) => value,
+			_ => panic!("AAA"),
 		}
 	}
 
-	// pub fn as_integer(self) -> i32 {
-	// 	match self {
-	// 		Value::Number(value) => value,
-	// 		Value::String(_) => panic!("tried to get numeric value of string"),
-	// 		Value::Variable(_) => panic!("tried to get numeric value of unrendered variable"),
-	// 	}
-	// }
-}
-
-impl Group {
-	pub fn get_string(&self, value: Value) -> String {
-		match value {
-			Value::String(value) => value.clone(),
-			Value::Number(_) => panic!("tried to get string value of number"),
-			Value::Variable(name) => self.variables[&name.0.to_string()].as_string(),
+	pub fn get_string(&self) -> String {
+		match self.get_static() {
+			StaticValue::String(value) => value.clone(),
+			_ => panic!("aaa"),
 		}
 	}
 }
 
 impl Semantics {
-	pub fn render_value(&self, value: Value, ancestors: &[usize]) -> Value {
+	pub fn render_values(&mut self, element_id: usize, ancestors: &[usize]) {
+		self.groups[element_id].variables = self.groups[element_id]
+			.variables
+			.clone()
+			.into_iter()
+			.map(|(identifier, value)| (identifier, self.render_value(value, ancestors)))
+			.collect();
+
+		self.groups[element_id].properties.cui = self.groups[element_id]
+			.properties
+			.cui
+			.clone()
+			.into_iter()
+			.map(|(identifier, value)| (identifier, self.render_value(value, ancestors)))
+			.collect();
+
+		self.groups[element_id].properties.css = self.groups[element_id]
+			.properties
+			.css
+			.clone()
+			.into_iter()
+			.map(|(identifier, value)| (identifier, self.render_value(value, ancestors)))
+			.collect();
+
+		self.groups[element_id].properties.page = self.groups[element_id]
+			.properties
+			.page
+			.clone()
+			.into_iter()
+			.map(|(identifier, value)| (identifier, self.render_value(value, ancestors)))
+			.collect();
+	}
+
+	fn render_value(&self, value: Value, ancestors: &[usize]) -> Value {
 		match value {
-			Value::Variable(variable) => {
+			Value::Variable(identifier, None, id) => {
 				for &ancestor_id in ancestors {
 					log::debug!(" Looking at ancestor: {}", ancestor_id);
 
 					if let Some(value) = self.groups[ancestor_id]
 						.variables
-						.get(&variable.0.to_string())
+						.get(&identifier.to_string())
 					{
-						return value.clone();
+						return Value::Variable(identifier, Some(value.get_static().clone()), id);
 					}
 				}
-				panic!("unable to evaluate variable")
+				panic!("unable to render variable from ancestors")
 			}
-			value => value.clone(),
+			Value::Variable(_, Some(_), _) => panic!("already rendered variable"),
+			value => value,
 		}
 	}
 }

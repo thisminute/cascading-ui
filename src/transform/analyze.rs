@@ -1,8 +1,8 @@
 use data::{
-	ast::{Block, Document, Prefix, Value},
+	ast::{Block, Document, Prefix, Value as AstValue},
 	semantics::{
 		properties::{is_css_property, CuiProperty},
-		Group, Page, Semantics,
+		Group, Page, Semantics, StaticValue, Value,
 	},
 };
 
@@ -11,17 +11,23 @@ impl Document {
 		let mut semantics = Semantics::default();
 		semantics.styles.insert(
 			"body".to_string(),
-			[("margin".to_string(), Value::String("0".to_string()))]
-				.iter()
-				.cloned()
-				.collect(),
+			[(
+				"margin".to_string(),
+				Value::Static(StaticValue::String("0".to_string())),
+			)]
+			.iter()
+			.cloned()
+			.collect(),
 		);
 		semantics.styles.insert(
 			"a".to_string(),
-			[("display".to_string(), Value::String("block".to_string()))]
-				.iter()
-				.cloned()
-				.collect(),
+			[(
+				"display".to_string(),
+				Value::Static(StaticValue::String("block".to_string())),
+			)]
+			.iter()
+			.cloned()
+			.collect(),
 		);
 		log::debug!("...Creating groups...");
 		semantics.create_group_from_block(self.root, None, None, None);
@@ -43,11 +49,20 @@ impl Semantics {
 			block.identifier.to_string()
 		);
 
-		let identifier = block.identifier.to_string();
+		let variables = block
+			.variables
+			.iter()
+			.map(|(identifier, value)| {
+				let value = self.create_semantic_value(value);
+				(identifier.clone(), value)
+			})
+			.collect();
+
 		let group_id = self.groups.len();
 		let group = if let Some(parent_id) = parent_id {
+			let identifier = block.identifier.to_string();
 			let parent = &mut self.groups[parent_id];
-			let group = Group::new(Some(identifier.clone()), listener_scope, block.variables);
+			let current_scope = listener_scope;
 			match block.prefix {
 				Prefix::Element => {
 					parent.elements.push(group_id);
@@ -64,22 +79,19 @@ impl Semantics {
 					parent.listeners.push(group_id);
 				}
 			}
-			group
+			Group::new(Some(identifier.clone()), current_scope, variables)
 		} else {
-			let group = Group::new(None, None, block.variables);
 			page_id = Some(self.pages.len());
 			self.pages.push(Page {
 				title: String::from(""),
 				route: String::from("/"),
 				root_id: group_id,
 			});
-			group
+			Group::new(None, None, variables)
 		};
 		self.groups.push(group);
 
 		for property in block.properties {
-			let group = &mut self.groups[group_id];
-			let properties = &mut group.properties;
 			let (property, value) = (property.property.to_string(), property.value);
 			log::debug!(
 				" Applying property {}:{:?} to group {}",
@@ -87,6 +99,10 @@ impl Semantics {
 				value,
 				group_id
 			);
+			let value = self.create_semantic_value(&value);
+
+			let group = &mut self.groups[group_id];
+			let properties = &mut group.properties;
 			if is_css_property(&property) {
 				properties.css.insert(property, value);
 			} else {
@@ -104,6 +120,14 @@ impl Semantics {
 		}
 		for block in block.elements {
 			self.create_group_from_block(block, page_id, Some(group_id), listener_scope);
+		}
+	}
+
+	fn create_semantic_value(&self, value: &AstValue) -> Value {
+		match value {
+			AstValue::Variable(identifier) => Value::Variable(identifier.0.to_string(), None, None),
+			AstValue::Number(value) => Value::Static(StaticValue::Number(*value)),
+			AstValue::String(value) => Value::Static(StaticValue::String(value.clone())),
 		}
 	}
 }

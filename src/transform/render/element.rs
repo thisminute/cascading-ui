@@ -65,26 +65,24 @@ impl Semantics {
 			self.groups[element_id].class_names.push(selector);
 		}
 
-		self.groups[element_id].variables = self.groups[element_id]
-			.variables
-			.clone()
-			.into_iter()
-			.map(|(identifier, value)| (identifier, self.render_value(value, ancestors)))
-			.collect();
+		// TODO: resolve variables that have variable values defined at the same level
 
 		ancestors.push(element_id);
+		self.render_values(element_id, ancestors);
+
 		for element_id in self.groups[element_id].elements.clone() {
 			self.render_element(element_id, ancestors);
 		}
 		ancestors.pop();
 
-		self.groups[element_id].tag = match self.groups[element_id]
+		self.groups[element_id].tag = if self.groups[element_id]
 			.properties
 			.cui
-			.get(&CuiProperty("link".to_string()))
+			.contains_key(&CuiProperty("link".to_string()))
 		{
-			Some(_) => "a",
-			None => "div",
+			"a"
+		} else {
+			"div"
 		};
 
 		log::debug!(" Removing virtual groups from element {}", element_id);
