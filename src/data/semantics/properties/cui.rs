@@ -3,22 +3,26 @@ use {
 	quote::{quote, ToTokens},
 };
 
-#[derive(Hash, PartialEq, Eq, Clone, Copy)]
+#[derive(Clone, Copy, Eq, PartialEq, Hash, Debug)]
 pub enum PageProperty {
 	Title,
 }
 
-#[derive(Hash, PartialEq, Eq, Clone)]
-pub struct CuiProperty(pub String);
+#[derive(Clone, Copy, Eq, PartialEq, Hash, Debug)]
+pub enum CuiProperty {
+	Text,
+	Link,
+	Tooltip,
+	Image,
+}
 
 impl ToTokens for CuiProperty {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
-		match &*self.0 {
-			"text" => quote! { Text },
-			"link" => quote! { Link },
-			"tooltip" => quote! { Tooltip },
-			"image" => quote! { Image },
-			name => panic!("invalid property {}", name),
+		match self {
+			Self::Text => quote! { Text },
+			Self::Link => quote! { Link },
+			Self::Tooltip => quote! { Tooltip },
+			Self::Image => quote! { Image },
 		}
 		.to_tokens(tokens)
 	}

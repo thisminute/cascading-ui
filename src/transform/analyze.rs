@@ -1,9 +1,6 @@
 use data::{
 	ast::{Block, Document, Prefix, Value as AstValue},
-	semantics::{
-		properties::{is_css_property, CuiProperty},
-		Group, Page, Semantics, StaticValue, Value,
-	},
+	semantics::{properties::Property, Group, Page, Semantics, StaticValue, Value},
 };
 
 impl Document {
@@ -83,8 +80,8 @@ impl Semantics {
 		} else {
 			page_id = Some(self.pages.len());
 			self.pages.push(Page {
-				title: String::from(""),
-				route: String::from("/"),
+				title: Value::Static(StaticValue::String(String::from(""))),
+				route: "/",
 				root_id: group_id,
 			});
 			Group::new(None, None, variables)
@@ -101,15 +98,9 @@ impl Semantics {
 			);
 			let value = self.create_semantic_value(&value);
 
-			let group = &mut self.groups[group_id];
-			let properties = &mut group.properties;
-			if is_css_property(&property) {
-				properties.css.insert(property, value);
-			} else {
-				properties.cui.insert(CuiProperty(property), value);
-			}
-			// page properties
-			// "title" => properties.page.insert(PageProperty::Title, value),
+			self.groups[group_id]
+				.properties
+				.insert(Property::new(property), value);
 		}
 
 		for block in block.listeners {

@@ -10,8 +10,8 @@ pub use self::{
 use self::properties::CssRules;
 
 pub struct Page {
-	pub title: String,
-	pub route: String,
+	pub title: Value,
+	pub route: &'static str,
 	pub root_id: usize,
 }
 

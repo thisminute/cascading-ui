@@ -1,4 +1,8 @@
-use {data::semantics::Semantics, proc_macro2::TokenStream, quote::quote};
+use {
+	data::semantics::{properties::Property, Semantics},
+	proc_macro2::TokenStream,
+	quote::quote,
+};
 
 impl Semantics {
 	pub fn static_register_all(&self, group_id: usize) -> TokenStream {
@@ -77,27 +81,18 @@ impl Semantics {
 	}
 
 	fn static_register_properties(&self, class_id: usize) -> TokenStream {
-		let css = self.groups[class_id]
+		self.groups[class_id]
 			.properties
-			.css
 			.iter()
-			.map(|(property, value)| {
-				quote! {
+			.map(|(property, value)| match property {
+				Property::Css(property) => quote! {
 					class.properties.insert(Property::Css(#property), #value);
-				}
-			});
-		let cui = self.groups[class_id]
-			.properties
-			.cui
-			.iter()
-			.map(|(property, value)| {
-				quote! {
+				},
+				Property::Cui(property) => quote! {
 					class.properties.insert(Property::#property, #value);
-				}
-			});
-		quote! {
-			#( #css )*
-			#( #cui )*
-		}
+				},
+				_ => quote! {},
+			})
+			.collect()
 	}
 }

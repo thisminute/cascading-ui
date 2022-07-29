@@ -1,4 +1,4 @@
-use data::semantics::properties::{CssProperties, CssRules};
+use data::semantics::properties::{CssProperties, CssRules, Properties, Property};
 
 pub trait Css {
 	fn css(&self) -> String;
@@ -6,11 +6,7 @@ pub trait Css {
 
 impl Css for Vec<CssRules> {
 	fn css(&self) -> String {
-		self
-			.iter()
-			.map(|rule| rule.css())
-			.collect::<Vec<String>>()
-			.join("")
+		self.iter().map(|rule| rule.css()).collect::<String>()
 	}
 }
 
@@ -19,8 +15,7 @@ impl Css for CssRules {
 		self
 			.iter()
 			.map(|(selector, properties)| format!("{}{{{}}}", selector, properties.css()))
-			.collect::<Vec<String>>()
-			.join("")
+			.collect::<String>()
 	}
 }
 
@@ -29,7 +24,29 @@ impl Css for CssProperties {
 		self
 			.iter()
 			.map(|(property, value)| format!("{}:{}", property, value))
-			.collect::<Vec<String>>()
-			.join(";")
+			.fold(String::with_capacity(self.len()), |mut a, b| {
+				a.push_str(&b);
+				a.push(';');
+				a
+			})
+	}
+}
+
+impl Css for Properties {
+	fn css(&self) -> String {
+		self
+			.iter()
+			.filter_map(|(property, value)| {
+				if let Property::Css(property) = property {
+					Some(format!("{}:{}", property, value))
+				} else {
+					None
+				}
+			})
+			.fold(String::with_capacity(self.len()), |mut a, b| {
+				a.push_str(&b);
+				a.push(';');
+				a
+			})
 	}
 }

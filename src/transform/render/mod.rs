@@ -2,7 +2,10 @@ mod cascade;
 mod element;
 mod value;
 
-use data::semantics::{properties::PageProperty, Semantics, StaticValue, Value};
+use data::semantics::{
+	properties::{PageProperty, Property},
+	Semantics, StaticValue, Value,
+};
 
 impl Semantics {
 	pub fn render(&mut self) {
@@ -15,11 +18,10 @@ impl Semantics {
 			let default = &Value::Static(StaticValue::String("".into()));
 			let title = self.groups[page_group_id]
 				.properties
-				.page
-				.get(&PageProperty::Title)
+				.get(&Property::Page(PageProperty::Title))
 				.unwrap_or(default)
 				.clone();
-			self.pages[i].title = title.get_string();
+			self.pages[i].title = title;
 			self.render_element(page_group_id, ancestors);
 		}
 	}

@@ -13,6 +13,7 @@ impl Semantics {
 				let type_ = match value.get_static() {
 					StaticValue::Number(_) => quote! { Number },
 					StaticValue::String(_) => quote! { String },
+					StaticValue::Color(_, _, _, _) => quote! { String },
 				};
 				quote! {
 					Value::#type_(#value),

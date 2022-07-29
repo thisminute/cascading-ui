@@ -1,4 +1,4 @@
-use {proc_macro2::TokenStream, quote::ToTokens, std::fmt};
+use std::fmt;
 
 #[derive(Clone, Debug)]
 pub enum Value {
@@ -10,26 +10,25 @@ pub enum Value {
 pub enum StaticValue {
 	Number(i32),
 	String(String),
+	Color(u8, u8, u8, f64),
 }
 
-impl fmt::Display for Value {
+impl fmt::Display for StaticValue {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(
 			f,
 			"{}",
 			match self {
-				Value::Static(value) => match value {
-					StaticValue::String(value) => value.clone(),
-					StaticValue::Number(value) => value.to_string(),
-				},
-				Value::Variable(..) => "@variable".to_string(),
+				StaticValue::String(value) => value.clone(),
+				StaticValue::Number(value) => value.to_string(),
+				StaticValue::Color(r, g, b, a) => {
+					if *a > 0.99 {
+						format!("#{:X}{:X}{:X}", r, g, b)
+					} else {
+						format!("rgba({},{},{},{})", r, g, b, a)
+					}
+				}
 			}
 		)
-	}
-}
-
-impl ToTokens for Value {
-	fn to_tokens(&self, tokens: &mut TokenStream) {
-		self.to_string().to_tokens(tokens)
 	}
 }

@@ -1,11 +1,14 @@
 use {
-	data::semantics::{properties::CuiProperty, Group, Semantics},
+	data::semantics::{
+		properties::{CuiProperty, Property},
+		Group, Semantics, StaticValue, Value,
+	},
 	std::collections::HashMap,
 	transform::compile::css::Css,
 };
 
 impl Semantics {
-	pub fn html(&self) -> (String, HashMap<String, String>) {
+	pub fn html(&self) -> (String, HashMap<&str, String>) {
 		log::debug!("...Writing HTML...");
 		let (contents, styles) = self.html_parts();
 		let homepage = contents.get("/").unwrap();
@@ -31,51 +34,45 @@ impl Semantics {
 		(html, contents)
 	}
 
-	pub fn html_parts(&self) -> (HashMap<String, String>, String) {
+	pub fn html_parts(&self) -> (HashMap<&str, String>, String) {
 		let contents = self
 			.pages
 			.iter()
-			.map(|page| {
-				(
-					page.route.clone(),
-					self.groups[page.root_id].html(&self.groups),
-				)
-			})
-			.collect::<HashMap<String, String>>();
+			.map(|page| (page.route, self.groups[page.root_id].html(&self.groups)))
+			.collect();
 		(contents, self.styles.css())
 	}
 }
 
 impl Group {
 	fn html(&self, groups: &[Group]) -> String {
-		let link = if let Some(value) = self.properties.cui.get(&CuiProperty("link".to_string())) {
-			value.get_string()
-		} else {
-			"".into()
-		};
+		let link = self.properties.get(&Property::Cui(CuiProperty::Link));
 		let attributes = [
-			("style", &*self.properties.css.css()),
+			("style", &*self.properties.css()),
 			("class", &*self.class_names.join(" ")),
-			("href", &*link),
+			(
+				"href",
+				&*link
+					.unwrap_or(&Value::Static(StaticValue::String("".to_string())))
+					.to_string(),
+			),
 		]
 		.iter()
 		.filter(|(_, value)| !value.is_empty())
 		.map(|(attribute, value)| format!(" {}='{}'", attribute, value))
-		.collect::<Vec<String>>()
-		.join("");
+		.collect::<String>();
 
 		let children = self
 			.elements
 			.iter()
 			.filter(|&&element_id| groups[element_id].is_static())
 			.map(|&child_id| groups[child_id].html(groups))
-			.collect::<Vec<String>>()
-			.join("");
+			.collect::<String>();
 
 		let contents = format!(
 			"{}{}",
-			if let Some(value) = self.properties.cui.get(&CuiProperty("text".to_string())) {
-				value.get_string()
+			if let Some(value) = self.properties.get(&Property::Cui(CuiProperty::Text)) {
+				value.to_string()
 			} else {
 				"".into()
 			},

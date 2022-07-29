@@ -1,5 +1,5 @@
 use {
-	super::{properties::Properties, Value},
+	super::{properties::Property, Value},
 	std::collections::HashMap,
 };
 
@@ -11,7 +11,7 @@ pub struct Group {
 	pub listener_scope: Option<usize>,
 	pub variables: HashMap<String, Value>,
 
-	pub properties: Properties,
+	pub properties: HashMap<Property, Value>,
 	pub elements: Vec<usize>,
 	pub classes: HashMap<String, Vec<usize>>,
 	pub listeners: Vec<usize>,
@@ -34,7 +34,7 @@ impl Group {
 			listener_scope,
 			variables,
 
-			properties: Properties::default(),
+			properties: HashMap::new(),
 			elements: Vec::new(),
 			classes: HashMap::new(),
 			listeners: Vec::new(),
@@ -59,11 +59,7 @@ impl Group {
 			listener_scope: None,
 			variables: HashMap::new(),
 
-			properties: Properties {
-				cui: self.properties.cui.clone(),
-				css: HashMap::new(),
-				page: HashMap::new(),
-			},
+			properties: self.properties.clone(),
 			elements: self.elements.clone(),
 			classes: HashMap::new(),
 			listeners: self.listeners.clone(),

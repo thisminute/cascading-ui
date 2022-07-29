@@ -1,5 +1,8 @@
 use {
-	data::semantics::{properties::CuiProperty, Semantics},
+	data::semantics::{
+		properties::{CuiProperty, Property},
+		Semantics,
+	},
 	misc::id_gen::id_gen,
 };
 
@@ -56,12 +59,20 @@ impl Semantics {
 				element_id,
 				self.groups[element_id].listener_scope != self.groups[source_id].listener_scope,
 			);
-			if !self.groups[source_id].properties.css.is_empty() {
-				self.styles.insert(
-					format!(".{}", selector),
-					self.groups[source_id].properties.css.clone(),
-				);
-			}
+			self.styles.insert(
+				format!(".{}", selector),
+				self.groups[source_id]
+					.properties
+					.iter()
+					.filter_map(|(property, value)| {
+						if let Property::Css(property) = property {
+							Some((property.clone(), value.clone()))
+						} else {
+							None
+						}
+					})
+					.collect(),
+			);
 			self.groups[element_id].class_names.push(selector);
 		}
 
@@ -77,8 +88,7 @@ impl Semantics {
 
 		self.groups[element_id].tag = if self.groups[element_id]
 			.properties
-			.cui
-			.contains_key(&CuiProperty("link".to_string()))
+			.contains_key(&Property::Cui(CuiProperty::Link))
 		{
 			"a"
 		} else {

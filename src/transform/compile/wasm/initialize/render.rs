@@ -1,5 +1,8 @@
 use {
-	data::semantics::{properties::CuiProperty, Semantics},
+	data::semantics::{
+		properties::{CuiProperty, Property},
+		Semantics,
+	},
 	proc_macro2::TokenStream,
 	quote::quote,
 };
@@ -70,7 +73,7 @@ impl Semantics {
 					#queue
 				}
 			})
-			.collect::<TokenStream>()
+			.collect()
 	}
 
 	pub fn static_render_listeners(&self, group_id: usize) -> TokenStream {
@@ -116,15 +119,17 @@ impl Semantics {
 	fn static_render_properties(&self, group_id: usize) -> TokenStream {
 		let properties = &self.groups[group_id].properties;
 		let mut effects = Vec::new();
-		if let Some(value) = properties.cui.get(&CuiProperty("text".to_string())) {
+		if let Some(value) = properties.get(&Property::Cui(CuiProperty::Text)) {
 			effects.push(quote! { element.text(#value); });
 		}
-		if let Some(_value) = properties.cui.get(&CuiProperty("link".to_string())) {
+		if let Some(_value) = properties.get(&Property::Cui(CuiProperty::Link)) {
 			effects.push(quote! {});
 		}
 
-		for (property, value) in &properties.css {
-			effects.push(quote! { element.css(#property, #value); });
+		for (property, value) in properties {
+			if let Property::Css(property) = property {
+				effects.push(quote! { element.css(#property, #value); });
+			}
 		}
 
 		quote! { #( #effects )* }
