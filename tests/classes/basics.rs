@@ -40,3 +40,22 @@ fn hoisting() {
 		"hello world"
 	);
 }
+
+#[wasm_bindgen_test]
+fn priority() {
+	test_setup! {
+		a {
+			text: "hello world";
+		}
+		.a {
+			text: "hi";
+		}
+	}
+	assert_eq!(
+		root
+			.first_element_child()
+			.expect("the root should contain an element")
+			.inner_html(),
+		"hello world"
+	);
+}

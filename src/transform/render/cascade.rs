@@ -31,8 +31,11 @@ impl Semantics {
 			}
 
 			for (name, value) in self.groups[source_id].variables.clone() {
-				log::debug!(" Cascading variable {}:{:?}", name, value);
-				self.groups[target_id].variables.insert(name, value);
+				log::debug!(" Cascading variable '{}': {:?}", name, value);
+				self.groups[target_id]
+					.variables
+					.entry(name)
+					.or_insert(value);
 			}
 		}
 

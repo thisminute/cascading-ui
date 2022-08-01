@@ -54,3 +54,43 @@ fn class_2() {
 		"hello world"
 	);
 }
+
+#[wasm_bindgen_test]
+fn priority_1() {
+	test_setup! {
+		a {
+			$text: "hello world";
+			text: $text;
+		}
+		.a {
+			$text: "hi";
+		}
+	}
+	assert_eq!(
+		root
+			.first_element_child()
+			.expect("the root should contain an element")
+			.inner_html(),
+		"hello world"
+	);
+}
+
+#[wasm_bindgen_test]
+fn priority_2() {
+	test_setup! {
+		a {
+			$text: "hello world";
+		}
+		.a {
+			$text: "hi";
+			text: $text;
+		}
+	}
+	assert_eq!(
+		root
+			.first_element_child()
+			.expect("the root should contain an element")
+			.inner_html(),
+		"hello world"
+	);
+}

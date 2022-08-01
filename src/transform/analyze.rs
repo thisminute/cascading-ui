@@ -49,10 +49,7 @@ impl Semantics {
 		let variables = block
 			.variables
 			.iter()
-			.map(|(identifier, value)| {
-				let value = self.create_semantic_value(value);
-				(identifier.clone(), value)
-			})
+			.map(|(identifier, value)| (identifier.clone(), self.create_semantic_value(value)))
 			.collect();
 
 		let group_id = self.groups.len();
@@ -76,7 +73,7 @@ impl Semantics {
 					parent.listeners.push(group_id);
 				}
 			}
-			Group::new(Some(identifier.clone()), current_scope, variables)
+			Group::new(Some(identifier), current_scope, variables)
 		} else {
 			page_id = Some(self.pages.len());
 			self.pages.push(Page {
@@ -97,7 +94,6 @@ impl Semantics {
 				group_id
 			);
 			let value = self.create_semantic_value(&value);
-
 			self.groups[group_id]
 				.properties
 				.insert(Property::new(property), value);
