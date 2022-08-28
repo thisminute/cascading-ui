@@ -5,15 +5,17 @@ use {
 };
 
 impl Semantics {
-	pub fn static_register_all(&self, group_id: usize) -> TokenStream {
-		let elements = self.static_register_elements(group_id);
-		let classes = self.static_register_classes(group_id);
-		let listeners = self.static_register_listeners(group_id);
-		let properties = self.static_register_properties(group_id);
+	pub fn static_register_all(&self, class_id: usize) -> TokenStream {
+		let elements = self.static_register_elements(class_id);
+		let classes = self.static_register_classes(class_id);
+		let listeners = self.static_register_listeners(class_id);
+		// let variables = self.static_register_variables(class_id);
+		let properties = self.static_register_properties(class_id);
 		quote! {
 			#elements
 			#classes
 			#listeners
+			// #variables
 			#properties
 		}
 	}
@@ -79,6 +81,17 @@ impl Semantics {
 			})
 			.collect()
 	}
+
+	// fn static_register_variables(&self, class_id: usize) -> TokenStream {
+	// 	self.groups[class_id]
+	// 		.variables
+	// 		.iter()
+	// 		.map(|(identifier, value)| {
+	// 			let identifier = cui_ident(identifier);
+	// 			quote! { let mut #identifier = #value; }
+	// 		})
+	// 		.collect()
+	// }
 
 	fn static_register_properties(&self, class_id: usize) -> TokenStream {
 		self.groups[class_id]

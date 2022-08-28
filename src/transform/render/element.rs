@@ -3,7 +3,7 @@ use {
 		properties::{CuiProperty, Property},
 		Semantics,
 	},
-	misc::id_gen::id_gen,
+	misc::id_gen::generate_class_id,
 };
 
 impl Semantics {
@@ -51,7 +51,7 @@ impl Semantics {
 
 			let selector = self.groups[source_id]
 				.selector
-				.get_or_insert_with(id_gen)
+				.get_or_insert_with(generate_class_id)
 				.clone();
 			log::debug!("  Generated selector {} for group {}", selector, source_id);
 			self.cascade(
@@ -75,8 +75,6 @@ impl Semantics {
 			);
 			self.groups[element_id].class_names.push(selector);
 		}
-
-		// TODO: resolve variables that have variable values defined at the same level
 
 		ancestors.push(element_id);
 		self.render_values(element_id, ancestors);

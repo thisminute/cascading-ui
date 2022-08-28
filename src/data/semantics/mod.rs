@@ -23,5 +23,5 @@ pub struct Semantics {
 
 	pub pages: Vec<Page>,
 	pub groups: Vec<Group>,
-	pub variables: Vec<Value>,
+	pub variables: Vec<(Value, Option<usize>)>,
 }

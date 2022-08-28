@@ -49,7 +49,11 @@ impl Semantics {
 		let variables = block
 			.variables
 			.iter()
-			.map(|(identifier, value)| (identifier.clone(), self.create_semantic_value(value)))
+			.map(|(identifier, value)| {
+				let value = self.create_semantic_value(value);
+				self.variables.push((value, None));
+				(identifier.clone(), self.variables.len() - 1)
+			})
 			.collect();
 
 		let group_id = self.groups.len();
@@ -112,7 +116,7 @@ impl Semantics {
 
 	fn create_semantic_value(&self, value: &AstValue) -> Value {
 		match value {
-			AstValue::Variable(identifier) => Value::Variable(identifier.0.to_string(), None, None),
+			AstValue::Variable(identifier) => Value::UnrenderedVariable(identifier.0.to_string()),
 			AstValue::Number(value) => Value::Static(StaticValue::Number(*value)),
 			AstValue::String(value) => Value::Static(StaticValue::String(value.clone())),
 		}

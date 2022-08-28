@@ -41,15 +41,3 @@ impl Property {
 		}
 	}
 }
-
-// use {quote::quote, TokenStream};
-// 	match &**name {
-// 		"blur" => quote! { set_onblur },
-// 		"focus" => quote! { set_onfocus },
-// 		"click" => quote! { set_onclick },
-// 		"mouseover" => quote! { set_onmouseover },
-// 		"mouseenter" => quote! { set_onmouseenter },
-// 		"mouseleave" => quote! { set_onmouseleave },
-// 		"mouseout" => quote! { set_onmouseout },
-// 		_ => panic! {"unrecognized html event {}", name },
-// 	}

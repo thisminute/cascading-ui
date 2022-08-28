@@ -54,18 +54,6 @@ fn parse_content(
 	Ok(block)
 }
 
-// impl Parse for IdentVec {
-// 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-// 		let mut list = Vec::new();
-// 		list.push(input.parse()?);
-// 		while input.peek(Token![,]) {
-// 			input.parse::<Token![,]>()?;
-// 			list.push(input.parse()?);
-// 		}
-// 		Ok(IdentVec(list))
-// 	}
-// }
-
 impl Parse for Block {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
 		let prefix = if input.peek(Token![.]) {

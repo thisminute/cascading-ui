@@ -9,7 +9,7 @@ pub struct Group {
 	pub selector: Option<String>,
 	pub class_names: Vec<String>,
 	pub listener_scope: Option<usize>,
-	pub variables: HashMap<String, Value>,
+	pub variables: HashMap<String, usize>,
 
 	pub properties: HashMap<Property, Value>,
 	pub elements: Vec<usize>,
@@ -25,7 +25,7 @@ impl Group {
 	pub fn new(
 		name: Option<String>,
 		listener_scope: Option<usize>,
-		variables: HashMap<String, Value>,
+		variables: HashMap<String, usize>,
 	) -> Self {
 		Self {
 			name,
@@ -49,8 +49,7 @@ impl Group {
 	pub fn class_to_new_static_element(&mut self, source_id: usize) -> Self {
 		Group {
 			name: Some(
-				self
-					.name
+				self.name
 					.clone()
 					.expect("should never try to make an instance of a class with no name"),
 			),

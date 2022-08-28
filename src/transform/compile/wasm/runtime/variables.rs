@@ -9,11 +9,11 @@ impl Semantics {
 		let variables = self
 			.variables
 			.iter()
-			.map(|value| {
-				let type_ = match value.get_static() {
+			.map(|(value, _)| {
+				let type_ = match self.get_static(value) {
 					StaticValue::Number(_) => quote! { Number },
 					StaticValue::String(_) => quote! { String },
-					StaticValue::Color(_, _, _, _) => quote! { String },
+					// StaticValue::Color(_, _, _, _) => quote! { String },
 				};
 				quote! {
 					Value::#type_(#value),
