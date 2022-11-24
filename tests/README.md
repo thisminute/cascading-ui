@@ -1,4 +1,6 @@
-All of the tests are run from `tests.rs`, which saves a massive amount of time in browser restarts between tests and is convenient in some other ways too.
+To run tests: `wasm-pack test --headless --chrome --firefox`
+
+All of the tests are run from a single file, `tests.rs`, which saves a massive amount of time in browser restarts between tests.
 
 Tests consist of a block of CUI code and then some DOM API steps to verify that a page was generated like it should be. Like CUI apps themselves, test code is placed in a root element inside of the body. This is done specifically so that tests can work, because wasm_bindgen_test uses elements in the body to store some data (such as console.log output).
 

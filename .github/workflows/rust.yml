@@ -1,26 +1,26 @@
 name: Rust
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+	push:
+		branches: [ master ]
+	pull_request:
+		branches: [ master ]
 
 env:
-  CARGO_TERM_COLOR: always
+	CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+	build:
 
-    runs-on: ubuntu-latest
+		runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v2
-    - name: Install
-      run: cargo install wasm-pack
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests (Chrome)
-      run: wasm-pack test --release --headless --chrome
-    - name: Run tests (Firefox)
-      run: wasm-pack test --release --headless --firefox
+		steps:
+		- uses: actions/checkout@v2
+		- name: Install
+			run: cargo install wasm-pack
+		- name: Build
+			run: cargo build --verbose
+		- name: Run tests (Chrome)
+			run: wasm-pack test --release --headless --chrome
+		- name: Run tests (Firefox)
+			run: wasm-pack test --release --headless --firefox
