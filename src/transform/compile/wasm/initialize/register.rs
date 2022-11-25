@@ -1,15 +1,21 @@
-use {data::semantics::Semantics, proc_macro2::TokenStream, quote::quote};
+use {
+	data::semantics::{properties::Property, Semantics},
+	proc_macro2::TokenStream,
+	quote::quote,
+};
 
 impl Semantics {
-	pub fn static_register_all(&self, group_id: usize) -> TokenStream {
-		let elements = self.static_register_elements(group_id);
-		let classes = self.static_register_classes(group_id);
-		let listeners = self.static_register_listeners(group_id);
-		let properties = self.static_register_properties(group_id);
+	pub fn static_register_all(&self, class_id: usize) -> TokenStream {
+		let elements = self.static_register_elements(class_id);
+		let classes = self.static_register_classes(class_id);
+		let listeners = self.static_register_listeners(class_id);
+		// let variables = self.static_register_variables(class_id);
+		let properties = self.static_register_properties(class_id);
 		quote! {
 			#elements
 			#classes
 			#listeners
+			// #variables
 			#properties
 		}
 	}
@@ -76,28 +82,30 @@ impl Semantics {
 			.collect()
 	}
 
+	// fn static_register_variables(&self, class_id: usize) -> TokenStream {
+	// 	self.groups[class_id]
+	// 		.variables
+	// 		.iter()
+	// 		.map(|(identifier, value)| {
+	// 			let identifier = cui_ident(identifier);
+	// 			quote! { let mut #identifier = #value; }
+	// 		})
+	// 		.collect()
+	// }
+
 	fn static_register_properties(&self, class_id: usize) -> TokenStream {
-		let css = self.groups[class_id]
+		self.groups[class_id]
 			.properties
-			.css
 			.iter()
-			.map(|(property, value)| {
-				quote! {
+			.map(|(property, value)| match property {
+				Property::Css(property) => quote! {
 					class.properties.insert(Property::Css(#property), #value);
-				}
-			});
-		let cui = self.groups[class_id]
-			.properties
-			.cui
-			.iter()
-			.map(|(property, value)| {
-				quote! {
+				},
+				Property::Cui(property) => quote! {
 					class.properties.insert(Property::#property, #value);
-				}
-			});
-		quote! {
-			#( #css )*
-			#( #cui )*
-		}
+				},
+				_ => quote! {},
+			})
+			.collect()
 	}
 }

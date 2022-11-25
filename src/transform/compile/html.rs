@@ -1,12 +1,14 @@
 use {
-	data::semantics::{properties::CuiProperty, Group, Semantics},
+	data::semantics::{
+		properties::{CuiProperty, Property},
+		Group, Semantics, StaticValue, Value,
+	},
 	std::collections::HashMap,
 	transform::compile::css::Css,
 };
 
 impl Semantics {
-	#[allow(clippy::format_in_format_args)]
-	pub fn html(&self) -> (String, HashMap<String, String>) {
+	pub fn html(&self) -> (String, HashMap<&str, String>) {
 		log::debug!("...Writing HTML...");
 		let (contents, styles) = self.html_parts();
 		let homepage = contents.get("/").unwrap();
@@ -14,15 +16,15 @@ impl Semantics {
 		// TODO: make this cleaner with a lightweight html!() macro
 		let html = format!(
 			"<html>{}{}</html>",
-			format!("<head>{}{}</head>",
-				format!("<title>{}</title>", root.title),
-				format!("<style>{}</style>", styles)
+			format_args!("<head>{}{}</head>",
+				format_args!("<title>{}</title>", root.title),
+				format_args!("<style>{}</style>", styles)
 			),
-			format!(
+			format_args!(
 				"<body>{}{}{}</body>",
 				homepage,
 				"<noscript>This page contains Webassembly and Javascript content. Please make sure that you are using the latest version of a modern browser and that Javascript and Webassembly (Wasm) are enabled.</noscript>",
-				format!(
+				format_args!(
 					"<script type=\"module\">{}{}</script>",
 					"import init from './cui/cui_app_template.js';",
 					"init();"
@@ -32,51 +34,47 @@ impl Semantics {
 		(html, contents)
 	}
 
-	pub fn html_parts(&self) -> (HashMap<String, String>, String) {
+	pub fn html_parts(&self) -> (HashMap<&str, String>, String) {
 		let contents = self
 			.pages
 			.iter()
-			.map(|page| {
-				(
-					page.route.clone(),
-					self.groups[page.root_id].html(&self.groups),
-				)
-			})
-			.collect::<HashMap<String, String>>();
+			.map(|page| (page.route, self.groups[page.root_id].html(&self.groups)))
+			.collect();
 		(contents, self.styles.css())
 	}
 }
 
 impl Group {
 	fn html(&self, groups: &[Group]) -> String {
-		let link = match self.properties.cui.get(&CuiProperty("link".to_string())) {
-			Some(value) => self.get_string(value.clone()),
-			None => "".to_string(),
-		};
+		let link = self.properties.get(&Property::Cui(CuiProperty::Link));
 		let attributes = [
-			("style", &*self.properties.css.css()),
+			("style", &*self.properties.css()),
 			("class", &*self.class_names.join(" ")),
-			("href", &*link),
+			(
+				"href",
+				&*link
+					.unwrap_or(&Value::Static(StaticValue::String("".to_string())))
+					.to_string(),
+			),
 		]
 		.iter()
 		.filter(|(_, value)| !value.is_empty())
 		.map(|(attribute, value)| format!(" {}='{}'", attribute, value))
-		.collect::<Vec<String>>()
-		.join("");
+		.collect::<String>();
 
 		let children = self
 			.elements
 			.iter()
 			.filter(|&&element_id| groups[element_id].is_static())
 			.map(|&child_id| groups[child_id].html(groups))
-			.collect::<Vec<String>>()
-			.join("");
+			.collect::<String>();
 
 		let contents = format!(
 			"{}{}",
-			match self.properties.cui.get(&CuiProperty("text".to_string())) {
-				Some(value) => self.get_string(value.clone()),
-				None => "".to_string(),
+			if let Some(value) = self.properties.get(&Property::Cui(CuiProperty::Text)) {
+				value.to_string()
+			} else {
+				"".into()
 			},
 			children
 		);

@@ -1,13 +1,17 @@
 mod group;
 pub mod properties;
+mod value;
 
-pub use self::group::Group;
+pub use self::{
+	group::Group,
+	value::{StaticValue, Value},
+};
 
-use data::semantics::properties::CssRules;
+use self::properties::CssRules;
 
 pub struct Page {
-	pub title: String,
-	pub route: String,
+	pub title: Value,
+	pub route: &'static str,
 	pub root_id: usize,
 }
 
@@ -19,4 +23,5 @@ pub struct Semantics {
 
 	pub pages: Vec<Page>,
 	pub groups: Vec<Group>,
+	pub variables: Vec<(Value, Option<usize>)>,
 }

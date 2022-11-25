@@ -103,6 +103,15 @@ impl Semantics {
 					}
 				}
 			}
+
+			fn render_variables(group: &Group, element: &mut HtmlElement) {
+				STATE.with(|state| {
+					let mut state = state.borrow_mut();
+					for (id, value) in &group.variables {
+						state[*id] = value.clone();
+					}
+				})
+			}
 		}
 	}
 }

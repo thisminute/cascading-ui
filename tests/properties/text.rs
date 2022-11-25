@@ -2,7 +2,7 @@ extern crate cascading_ui;
 extern crate wasm_bindgen_test;
 use self::{
 	cascading_ui::{test_header, test_setup},
-	wasm_bindgen_test::*,
+	wasm_bindgen_test::wasm_bindgen_test,
 };
 
 test_header!();
@@ -23,8 +23,7 @@ fn element() {
 		}
 	}
 	assert_eq!(
-		root
-			.first_element_child()
+		root.first_element_child()
 			.expect("the root should contain an element")
 			.inner_html(),
 		"hello world"

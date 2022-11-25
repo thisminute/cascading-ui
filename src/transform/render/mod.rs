@@ -2,9 +2,9 @@ mod cascade;
 mod element;
 mod value;
 
-use data::{
-	ast::Value,
-	semantics::{properties::PageProperty, Semantics},
+use data::semantics::{
+	properties::{PageProperty, Property},
+	Semantics, StaticValue, Value,
 };
 
 impl Semantics {
@@ -15,15 +15,13 @@ impl Semantics {
 			log::debug!("Rendering page {}", page_group_id);
 			// TODO: routes based on directory structure
 			let ancestors = &mut Vec::new();
-			let default = &Value::String("".into());
+			let default = &Value::Static(StaticValue::String("".into()));
 			let title = self.groups[page_group_id]
 				.properties
-				.page
-				.get(&PageProperty::Title)
-				.or(Some(default))
-				.unwrap()
+				.get(&Property::Page(PageProperty::Title))
+				.unwrap_or(default)
 				.clone();
-			self.pages[i].title = self.groups[page_group_id].get_string(title);
+			self.pages[i].title = title;
 			self.render_element(page_group_id, ancestors);
 		}
 	}

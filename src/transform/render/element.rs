@@ -1,6 +1,9 @@
 use {
-	data::semantics::{properties::CuiProperty, Semantics},
-	misc::id_gen::id_gen,
+	data::semantics::{
+		properties::{CuiProperty, Property},
+		Semantics,
+	},
+	misc::id_gen::generate_class_id,
 };
 
 impl Semantics {
@@ -48,7 +51,7 @@ impl Semantics {
 
 			let selector = self.groups[source_id]
 				.selector
-				.get_or_insert_with(id_gen)
+				.get_or_insert_with(generate_class_id)
 				.clone();
 			log::debug!("  Generated selector {} for group {}", selector, source_id);
 			self.cascade(
@@ -56,35 +59,38 @@ impl Semantics {
 				element_id,
 				self.groups[element_id].listener_scope != self.groups[source_id].listener_scope,
 			);
-			if !self.groups[source_id].properties.css.is_empty() {
-				self.styles.insert(
-					format!(".{}", selector),
-					self.groups[source_id].properties.css.clone(),
-				);
-			}
+			self.styles.insert(
+				format!(".{}", selector),
+				self.groups[source_id]
+					.properties
+					.iter()
+					.filter_map(|(property, value)| {
+						if let Property::Css(property) = property {
+							Some((property.clone(), value.clone()))
+						} else {
+							None
+						}
+					})
+					.collect(),
+			);
 			self.groups[element_id].class_names.push(selector);
 		}
 
-		self.groups[element_id].variables = self.groups[element_id]
-			.variables
-			.clone()
-			.into_iter()
-			.map(|(identifier, value)| (identifier, self.render_value(value, ancestors)))
-			.collect();
-
 		ancestors.push(element_id);
+		self.render_values(element_id, ancestors);
+
 		for element_id in self.groups[element_id].elements.clone() {
 			self.render_element(element_id, ancestors);
 		}
 		ancestors.pop();
 
-		self.groups[element_id].tag = match self.groups[element_id]
+		self.groups[element_id].tag = if self.groups[element_id]
 			.properties
-			.cui
-			.get(&CuiProperty("link".to_string()))
+			.contains_key(&Property::Cui(CuiProperty::Link))
 		{
-			Some(_) => "a",
-			None => "div",
+			"a"
+		} else {
+			"div"
 		};
 
 		log::debug!(" Removing virtual groups from element {}", element_id);

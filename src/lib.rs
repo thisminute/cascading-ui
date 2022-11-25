@@ -115,5 +115,12 @@ pub fn test_setup(input: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn test_header(_input: TokenStream) -> TokenStream {
-	Semantics::runtime().into()
+	let header = Semantics::runtime();
+	quote! {
+		#header
+		thread_local! {
+			static STATE: RefCell<Vec<Value>> = RefCell::new(vec![]);
+		}
+	}
+	.into()
 }

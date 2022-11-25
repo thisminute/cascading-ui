@@ -1,4 +1,4 @@
-use data::semantics::Semantics;
+use {data::semantics::Semantics, misc::id_gen::generate_mutable_id};
 
 impl Semantics {
 	fn create_element_from_group(&mut self, source_id: usize, parent_id: usize) {
@@ -22,18 +22,31 @@ impl Semantics {
 		}
 
 		if !virtual_ {
-			for (property, value) in self.groups[source_id].properties.cui.clone() {
-				log::debug!(" Cascading cui property {}:{:?}", property.0, value);
+			for (property, value) in self.groups[source_id].properties.clone() {
+				log::debug!(" Cascading cui property {:?}:{:?}", property, value);
 				self.groups[target_id]
 					.properties
-					.cui
 					.entry(property)
 					.or_insert(value);
 			}
 
 			for (name, value) in self.groups[source_id].variables.clone() {
-				log::debug!(" Cascading variable {}:{:?}", name, value);
-				self.groups[target_id].variables.insert(name, value);
+				log::debug!(" Cascading variable '{}': {:?}", name, value);
+				self.groups[target_id]
+					.variables
+					.entry(name)
+					.or_insert(value);
+			}
+		} else {
+			for name in self.groups[source_id].variables.keys() {
+				if self.groups[source_id].listener_scope != self.groups[target_id].listener_scope {
+					if let Some(&variable_id) = self.groups[target_id].variables.get(name) {
+						log::debug!(" Adding mutable flag to variable '{}'", name);
+						let mutable_id = generate_mutable_id();
+						self.variables[variable_id] =
+							(self.variables[variable_id].0.clone(), Some(mutable_id));
+					}
+				}
 			}
 		}
 

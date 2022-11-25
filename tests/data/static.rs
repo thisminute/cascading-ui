@@ -2,10 +2,9 @@ extern crate cascading_ui;
 extern crate wasm_bindgen_test;
 use self::{
 	cascading_ui::{test_header, test_setup},
-	wasm_bindgen_test::*,
+	wasm_bindgen_test::wasm_bindgen_test,
 };
 
-wasm_bindgen_test_configure!(run_in_browser);
 test_header!();
 
 #[wasm_bindgen_test]
@@ -28,8 +27,7 @@ fn class_1() {
 		}
 	}
 	assert_eq!(
-		root
-			.first_element_child()
+		root.first_element_child()
 			.expect("the root should contain an element")
 			.inner_html(),
 		"hello world"
@@ -47,8 +45,45 @@ fn class_2() {
 		}
 	}
 	assert_eq!(
-		root
-			.first_element_child()
+		root.first_element_child()
+			.expect("the root should contain an element")
+			.inner_html(),
+		"hello world"
+	);
+}
+
+#[wasm_bindgen_test]
+fn priority_1() {
+	test_setup! {
+		a {
+			$text: "hello world";
+			text: $text;
+		}
+		.a {
+			$text: "hi";
+		}
+	}
+	assert_eq!(
+		root.first_element_child()
+			.expect("the root should contain an element")
+			.inner_html(),
+		"hello world"
+	);
+}
+
+#[wasm_bindgen_test]
+fn priority_2() {
+	test_setup! {
+		a {
+			$text: "hello world";
+		}
+		.a {
+			$text: "hi";
+			text: $text;
+		}
+	}
+	assert_eq!(
+		root.first_element_child()
 			.expect("the root should contain an element")
 			.inner_html(),
 		"hello world"

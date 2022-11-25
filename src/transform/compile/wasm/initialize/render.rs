@@ -1,19 +1,24 @@
 use {
-	data::semantics::{properties::CuiProperty, Semantics},
+	data::semantics::{
+		properties::{CuiProperty, Property},
+		Semantics, Value,
+	},
 	proc_macro2::TokenStream,
 	quote::quote,
 };
 
 impl Semantics {
-	pub fn static_render_all(&self, group_id: usize) -> TokenStream {
+	fn static_render_all(&self, group_id: usize) -> TokenStream {
 		let elements = self.static_render_elements(group_id);
 		let classes = self.static_render_classes(group_id);
 		let listeners = self.static_render_listeners(group_id);
+		let variables = self.static_render_variables(group_id);
 		let properties = self.static_render_properties(group_id);
 		quote! {
 			#elements
 			#classes
 			#listeners
+			#variables
 			#properties
 		}
 	}
@@ -54,7 +59,7 @@ impl Semantics {
 					.selector
 					.as_ref()
 					.expect("dynamic classes should have selectors");
-				let render = self.static_render_all(class_id);
+				let rules = self.static_render_all(class_id);
 				let queue = self.static_register_all(class_id);
 				quote! {
 					let elements = document.get_elements_by_class_name(#selector);
@@ -64,13 +69,13 @@ impl Semantics {
 							.unwrap()
 							.dyn_into::<HtmlElement>()
 							.unwrap();
-						#render
+						#rules
 					}
 					let mut class = classes.entry(#selector).or_insert(Group::default());
 					#queue
 				}
 			})
-			.collect::<TokenStream>()
+			.collect()
 	}
 
 	pub fn static_render_listeners(&self, group_id: usize) -> TokenStream {
@@ -100,9 +105,11 @@ impl Semantics {
 							e.stop_propagation();
 							let window = web_sys::window().unwrap();
 							let document = window.document().unwrap();
-							CLASSES.with(|classes| {
-								let mut classes = classes.borrow_mut();
-								#rules
+							STATE.with(|state| {
+								CLASSES.with(|classes| {
+									let mut classes = classes.borrow_mut();
+									#rules
+								});
 							});
 						}) as Box<dyn FnMut(Event)>)
 					};
@@ -113,20 +120,46 @@ impl Semantics {
 			.collect()
 	}
 
+	fn static_render_variables(&self, group_id: usize) -> TokenStream {
+		self.groups[group_id]
+			.variables
+			.iter()
+			.map(|(_, _)| {
+				// let value = self.get_static(&value).to_string();
+
+				quote! {}
+			})
+			.collect()
+	}
+
+	fn static_render_value(&self, value: &Value) -> TokenStream {
+		if let &Value::Variable(variable_id, _) = value {
+			if let (_, Some(mutable_id)) = self.variables[variable_id] {
+				return quote! { state[#mutable_id] };
+			}
+		}
+		quote! { #value }
+	}
+
 	fn static_render_properties(&self, group_id: usize) -> TokenStream {
 		let properties = &self.groups[group_id].properties;
 		let mut effects = Vec::new();
-		if let Some(value) = properties.cui.get(&CuiProperty("text".to_string())) {
+
+		if let Some(value) = properties.get(&Property::Cui(CuiProperty::Text)) {
+			let value = self.static_render_value(value);
 			effects.push(quote! { element.text(#value); });
 		}
-		if let Some(_value) = properties.cui.get(&CuiProperty("link".to_string())) {
-			effects.push(quote! {});
+
+		// if let Some(_value) = properties.get(&Property::Cui(CuiProperty::Link)) {
+		// 	effects.push(quote! {});
+		// }
+
+		for (property, value) in properties {
+			if let Property::Css(property) = property {
+				effects.push(quote! { element.css(#property, #value); });
+			}
 		}
 
-		for (property, value) in &properties.css {
-			effects.push(quote! { element.css(#property, #value); });
-		}
-
-		quote! { #( #effects )* }
+		effects.into_iter().collect()
 	}
 }

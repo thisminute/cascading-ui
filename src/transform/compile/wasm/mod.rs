@@ -52,6 +52,13 @@ impl Semantics {
 				Image,
 			}
 
+			#[derive(Clone, Debug)]
+			pub enum Value {
+				Number(i32),
+				String(&'static str),
+				Variable(usize),
+			}
+
 			#[derive(Clone, Default)]
 			struct Group {
 				class_names: Vec<&'static str>,
@@ -61,6 +68,7 @@ impl Semantics {
 				listeners: Vec<Group>,
 				elements: Vec<Group>,
 				properties: HashMap<Property, &'static str>,
+				variables: Vec<(usize, Value)>,
 			}
 
 			trait Std {
@@ -122,9 +130,11 @@ impl Semantics {
 
 	fn full(&self) -> TokenStream {
 		let header = Self::runtime();
+		let state = self.runtime_state();
 		let document = self.document();
 		quote! {
 			#header
+			#state
 
 			extern crate console_error_panic_hook;
 

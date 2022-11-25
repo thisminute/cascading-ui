@@ -10,42 +10,42 @@ version = "0.0.1"
 proc-macro = true
 
 [dependencies]
-log = "^0.4.16"
-phf = {version = "^0.10.1", features = ["macros"]}
-proc-macro2 = {version = "^1.0.36", features = ["nightly"]}
-quote = "^1.0.17"
-simple_logger = "^2.1.0"
+log = "^0.4.17"
+phf = {version = "^0.11.1", features = ["macros"]}
+proc-macro2 = "^1.0.47"
+quote = "^1.0.21"
+simple_logger = "^4.0.0"
 
 [dependencies.syn]
 features = [
-  "extra-traits",
-  "full",
-  "parsing",
-  "printing",
-  "visit-mut",
+	"extra-traits",
+	"full",
+	"parsing",
+	"printing",
+	"visit-mut",
 ]
-version = "^1.0.89"
+version = "^1.0.103"
 
 [dev-dependencies]
-wasm-bindgen = "^0.2.79"
-wasm-bindgen-test = "^0.3.29"
+wasm-bindgen = "^0.2.83"
+wasm-bindgen-test = "^0.3.33"
 
 [dev-dependencies.web-sys]
 features = [
-  "console",
-  "CssStyleDeclaration",
-  "CssStyleSheet",
-  "Document",
-  "Element",
-  "Event",
-  "EventListener",
-  "EventTarget",
-  "HtmlCollection",
-  "HtmlElement",
-  "HtmlHeadElement",
-  "Location",
-  "Node",
-  "NodeList",
-  "Window",
+	"console",
+	"CssStyleDeclaration",
+	"CssStyleSheet",
+	"Document",
+	"Element",
+	"Event",
+	"EventListener",
+	"EventTarget",
+	"HtmlCollection",
+	"HtmlElement",
+	"HtmlHeadElement",
+	"Location",
+	"Node",
+	"NodeList",
+	"Window",
 ]
-version = "^0.3.56"
+version = "^0.3.60"

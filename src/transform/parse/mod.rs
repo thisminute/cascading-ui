@@ -4,7 +4,6 @@ use {
 	self::peek::Peek,
 	data::ast::{Assignment, Block, Document, Prefix, Property, Value, Variable},
 	proc_macro2::Span,
-	std::collections::HashMap,
 	syn::{
 		braced,
 		parse::{Parse, ParseStream},
@@ -32,7 +31,7 @@ fn parse_content(
 		elements: Vec::new(),
 		classes: Vec::new(),
 		listeners: Vec::new(),
-		variables: HashMap::new(),
+		variables: Vec::new(),
 	};
 	loop {
 		if input.peek_property() {
@@ -47,25 +46,13 @@ fn parse_content(
 			let assignment = input.parse::<Assignment>()?;
 			block
 				.variables
-				.insert(assignment.variable.0.to_string(), assignment.value);
+				.push((assignment.variable.0.to_string(), assignment.value));
 		} else {
 			break;
 		}
 	}
 	Ok(block)
 }
-
-// impl Parse for IdentVec {
-// 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-// 		let mut list = Vec::new();
-// 		list.push(input.parse()?);
-// 		while input.peek(Token![,]) {
-// 			input.parse::<Token![,]>()?;
-// 			list.push(input.parse()?);
-// 		}
-// 		Ok(IdentVec(list))
-// 	}
-// }
 
 impl Parse for Block {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {

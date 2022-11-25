@@ -1,5 +1,5 @@
 use {
-	data::{ast::Value, semantics::properties::Properties},
+	super::{properties::Property, Value},
 	std::collections::HashMap,
 };
 
@@ -9,9 +9,9 @@ pub struct Group {
 	pub selector: Option<String>,
 	pub class_names: Vec<String>,
 	pub listener_scope: Option<usize>,
-	pub variables: HashMap<String, Value>,
+	pub variables: HashMap<String, usize>,
 
-	pub properties: Properties,
+	pub properties: HashMap<Property, Value>,
 	pub elements: Vec<usize>,
 	pub classes: HashMap<String, Vec<usize>>,
 	pub listeners: Vec<usize>,
@@ -25,7 +25,7 @@ impl Group {
 	pub fn new(
 		name: Option<String>,
 		listener_scope: Option<usize>,
-		variables: HashMap<String, Value>,
+		variables: HashMap<String, usize>,
 	) -> Self {
 		Self {
 			name,
@@ -34,7 +34,7 @@ impl Group {
 			listener_scope,
 			variables,
 
-			properties: Properties::default(),
+			properties: HashMap::new(),
 			elements: Vec::new(),
 			classes: HashMap::new(),
 			listeners: Vec::new(),
@@ -49,8 +49,7 @@ impl Group {
 	pub fn class_to_new_static_element(&mut self, source_id: usize) -> Self {
 		Group {
 			name: Some(
-				self
-					.name
+				self.name
 					.clone()
 					.expect("should never try to make an instance of a class with no name"),
 			),
@@ -59,11 +58,7 @@ impl Group {
 			listener_scope: None,
 			variables: HashMap::new(),
 
-			properties: Properties {
-				cui: self.properties.cui.clone(),
-				css: HashMap::new(),
-				page: HashMap::new(),
-			},
+			properties: self.properties.clone(),
 			elements: self.elements.clone(),
 			classes: HashMap::new(),
 			listeners: self.listeners.clone(),

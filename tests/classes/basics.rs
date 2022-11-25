@@ -2,7 +2,7 @@ extern crate cascading_ui;
 extern crate wasm_bindgen_test;
 use self::{
 	cascading_ui::{test_header, test_setup},
-	wasm_bindgen_test::*,
+	wasm_bindgen_test::wasm_bindgen_test,
 };
 
 test_header!();
@@ -16,8 +16,7 @@ fn base() {
 		thingy {}
 	}
 	assert_eq!(
-		root
-			.first_element_child()
+		root.first_element_child()
 			.expect("the root should contain an element")
 			.inner_html(),
 		"hello world"
@@ -33,8 +32,25 @@ fn hoisting() {
 		}
 	}
 	assert_eq!(
-		root
-			.first_element_child()
+		root.first_element_child()
+			.expect("the root should contain an element")
+			.inner_html(),
+		"hello world"
+	);
+}
+
+#[wasm_bindgen_test]
+fn priority() {
+	test_setup! {
+		a {
+			text: "hello world";
+		}
+		.a {
+			text: "hi";
+		}
+	}
+	assert_eq!(
+		root.first_element_child()
 			.expect("the root should contain an element")
 			.inner_html(),
 		"hello world"
