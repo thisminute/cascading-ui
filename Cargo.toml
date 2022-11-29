@@ -5,6 +5,10 @@ license = "MIT"
 name = "cascading-ui"
 repository = "https://github.com/thisminute/cascading-ui"
 version = "0.0.1"
+include = [
+    "/src",
+    "/Cargo.toml",
+]
 
 [lib]
 proc-macro = true
