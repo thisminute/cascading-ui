@@ -1,4 +1,4 @@
 [submodule "cui-tools"]
 	path = cui-tools
 	url = git@github.com:thisminute/cui-tools.git
-	branch = main
+	branch = debug
