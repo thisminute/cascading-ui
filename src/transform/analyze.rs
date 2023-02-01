@@ -98,9 +98,11 @@ impl Semantics {
 				group_id
 			);
 			let value = self.create_semantic_value(&value);
-			self.groups[group_id]
-				.properties
-				.insert(Property::new(property), value);
+			let property = Property::new(property);
+			if let Property::Css(_) = property {
+				self.groups[group_id].has_css_properties = true;
+			}
+			self.groups[group_id].properties.insert(property, value);
 		}
 
 		for block in block.listeners {
