@@ -12,12 +12,10 @@ impl Semantics {
 		let header = Self::header();
 		let runtime_register_functions = Self::runtime_register_functions();
 		let runtime_render_functions = Self::runtime_render_functions();
-		let runtime_static_render_functions = Self::runtime_static_render_functions();
 		quote! {
 			#header
 			#runtime_register_functions
 			#runtime_render_functions
-			#runtime_static_render_functions
 		}
 	}
 
@@ -44,7 +42,7 @@ impl Semantics {
 			};
 
 			#[derive(Clone, Hash, PartialEq, Eq)]
-			pub enum Property {
+			enum Property {
 				Css(&'static str),
 				Link,
 				Text,
@@ -53,7 +51,7 @@ impl Semantics {
 			}
 
 			#[derive(Clone, Debug)]
-			pub enum Value {
+			enum Value {
 				Number(i32),
 				String(&'static str),
 				Variable(usize),
@@ -112,14 +110,20 @@ impl Semantics {
 			}
 		});
 
+		let document = self.document();
+
+		if document.is_empty() {
+			return quote! {};
+		}
+
 		let core = if !self.errors.is_empty() {
 			quote! {
 				#( #errors )*
 			}
 		} else if full {
-			self.full()
+			self.full(document)
 		} else {
-			self.document()
+			document
 		};
 
 		quote! {
@@ -128,10 +132,9 @@ impl Semantics {
 		}
 	}
 
-	fn full(&self) -> TokenStream {
+	fn full(&self, document: TokenStream) -> TokenStream {
 		let header = Self::runtime();
-		let state = self.runtime_state();
-		let document = self.document();
+		let state = self.compiled_variables();
 		quote! {
 			#header
 			#state

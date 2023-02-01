@@ -8,28 +8,36 @@ use {
 };
 
 impl Semantics {
-	pub fn html(&self) -> (String, HashMap<&str, String>) {
+	pub fn html(&self, static_: bool) -> (String, HashMap<&str, String>) {
 		log::debug!("...Writing HTML...");
 		let (contents, styles) = self.html_parts();
 		let homepage = contents.get("/").unwrap();
 		let root = &self.pages[self.pages[0].root_id];
 		// TODO: make this cleaner with a lightweight html!() macro
+
 		let html = format!(
 			"<html>{}{}</html>",
-			format_args!("<head>{}{}</head>",
+			format_args!(
+				"<head>{}{}</head>",
 				format_args!("<title>{}</title>", root.title),
 				format_args!("<style>{}</style>", styles)
 			),
 			format_args!(
-				"<body>{}{}{}</body>",
+				"<body>{}{}</body>",
 				homepage,
-				"<noscript>This page contains Webassembly and Javascript content. Please make sure that you are using the latest version of a modern browser and that Javascript and Webassembly (Wasm) are enabled.</noscript>",
-				format_args!(
-					"<script type=\"module\">{}{}</script>",
-					"import init from './cui/cui_app_template.js';",
-					"init();"
-				)
-			)
+				if static_ {
+					"".into()
+				} else {
+					format!("{}{}",
+						"<noscript>This page contains Webassembly and Javascript content. Please make sure that you are using the latest version of a modern browser and that Javascript and Webassembly (Wasm) are enabled.</noscript>",
+						format_args!(
+							"<script type=\"module\">{}{}</script>",
+							"import init from './cui/cui_app_template.js';",
+							"init();"
+						)
+					)
+				}
+			),
 		);
 		(html, contents)
 	}
@@ -65,7 +73,7 @@ impl Group {
 		let children = self
 			.elements
 			.iter()
-			.filter(|&&element_id| groups[element_id].is_static())
+			.filter(|&&element_id| groups[element_id].is_compiled())
 			.map(|&child_id| groups[child_id].html(groups))
 			.collect::<String>();
 

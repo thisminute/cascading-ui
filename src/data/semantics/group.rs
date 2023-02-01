@@ -6,20 +6,24 @@ use {
 #[derive(Clone)]
 pub struct Group {
 	pub name: Option<String>,
-	pub selector: Option<String>,
-	pub class_names: Vec<String>,
 	pub listener_scope: Option<usize>,
-	pub variables: HashMap<String, usize>,
 
-	pub properties: HashMap<Property, Value>,
 	pub elements: Vec<usize>,
 	pub classes: HashMap<String, Vec<usize>>,
 	pub listeners: Vec<usize>,
+	pub properties: HashMap<Property, Value>,
+	pub variables: HashMap<String, usize>,
 
-	pub members: Vec<usize>,
-	pub member_of: Vec<usize>,
-
+	// for element groups
 	pub tag: &'static str,
+	pub member_of: Vec<usize>,
+	pub class_names: Vec<String>,
+
+	// for class groups
+	pub selector: Option<String>,
+	pub members: Vec<usize>,
+	pub has_css_properties: bool,
+	pub is_dynamic: bool,
 }
 impl Group {
 	pub fn new(
@@ -29,48 +33,52 @@ impl Group {
 	) -> Self {
 		Self {
 			name,
-			selector: None,
-			class_names: Vec::new(),
 			listener_scope,
-			variables,
 
-			properties: HashMap::new(),
 			elements: Vec::new(),
 			classes: HashMap::new(),
 			listeners: Vec::new(),
-
-			members: Vec::new(),
-			member_of: Vec::new(),
+			properties: HashMap::new(),
+			variables,
 
 			tag: "div",
+			member_of: Vec::new(),
+			class_names: Vec::new(),
+
+			selector: None,
+			members: Vec::new(),
+			has_css_properties: false,
+			is_dynamic: false,
 		}
 	}
 
-	pub fn class_to_new_static_element(&mut self, source_id: usize) -> Self {
+	pub fn class_to_new_compiled_element(&mut self, source_id: usize) -> Self {
 		Group {
 			name: Some(
 				self.name
 					.clone()
 					.expect("should never try to make an instance of a class with no name"),
 			),
-			selector: None,
-			class_names: Vec::new(),
 			listener_scope: None,
-			variables: HashMap::new(),
 
-			properties: self.properties.clone(),
 			elements: self.elements.clone(),
 			classes: HashMap::new(),
 			listeners: self.listeners.clone(),
-
-			members: Vec::new(),
-			member_of: vec![source_id],
+			properties: self.properties.clone(),
+			variables: HashMap::new(),
 
 			tag: "div",
+			member_of: vec![source_id],
+			class_names: Vec::new(),
+
+			selector: None,
+			members: Vec::new(),
+			has_css_properties: self.has_css_properties,
+			is_dynamic: false,
 		}
 	}
 
-	pub fn is_static(&self) -> bool {
+	pub fn is_compiled(&self) -> bool {
 		self.listener_scope.is_none()
 	}
 }

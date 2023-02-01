@@ -4,108 +4,77 @@ use {
 	quote::quote,
 };
 
-impl Semantics {
-	pub fn static_register_all(&self, class_id: usize) -> TokenStream {
-		let elements = self.static_register_elements(class_id);
-		let classes = self.static_register_classes(class_id);
-		let listeners = self.static_register_listeners(class_id);
-		// let variables = self.static_register_variables(class_id);
-		let properties = self.static_register_properties(class_id);
-		quote! {
-			#elements
-			#classes
-			#listeners
-			// #variables
-			#properties
-		}
-	}
+// the generated code to register the effects of listeners and classes in the
+// runtime, to be used when a listener is triggered
 
-	fn static_register_elements(&self, class_id: usize) -> TokenStream {
-		self.groups[class_id]
-			.elements
-			.iter()
+impl Semantics {
+	pub fn compiled_register_group(&self, group_id: usize) -> TokenStream {
+		let elements = (self.groups[group_id].elements.iter())
 			.map(|&element_id| {
-				let rules = self.static_register_all(element_id);
+				let rules = self.compiled_register_group(element_id);
 				quote! {
-					class.elements.push({
-						let mut class = Group::default();
+					group.elements.push({
+						let mut group = Group::default();
 						#rules
-						class
+						group
 					});
 				}
 			})
-			.collect()
-	}
-
-	fn static_register_classes(&self, group_id: usize) -> TokenStream {
-		self.groups[group_id]
-			.classes
-			.iter()
+			.collect::<TokenStream>();
+		let classes = (self.groups[group_id].classes.iter())
 			.flat_map(|(_, groups)| groups.iter())
 			.map(|&class_id| {
-				let selector = self.groups[class_id]
-					.selector
-					.clone()
-					.expect("static and dynamic classes should have selectors");
-				let rules = self.static_register_all(class_id);
+				let rules = self.compiled_register_group(class_id);
+				if rules.is_empty() || self.groups[class_id].selector.is_none() {
+					return quote! {};
+				}
+				let selector = self.groups[class_id].selector.clone().unwrap();
 				quote! {
-					class.classes.push({
-						let mut class = Group::default();
-						class.selector = #selector;
+					group.classes.push({
+						let mut group = Group::default();
+						group.selector = #selector;
 						#rules
-						class
+						group
 					});
 				}
 			})
-			.collect()
-	}
-
-	fn static_register_listeners(&self, class_id: usize) -> TokenStream {
-		self.groups[class_id]
-			.listeners
-			.iter()
+			.collect::<TokenStream>();
+		let listeners = (self.groups[group_id].listeners.iter())
 			.map(|&listener_id| {
+				let rules = self.compiled_register_group(listener_id);
+				if rules.is_empty() {
+					return quote! {};
+				}
 				let selector = self.groups[listener_id]
 					.name
 					.clone()
 					.expect("listeners should have event names");
-				let rules = self.static_register_all(listener_id);
 				quote! {
-					class.listeners.push({
-						let mut class = Group::default();
-						class.selector = #selector;
+					group.listeners.push({
+						let mut group = Group::default();
+						group.selector = #selector;
 						#rules
-						class
+						group
 					});
 				}
 			})
-			.collect()
-	}
-
-	// fn static_register_variables(&self, class_id: usize) -> TokenStream {
-	// 	self.groups[class_id]
-	// 		.variables
-	// 		.iter()
-	// 		.map(|(identifier, value)| {
-	// 			let identifier = cui_ident(identifier);
-	// 			quote! { let mut #identifier = #value; }
-	// 		})
-	// 		.collect()
-	// }
-
-	fn static_register_properties(&self, class_id: usize) -> TokenStream {
-		self.groups[class_id]
-			.properties
-			.iter()
+			.collect::<TokenStream>();
+		let properties = (self.groups[group_id].properties.iter())
 			.map(|(property, value)| match property {
 				Property::Css(property) => quote! {
-					class.properties.insert(Property::Css(#property), #value);
+					group.properties.insert(Property::Css(#property), #value);
 				},
 				Property::Cui(property) => quote! {
-					class.properties.insert(Property::#property, #value);
+					group.properties.insert(Property::#property, #value);
 				},
-				_ => quote! {},
+				_ => panic!("aaaAA"),
 			})
-			.collect()
+			.collect::<TokenStream>();
+		quote! {
+			#elements
+			#classes
+			#listeners
+			#properties
+		}
 	}
 }

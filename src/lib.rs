@@ -26,7 +26,8 @@ use {
 fn pipeline(document: Document) -> (String, TokenStream2) {
 	let mut semantics = document.analyze();
 	semantics.render();
-	(semantics.html().0, semantics.wasm(true))
+	let wasm = semantics.wasm(true);
+	(semantics.html(wasm.is_empty()).0, wasm)
 }
 
 #[proc_macro]
@@ -40,7 +41,7 @@ pub fn cui(input: TokenStream) -> TokenStream {
 	// if it exists, import .cui files from the `cui` directory and attach them to the input
 	let path = "./cui";
 	if Path::new(path).exists() {
-		for entry in read_dir(path).expect(&*format!("reading from {}", path)) {
+		for entry in read_dir(path).unwrap_or_else(|_| panic!("reading from {}", path)) {
 			let entry = entry.expect("reading .cui file");
 			let filename = entry.path().display().to_string();
 			if filename.ends_with(".cui") {
@@ -54,7 +55,8 @@ pub fn cui(input: TokenStream) -> TokenStream {
 	let (html, runtime) = pipeline(parse_macro_input!(input as Document));
 	let destination = "target/html/index.html";
 	create_dir_all("target/html").expect("unable to create target/html directory");
-	write(destination, html).expect(&*format!("writing output html code to {}", destination));
+	write(destination, html)
+		.unwrap_or_else(|_| panic!("writing output html code to {}", destination));
 	write("target/cui_macro_output.rs", runtime.to_string()).expect("writing output rust code");
 
 	runtime.into()
