@@ -69,9 +69,7 @@ impl Semantics {
 
 			self.styles.insert(
 				format!(".{}", selector),
-				self.groups[source_id]
-					.properties
-					.iter()
+				(self.groups[source_id].properties.iter())
 					.filter_map(|(property, value)| {
 						if let Property::Css(property) = property {
 							Some((property.clone(), value.clone()))

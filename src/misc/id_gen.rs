@@ -36,3 +36,7 @@ pub fn generate_class_id() -> String {
 pub fn generate_mutable_id() -> usize {
 	MUTABLE_COUNTER.fetch_add(1, Ordering::Relaxed)
 }
+
+pub fn reset_mutable_counter() {
+	MUTABLE_COUNTER.swap(0, Ordering::Relaxed);
+}
