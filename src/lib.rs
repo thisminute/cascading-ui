@@ -85,7 +85,7 @@ pub fn test_setup(input: TokenStream) -> TokenStream {
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();
 			state.clear();
-			state.extend_from_slice(&#mutables[..]);
+			state.extend_from_slice(&#mutables);
 		});
 		let window = web_sys::window().expect("getting window");
 		let document = &window.document().expect("getting `window.document`");
