@@ -46,9 +46,7 @@ impl Semantics {
 			block.identifier.to_string()
 		);
 
-		let variables = block
-			.variables
-			.iter()
+		let variables = (block.variables.iter())
 			.map(|(identifier, value)| {
 				let value = self.create_semantic_value(value);
 				self.variables.push((value, None));

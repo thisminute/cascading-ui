@@ -38,14 +38,22 @@ impl Semantics {
 					.or_insert(value);
 			}
 		} else {
-			for name in self.groups[source_id].variables.keys() {
-				if self.groups[source_id].listener_scope != self.groups[target_id].listener_scope {
-					if let Some(&variable_id) = self.groups[target_id].variables.get(name) {
-						log::debug!(" Adding mutable flag to variable '{}'", name);
-						let mutable_id = generate_mutable_id();
-						self.variables[variable_id] =
-							(self.variables[variable_id].0.clone(), Some(mutable_id));
-					}
+			for (name, &source_variable_id) in &self.groups[source_id].variables {
+				if let Some(&target_variable_id) = self.groups[target_id].variables.get(name) {
+					log::debug!(
+						" Adding mutable flag to variable '{}' with id {}",
+						name,
+						target_variable_id
+					);
+					let mutable_id = generate_mutable_id();
+					self.variables[source_variable_id] = (
+						self.variables[source_variable_id].0.clone(),
+						Some(mutable_id),
+					);
+					self.variables[target_variable_id] = (
+						self.variables[target_variable_id].0.clone(),
+						Some(mutable_id),
+					);
 				}
 			}
 		}

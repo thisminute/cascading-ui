@@ -1,8 +1,8 @@
 extern crate cascading_ui;
 extern crate wasm_bindgen_test;
 use self::{
-	cascading_ui::{test_header},
-	// wasm_bindgen_test::wasm_bindgen_test,
+	cascading_ui::{test_header, test_setup},
+	wasm_bindgen_test::wasm_bindgen_test,
 };
 
 test_header!();
@@ -123,3 +123,17 @@ test_header!();
 // 		}
 // 	}
 // }
+
+#[wasm_bindgen_test]
+fn base() {
+	test_setup! {
+		text: $text;
+		$text: "click me";
+		?click {
+			$text: "hello world";
+		}
+	}
+	assert_eq!(root.inner_html(), "click me");
+	root.click();
+	assert_eq!(root.inner_html(), "hello world");
+}

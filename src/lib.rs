@@ -12,6 +12,7 @@ mod transform;
 use {
 	data::{ast::Document, semantics::Semantics},
 	log::LevelFilter,
+	misc::id_gen::reset_mutable_counter,
 	proc_macro::TokenStream,
 	proc_macro2::TokenStream as TokenStream2,
 	quote::{quote, ToTokens},
@@ -69,6 +70,7 @@ pub fn test_setup(input: TokenStream) -> TokenStream {
 		.init()
 		.is_ok()
 	{}
+	reset_mutable_counter();
 
 	let document = parse_macro_input!(input as Document);
 	let mut semantics = document.analyze();
@@ -78,7 +80,13 @@ pub fn test_setup(input: TokenStream) -> TokenStream {
 	let content = pages.get("/").unwrap();
 
 	let wasm = semantics.wasm(false);
+	let mutables = semantics.get_mutables();
 	let wasm = quote! {
+		STATE.with(|state| {
+			let mut state = state.borrow_mut();
+			state.clear();
+			state.extend_from_slice(&#mutables[..]);
+		});
 		let window = web_sys::window().expect("getting window");
 		let document = &window.document().expect("getting `window.document`");
 		let head = &document.head().expect("getting `window.document.head`");
@@ -121,7 +129,7 @@ pub fn test_header(_input: TokenStream) -> TokenStream {
 	quote! {
 		#header
 		thread_local! {
-			static STATE: RefCell<Vec<Value>> = RefCell::new(vec![]);
+			static STATE: RefCell<Vec<(Value, Vec<Effect>)>> = RefCell::new(vec![]);
 		}
 	}
 	.into()

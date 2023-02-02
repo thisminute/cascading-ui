@@ -39,3 +39,7 @@ pub fn generate_mutable_id() -> usize {
 	MUTABLE_COUNTER.swap(n + 1, Ordering::Relaxed);
 	n
 }
+
+pub fn reset_mutable_counter() {
+	MUTABLE_COUNTER.swap(0, Ordering::Relaxed);
+}

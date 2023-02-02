@@ -43,9 +43,7 @@ impl Semantics {
 	}
 
 	pub fn html_parts(&self) -> (HashMap<&str, String>, String) {
-		let contents = self
-			.pages
-			.iter()
+		let contents = (self.pages.iter())
 			.map(|page| (page.route, self.groups[page.root_id].html(&self.groups)))
 			.collect();
 		(contents, self.styles.css())
@@ -70,9 +68,7 @@ impl Group {
 		.map(|(attribute, value)| format!(" {}='{}'", attribute, value))
 		.collect::<String>();
 
-		let children = self
-			.elements
-			.iter()
+		let children = (self.elements.iter())
 			.filter(|&&element_id| groups[element_id].is_compiled())
 			.map(|&child_id| groups[child_id].html(groups))
 			.collect::<String>();

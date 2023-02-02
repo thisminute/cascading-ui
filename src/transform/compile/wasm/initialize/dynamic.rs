@@ -1,3 +1,5 @@
+use crate::data::semantics::StaticValue;
+
 use {
 	data::semantics::{
 		properties::{CuiProperty, Property},
@@ -66,12 +68,14 @@ impl Semantics {
 				}
 			}
 		};
+
 		let classes = (self.groups[group_id].classes.iter())
 			.flat_map(|(_, groups)| groups.iter())
+			.filter(|&&class_id| self.groups[class_id].is_dynamic)
 			.map(|&class_id| {
 				let rules = self.compiled_dynamic_group(class_id);
 				let queue = self.compiled_register_group(class_id);
-				if !self.groups[class_id].is_dynamic || rules.is_empty() {
+				if rules.is_empty() {
 					return quote! {};
 				}
 				let selector = self.groups[class_id]
@@ -92,62 +96,47 @@ impl Semantics {
 					#queue
 				}
 			});
-		let listeners = (self.groups[group_id].listeners.iter()).map(|&listener_id| {
-			let rules = self.compiled_dynamic_group(listener_id);
-			if rules.is_empty() {
-				return quote! {};
-			}
-			let event = match &**self.groups[listener_id]
-				.name
-				.as_ref()
-				.expect("every listener should have an event id")
-			{
-				"blur" => quote! { set_onblur },
-				"focus" => quote! { set_onfocus },
-				"click" => quote! { set_onclick },
-				"mouseover" => quote! { set_onmouseover },
-				"mouseenter" => quote! { set_onmouseenter },
-				"mouseleave" => quote! { set_onmouseleave },
-				"mouseout" => quote! { set_onmouseout },
-				_ => panic!("unknown event id"),
-			};
-			let rules = self.provide_state(rules);
-			quote! {
-				let closure = {
-					let document = document.clone();
-					let mut element = element.clone();
-					Closure::wrap(Box::new(move |e: Event| {
-						e.stop_propagation();
-						CLASSES.with(|classes| {
-							let mut classes = classes.borrow_mut();
-							#rules
-						});
-					}) as Box<dyn FnMut(Event)>)
-				};
-				element.#event(Some(closure.as_ref().unchecked_ref()));
-				closure.forget();
-			}
-		});
+
+		let listeners = self.compiled_listeners(group_id);
+
 		let properties = self.compiled_dynamic_properties(group_id);
+
+		let variables = (self.groups[group_id].variables.iter())
+			.filter_map(|(_, variable_id)| {
+				if let (value, Some(mutable_id)) = &self.variables[*variable_id] {
+					Some((value, mutable_id))
+				} else {
+					None
+				}
+			})
+			.map(|(value, mutable_id)| {
+				let type_ = match self.get_static(value) {
+					StaticValue::Number(_) => quote! { Number },
+					StaticValue::String(_) => quote! { String },
+					// StaticValue::Color(_, _, _, _) => quote! { String },
+				};
+				let value = quote! {
+					Value::#type_(#value)
+				};
+				quote! {
+					state[#mutable_id].0 = #value;
+					for Effect { property, target } in &state[#mutable_id].1 {
+						if let EffectTarget::Element(element) = target {
+							render_property(element, property, #value);
+						}
+					}
+				}
+			});
+
 		quote! {
+			#( #variables )*
+
 			#elements
 			#( #classes )*
-			#( #listeners )*
+			#listeners
 			#properties
 		}
 	}
-
-	// fn compiled_render_variables(&self, group_id: usize) -> TokenStream {
-	// 	self.groups[group_id]
-	// 		.variables
-	// 		.iter()
-	// 		.map(|(_, _)| {
-	// 			// let value = self.get_static(&value).to_string();
-
-	// 			quote! {}
-	// 		})
-	// 		.collect()
-	// }
 
 	fn compiled_dynamic_properties(&self, group_id: usize) -> TokenStream {
 		let properties = &self.groups[group_id].properties;
@@ -155,7 +144,7 @@ impl Semantics {
 
 		if let Some(value) = properties.get(&Property::Cui(CuiProperty::Text)) {
 			let value = self.compiled_dynamic_value(value);
-			effects.push(quote! { element.text(#value); });
+			effects.push(quote! { element.text(Value::String(#value)); });
 		}
 
 		// if let Some(_value) = properties.get(&Property::Cui(CuiProperty::Link)) {
@@ -164,10 +153,10 @@ impl Semantics {
 
 		for (property, value) in properties {
 			if let Property::Css(property) = property {
-				effects.push(quote! { element.css(#property, #value); });
+				let value = self.compiled_dynamic_value(value);
+				effects.push(quote! { element.css(#property, Value::String(#value)); });
 			}
 		}
-
 		effects.into_iter().collect()
 	}
 
