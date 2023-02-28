@@ -12,6 +12,7 @@ mod transform;
 use {
 	data::{ast::Document, semantics::Semantics},
 	log::LevelFilter,
+	misc::id_gen::reset_mutable_counter,
 	proc_macro::TokenStream,
 	proc_macro2::TokenStream as TokenStream2,
 	quote::{quote, ToTokens},
@@ -26,7 +27,8 @@ use {
 fn pipeline(document: Document) -> (String, TokenStream2) {
 	let mut semantics = document.analyze();
 	semantics.render();
-	(semantics.html().0, semantics.wasm(true))
+	let wasm = semantics.wasm(true);
+	(semantics.html(wasm.is_empty()).0, wasm)
 }
 
 #[proc_macro]
@@ -40,7 +42,7 @@ pub fn cui(input: TokenStream) -> TokenStream {
 	// if it exists, import .cui files from the `cui` directory and attach them to the input
 	let path = "./cui";
 	if Path::new(path).exists() {
-		for entry in read_dir(path).expect(&*format!("reading from {}", path)) {
+		for entry in read_dir(path).unwrap_or_else(|_| panic!("reading from {}", path)) {
 			let entry = entry.expect("reading .cui file");
 			let filename = entry.path().display().to_string();
 			if filename.ends_with(".cui") {
@@ -54,7 +56,8 @@ pub fn cui(input: TokenStream) -> TokenStream {
 	let (html, runtime) = pipeline(parse_macro_input!(input as Document));
 	let destination = "target/html/index.html";
 	create_dir_all("target/html").expect("unable to create target/html directory");
-	write(destination, html).expect(&*format!("writing output html code to {}", destination));
+	write(destination, html)
+		.unwrap_or_else(|_| panic!("writing output html code to {}", destination));
 	write("target/cui_macro_output.rs", runtime.to_string()).expect("writing output rust code");
 
 	runtime.into()
@@ -67,6 +70,7 @@ pub fn test_setup(input: TokenStream) -> TokenStream {
 		.init()
 		.is_ok()
 	{}
+	reset_mutable_counter();
 
 	let document = parse_macro_input!(input as Document);
 	let mut semantics = document.analyze();
@@ -76,7 +80,13 @@ pub fn test_setup(input: TokenStream) -> TokenStream {
 	let content = pages.get("/").unwrap();
 
 	let wasm = semantics.wasm(false);
+	let mutables = semantics.get_mutables();
 	let wasm = quote! {
+		STATE.with(|state| {
+			let mut state = state.borrow_mut();
+			state.clear();
+			state.extend_from_slice(&#mutables);
+		});
 		let window = web_sys::window().expect("getting window");
 		let document = &window.document().expect("getting `window.document`");
 		let head = &document.head().expect("getting `window.document.head`");
@@ -119,7 +129,7 @@ pub fn test_header(_input: TokenStream) -> TokenStream {
 	quote! {
 		#header
 		thread_local! {
-			static STATE: RefCell<Vec<Value>> = RefCell::new(vec![]);
+			static STATE: RefCell<Vec<(Value, Vec<Effect>)>> = RefCell::new(vec![]);
 		}
 	}
 	.into()

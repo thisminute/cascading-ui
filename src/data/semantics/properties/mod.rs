@@ -1,8 +1,15 @@
 mod css;
 mod cui;
+
 pub use self::cui::{CuiProperty, PageProperty};
 
-use {self::css::CSS_PROPERTIES, super::Value, std::collections::HashMap};
+use {
+	self::css::CSS_PROPERTIES,
+	super::Value,
+	proc_macro2::TokenStream,
+	quote::{quote, ToTokens},
+	std::collections::HashMap,
+};
 
 pub type CssProperty = String;
 pub type CssProperties = HashMap<CssProperty, Value>;
@@ -39,5 +46,24 @@ impl Property {
 				}),
 			}
 		}
+	}
+}
+
+impl ToTokens for Property {
+	fn to_tokens(&self, tokens: &mut TokenStream) {
+		quote! {Property::}.to_tokens(tokens);
+		if let Property::Css(name) = self {
+			quote! {Css(#name)}
+		} else if let Property::Cui(property) = self {
+			match property {
+				CuiProperty::Text => quote! { Text },
+				CuiProperty::Link => quote! { Link },
+				CuiProperty::Tooltip => quote! { Tooltip },
+				CuiProperty::Image => quote! { Image },
+			}
+		} else {
+			quote! {}
+		}
+		.to_tokens(tokens)
 	}
 }

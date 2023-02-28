@@ -2,9 +2,12 @@ mod cascade;
 mod element;
 mod value;
 
-use data::semantics::{
-	properties::{PageProperty, Property},
-	Semantics, StaticValue, Value,
+use {
+	data::semantics::{
+		properties::{PageProperty, Property},
+		Semantics, StaticValue, Value,
+	},
+	misc::id_gen::generate_mutable_id,
 };
 
 impl Semantics {
@@ -24,5 +27,6 @@ impl Semantics {
 			self.pages[i].title = title;
 			self.render_element(page_group_id, ancestors);
 		}
+		self.mutable_count = generate_mutable_id();
 	}
 }
