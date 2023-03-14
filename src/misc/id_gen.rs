@@ -11,8 +11,7 @@ static SYMBOLS_2: &[char] = &['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 
 
 pub fn generate_class_id() -> String {
 	let mut id = String::from("");
-	let mut n = CLASS_COUNTER.load(Ordering::Relaxed);
-	CLASS_COUNTER.swap(n + 1, Ordering::Relaxed);
+	let mut n = CLASS_COUNTER.fetch_add(1, Ordering::Relaxed);
 
 	loop {
 		let symbol_pool = if id.is_empty() {
@@ -35,7 +34,5 @@ pub fn generate_class_id() -> String {
 }
 
 pub fn generate_mutable_id() -> usize {
-	let n = MUTABLE_COUNTER.load(Ordering::Relaxed);
-	MUTABLE_COUNTER.swap(n + 1, Ordering::Relaxed);
-	n
+	MUTABLE_COUNTER.fetch_add(1, Ordering::Relaxed)
 }
