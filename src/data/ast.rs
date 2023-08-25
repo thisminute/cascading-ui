@@ -25,8 +25,14 @@ pub struct Block {
 pub struct Variable(pub Ident);
 
 #[derive(Clone, Debug)]
+pub enum Unit {
+	None,
+	Percent,
+}
+
+#[derive(Clone, Debug)]
 pub enum Value {
-	Number(i32),
+	Number(i32, Unit),
 	String(String),
 	Variable(Variable),
 }

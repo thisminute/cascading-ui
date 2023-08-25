@@ -117,7 +117,9 @@ impl Semantics {
 	fn create_semantic_value(&self, value: &AstValue) -> Value {
 		match value {
 			AstValue::Variable(identifier) => Value::UnrenderedVariable(identifier.0.to_string()),
-			AstValue::Number(value) => Value::Static(StaticValue::Number(*value)),
+			AstValue::Number(value, unit) => {
+				Value::Static(StaticValue::Number(*value, unit.clone()))
+			}
 			AstValue::String(value) => Value::Static(StaticValue::String(value.clone())),
 		}
 	}

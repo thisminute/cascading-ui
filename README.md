@@ -69,27 +69,11 @@ Data flows between data structures (the `data` module, in the left column of the
 
 This is the core of CUI (And could be fairly easy to adapt to other syntaxes!). In `src/misc` are files outside of this core flow, such as the helper `context` which is used during semantic analysis.
 
-## Transformations in detail
-
-Transformations are not entirely conceptually distinct from one another - some of the tasks that a transformation does could have been placed in a different transformation to achieve the same result. For example, different kinds of blocks (class, element, or event) are written to different arrays during parsing, but the same thing could be achieved by writing to a single `blocks` array during parsing and then determining what kind of block each block is later, during analysis.
-
-A general principle is to place logic as early as it can happen without losing information that we need later. In our block parsing example, by determining whether a block is a class, element, or event in parsing, we lose the ability to tell whether a particular class came before or after another element. For example:
-
-```cui
-// 1
-.some_rule {}
-some_rule {}
-
-// 2
-some_rule {}
-.some_rule {}
-```
-
-Both of these bits of code parse into exactly the same AST, because both create a `classes` array with one item and an `elements` array with one item, and it is impossible to tell after parsing which order they were in originally. This is in fact desired behavior! CUI syntax should not require us to place classes before elements for the rules to apply, and as there is currently no planned distinction between putting an element and a class in either order (note: the order of any element relative to other _elements_ on the other hand is very important, and preserved in the `elements` array), we are okay with completely eliminating that information from the pipeline in the very first transformation, and it saves us from having to worry about that information affecting something in a later transformation.
+## Transformations in Detail
 
 ### Parse
 
-Parsing takes tokens derived from some CUI input and provided to us by the `syn` crate, and it transforms them into an AST. The AST is a minimum representation of the input - it is close to 1:1 with the original code, but unlike the input code it is in a tree rather than a sequence of tokens. The AST should represent the minimum information necessary to reproduce a CUI program. For example:
+Parsing takes tokens derived from some CUI input (which have been lexed for us by the `syn` crate) and it transforms them into an AST. The AST is a minimum representation of the input - it is close to 1:1 with the original code, but unlike the input code it is in a tree rather than a sequence of tokens. The AST should represent the minimum information necessary to reproduce a CUI program. For example:
 
 ```cui
 .box {

@@ -46,16 +46,31 @@ impl Semantics {
 						target_variable_id
 					);
 					let mutable_id = generate_mutable_id();
-					self.variables[source_variable_id] = (
-						self.variables[source_variable_id].0.clone(),
-						Some(mutable_id),
-					);
-					self.variables[target_variable_id] = (
-						self.variables[target_variable_id].0.clone(),
-						Some(mutable_id),
-					);
+					self.variables[source_variable_id].1 = Some(mutable_id);
+					self.variables[target_variable_id].1 = Some(mutable_id);
 				}
 			}
+
+			// for (property, value) in &self.groups[source_id].properties {
+			// 	if let Value::Variable(value) = value {
+			// 	}
+			// 	if let Some(&target_variable_id) = self.groups[target_id].variables.get(name) {
+			// 		log::debug!(
+			// 			" Adding mutable flag to variable '{}' with id {}",
+			// 			name,
+			// 			target_variable_id
+			// 		);
+			// 		let mutable_id = generate_mutable_id();
+			// 		self.variables[source_variable_id] = (
+			// 			self.variables[source_variable_id].0.clone(),
+			// 			Some(mutable_id),
+			// 		);
+			// 		self.variables[target_variable_id] = (
+			// 			self.variables[target_variable_id].0.clone(),
+			// 			Some(mutable_id),
+			// 		);
+			// 	}
+			// }
 		}
 
 		for listener_id in self.groups[source_id].listeners.clone() {

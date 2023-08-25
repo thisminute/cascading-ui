@@ -1,2 +1,0 @@
-mod register;
-mod render;

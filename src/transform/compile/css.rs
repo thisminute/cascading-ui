@@ -13,7 +13,7 @@ impl Css for Vec<CssRules> {
 impl Css for CssRules {
 	fn css(&self) -> String {
 		self.iter()
-			.map(|(selector, properties)| format!("{}{{{}}}", selector, properties.css()))
+			.map(|(selector, properties)| format!("{selector}{{{}}}", properties.css()))
 			.collect::<String>()
 	}
 }
@@ -21,7 +21,7 @@ impl Css for CssRules {
 impl Css for CssProperties {
 	fn css(&self) -> String {
 		self.iter()
-			.map(|(property, value)| format!("{}:{}", property, value))
+			.map(|(property, value)| format!("{property}:{value}"))
 			.fold(String::with_capacity(self.len()), |mut a, b| {
 				a.push_str(&b);
 				a.push(';');
@@ -35,7 +35,7 @@ impl Css for Properties {
 		self.iter()
 			.filter_map(|(property, value)| {
 				if let Property::Css(property) = property {
-					Some(format!("{}:{}", property, value))
+					Some(format!("{property}:{value}"))
 				} else {
 					None
 				}

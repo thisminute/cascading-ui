@@ -17,7 +17,7 @@ impl Peek for ParseStream<'_> {
 		self.peek(Ident::peek_any) && self.peek2(Token![:])
 	}
 	fn peek_element_block(&self) -> bool {
-		self.peek(Ident::peek_any) && self.peek2(Brace)
+		(self.peek(Ident::peek_any) || self.peek(Token![_])) && self.peek2(Brace)
 	}
 	fn peek_class_block(&self) -> bool {
 		self.peek(Token![.]) && self.peek2(Ident::peek_any) && self.peek3(Brace)

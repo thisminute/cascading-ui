@@ -55,16 +55,18 @@ impl Semantics {
 				});
 			}
 		});
-		let properties =
-			(self.groups[group_id].properties.iter()).map(|(property, value)| match property {
+		let properties = (self.groups[group_id].properties.iter()).map(|(property, value)| {
+			let value = self.dynamic_value(value);
+			match property {
 				Property::Css(property) => quote! {
-					group.properties.insert(Property::Css(#property), Value::String(#value));
+					group.properties.insert(Property::Css(#property), #value);
 				},
 				Property::Cui(property) => quote! {
-					group.properties.insert(Property::#property, Value::String(#value));
+					group.properties.insert(Property::#property, #value);
 				},
 				_ => panic!("aaaAA"),
-			});
+			}
+		});
 		quote! {
 			#( #elements )*
 			#( #classes )*

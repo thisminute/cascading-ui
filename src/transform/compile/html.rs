@@ -13,31 +13,28 @@ impl Semantics {
 		let (contents, styles) = self.html_parts();
 		let homepage = contents.get("/").unwrap();
 		let root = &self.pages[self.pages[0].root_id];
-		// TODO: make this cleaner with a lightweight html!() macro
+		let title = &root.title;
+		let runtime = if static_ {
+			"".into()
+		} else {
+			format!("{}{}",
+				"<noscript>This page contains Webassembly and Javascript content. Please make sure that you are using the latest version of a modern browser and that Javascript and Webassembly (Wasm) are enabled.</noscript>",
+				format_args!(
+					"<script type=\"module\">{}{}</script>",
+					"import init from './cui/cui_app_template.js';",
+					"init();"
+				)
+			)
+		};
 
 		let html = format!(
 			"<html>{}{}</html>",
 			format_args!(
 				"<head>{}{}</head>",
-				format_args!("<title>{}</title>", root.title),
-				format_args!("<style>{}</style>", styles)
+				format_args!("<title>{title}</title>"),
+				format_args!("<style>{styles}</style>")
 			),
-			format_args!(
-				"<body>{}{}</body>",
-				homepage,
-				if static_ {
-					"".into()
-				} else {
-					format!("{}{}",
-						"<noscript>This page contains Webassembly and Javascript content. Please make sure that you are using the latest version of a modern browser and that Javascript and Webassembly (Wasm) are enabled.</noscript>",
-						format_args!(
-							"<script type=\"module\">{}{}</script>",
-							"import init from './cui/cui_app_template.js';",
-							"init();"
-						)
-					)
-				}
-			),
+			format_args!("<body>{homepage}{runtime}</body>"),
 		);
 		(html, contents)
 	}
@@ -65,7 +62,7 @@ impl Group {
 		]
 		.iter()
 		.filter(|(_, value)| !value.is_empty())
-		.map(|(attribute, value)| format!(" {}='{}'", attribute, value))
+		.map(|(attribute, value)| format!(" {attribute}='{value}'"))
 		.collect::<String>();
 
 		let children = (self.elements.iter())

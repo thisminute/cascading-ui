@@ -2,7 +2,7 @@ mod peek;
 
 use {
 	self::peek::Peek,
-	data::ast::{Assignment, Block, Document, Prefix, Property, Value, Variable},
+	data::ast::{Assignment, Block, Document, Prefix, Property, Unit, Value, Variable},
 	proc_macro2::Span,
 	syn::{
 		braced,
@@ -66,7 +66,12 @@ impl Parse for Block {
 			Prefix::Element
 		};
 
-		let identifier = input.parse()?;
+		let identifier = if input.peek(Token![_]) {
+			input.parse::<Token![_]>()?;
+			Ident::new("_", Span::call_site())
+		} else {
+			input.parse()?
+		};
 
 		let content;
 		braced!(content in input);
@@ -98,11 +103,28 @@ impl Parse for Assignment {
 impl Parse for Value {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
 		Ok(if input.peek_variable() {
-			Self::Variable(input.parse::<Variable>()?)
+			Self::Variable(input.parse()?)
 		} else if input.peek(LitStr) {
 			Self::String(input.parse::<LitStr>()?.value())
 		} else {
-			Self::Number(input.parse::<LitInt>()?.base10_parse::<i32>()?)
+			Self::Number(
+				input.parse::<LitInt>()?.base10_parse::<i32>()?,
+				input.parse()?,
+			)
+		})
+	}
+}
+
+impl Parse for Unit {
+	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
+		Ok(if input.peek(Token![;]) {
+			Self::None
+		} else if input.peek(Token![%]) {
+			input.parse::<Token![%]>()?;
+			Self::Percent
+		} else {
+			// TODO: this should return an error
+			return Ok(Self::None);
 		})
 	}
 }

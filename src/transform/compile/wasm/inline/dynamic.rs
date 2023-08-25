@@ -1,9 +1,7 @@
-use crate::data::semantics::StaticValue;
-
 use {
 	data::semantics::{
 		properties::{CuiProperty, Property},
-		Semantics, Value,
+		Semantics,
 	},
 	proc_macro2::TokenStream,
 	quote::quote,
@@ -99,7 +97,21 @@ impl Semantics {
 
 		let listeners = self.compiled_listeners(group_id);
 
-		let properties = self.compiled_dynamic_properties(group_id);
+		let properties = (self.groups[group_id].properties.iter()).map(|(property, value)| {
+			let value = self.dynamic_value(value);
+			match property {
+				Property::Css(property) => {
+					quote! { element.css(#property, #value); }
+				}
+				Property::Cui(property) => match property {
+					CuiProperty::Text => quote! { element.text(#value); },
+					CuiProperty::Link => quote! {},
+					CuiProperty::Tooltip => quote! {},
+					CuiProperty::Image => quote! {},
+				},
+				Property::Page(_) => quote! {},
+			}
+		});
 
 		let variables = (self.groups[group_id].variables.iter())
 			.filter_map(|(_, variable_id)| {
@@ -110,14 +122,7 @@ impl Semantics {
 				}
 			})
 			.map(|(value, mutable_id)| {
-				let type_ = match self.get_static(value) {
-					StaticValue::Number(_) => quote! { Number },
-					StaticValue::String(_) => quote! { String },
-					// StaticValue::Color(_, _, _, _) => quote! { String },
-				};
-				let value = quote! {
-					Value::#type_(#value)
-				};
+				let value = self.initial_value(value);
 				quote! {
 					state[#mutable_id].0 = #value;
 					for Effect { property, target } in &state[#mutable_id].1 {
@@ -134,38 +139,7 @@ impl Semantics {
 			#elements
 			#( #classes )*
 			#listeners
-			#properties
+			#( #properties )*
 		}
-	}
-
-	fn compiled_dynamic_properties(&self, group_id: usize) -> TokenStream {
-		let properties = &self.groups[group_id].properties;
-		let mut effects = Vec::new();
-
-		if let Some(value) = properties.get(&Property::Cui(CuiProperty::Text)) {
-			let value = self.compiled_dynamic_value(value);
-			effects.push(quote! { element.text(Value::String(#value)); });
-		}
-
-		// if let Some(_value) = properties.get(&Property::Cui(CuiProperty::Link)) {
-		// 	effects.push(quote! {});
-		// }
-
-		for (property, value) in properties {
-			if let Property::Css(property) = property {
-				let value = self.compiled_dynamic_value(value);
-				effects.push(quote! { element.css(#property, Value::String(#value)); });
-			}
-		}
-		effects.into_iter().collect()
-	}
-
-	fn compiled_dynamic_value(&self, value: &Value) -> TokenStream {
-		if let &Value::Variable(variable_id, _) = value {
-			if let (_, Some(mutable_id)) = self.variables[variable_id] {
-				return quote! { state[#mutable_id] };
-			}
-		}
-		quote! { #value }
 	}
 }
