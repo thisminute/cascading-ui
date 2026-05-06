@@ -83,3 +83,138 @@ No syntax exists yet. Possible CUI syntax:
 }
 ```
 These would need new AST nodes, new Prefix variants, and compile-time vs runtime conditional logic.
+
+## Design Proposals (from cascading-ui.net work)
+
+### LocalStorage for Dark Mode Persistence
+
+CUI currently has no concept of browser APIs. The dark mode toggle resets on page reload.
+
+**Option A — `persist:` property on variables (recommended):**
+```
+let $bg: "white" persist: "theme-bg";
+```
+At page load, the Wasm initialize phase checks `localStorage.getItem("theme-bg")`. If found, uses that value instead of the default. On every assignment, calls `localStorage.setItem("theme-bg", newValue)`.
+
+**Option B — `storage` block type:**
+```
+storage {
+    $bg: "theme-bg";
+    $fg: "theme-fg";
+    $tile: "theme-tile";
+}
+```
+Maps variables to localStorage keys. Clean separation of concerns but introduces a new block type.
+
+Option A is preferred — it's per-variable, minimal syntax, and fits the "properties on things" philosophy.
+
+**Implementation notes:**
+- Affects `analyze.rs` (parse `persist:` on `let` declarations)
+- Affects `wasm/initialize/` (read localStorage before first render)
+- Affects `wasm/runtime/` (write localStorage on variable assignment)
+- The `persist` key should be optional — most variables don't need it
+
+### Resetting State Between Tutorial Steps
+
+When navigating between lessons, interactive state (clicked buttons, toggled checkboxes) persists in the background. Options:
+
+**Option A — Manual reset in navigation handlers (works today):**
+```
+l5_next {
+    ?click {
+        $show_l5: "none";
+        $show_l6: "block";
+        $l6_status: "nothing checked";  // reset lesson 6 state
+    }
+}
+```
+Verbose but requires no language changes.
+
+**Option B — `?init` listener (new language feature):**
+```
+lesson_6 {
+    ?init {
+        $l6_status: "nothing checked";
+    }
+}
+```
+Fires when the element becomes visible. The compiler would generate Wasm that watches the display variable and runs the init block on transition from `none` → `block`. Fits the existing listener pattern (`?click`, `?blur`, etc.).
+
+**Option C — `reset-on-hide` property:**
+```
+lesson_6 {
+    display: $show_l6;
+    reset-on-hide: "true";
+}
+```
+When `display` transitions to `"none"`, all descendant variables reset to their `let` defaults. Requires the compiler to track initial values and generate reset logic.
+
+Option B (`?init`) is the most CUI-idiomatic — it's just another listener type.
+
+### URL-Based Routing
+
+Current state: SPA with display variables (`$show_home`, `$show_l1`, etc.). True routing needs direct URL access and browser history.
+
+**Proposed syntax:**
+```
+/home {
+    // homepage content
+}
+
+/tutorial {
+    // tutorial shell with sidebar
+
+    /lessons/1 {
+        // lesson 1 content
+    }
+    /lessons/2 {
+        // lesson 2 content
+    }
+}
+```
+
+**Implementation path:**
+1. **Parse**: `/path { }` blocks become route blocks — new AST node type alongside Element, Class, Listener
+2. **Compile**: Generate a Wasm router that listens to `popstate` events
+3. **Initialize**: Read `window.location.pathname` on load, show the matching route
+4. **Navigation**: A `navigate:` property (or reuse `link:` for internal routes) that calls `history.pushState()` instead of setting display variables
+5. **Nested routes**: `/tutorial` shows the shell, `/tutorial/lessons/1` shows shell + lesson content
+
+The `Page` struct already has a `route: &'static str` field and `html()` generates `HashMap<&str, String>`. The plumbing exists — it just needs to be connected to client-side navigation.
+
+**Incremental approach**: Start with flat routes, add nesting later.
+
+### Responsive / Mobile Views
+
+CUI doesn't support `@media` queries. Options:
+
+**Option A — `?media` listener (recommended):**
+```
+sidebar {
+    width: "200px";
+    ?media "(max-width: 768px)" {
+        display: "none";
+    }
+}
+```
+Fits the existing listener pattern. The compiler generates a `matchMedia` listener in Wasm, just like `?click` generates a click handler. Consistent mental model.
+
+**Option B — `@media` blocks:**
+```
+page {
+    sidebar { width: "200px"; }
+
+    @media "(max-width: 768px)" {
+        sidebar { display: "none"; }
+    }
+}
+```
+More CSS-like but introduces a new block type that doesn't fit the Instance/Class/Listener model.
+
+**Option C — Viewport variables:**
+```
+let $sidebar_display: "block" media: "(max-width: 768px)" "none";
+```
+Variable defaults change based on viewport. Compile-time only.
+
+Option A (`?media`) is preferred — it uses the existing listener infrastructure, requires no new block types, and enables reactive viewport-based behavior.
