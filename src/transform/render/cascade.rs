@@ -37,7 +37,16 @@ impl Semantics {
 					.entry(name)
 					.or_insert(value);
 			}
+
+			for (name, value) in self.groups[source_id].assignments.clone() {
+				log::debug!(" Cascading assignment '{}': {:?}", name, value);
+				self.groups[target_id]
+					.assignments
+					.entry(name)
+					.or_insert(value);
+			}
 		} else {
+			// Link declarations from source to declarations in target
 			for (name, &source_variable_id) in &self.groups[source_id].variables {
 				if let Some(&target_variable_id) = self.groups[target_id].variables.get(name) {
 					log::debug!(
@@ -46,6 +55,27 @@ impl Semantics {
 						target_variable_id
 					);
 					let mutable_id = generate_mutable_id();
+					self.variables[source_variable_id] = (
+						self.variables[source_variable_id].0.clone(),
+						Some(mutable_id),
+					);
+					self.variables[target_variable_id] = (
+						self.variables[target_variable_id].0.clone(),
+						Some(mutable_id),
+					);
+				}
+			}
+			// Link assignments from source to declarations in target
+			for (name, &source_variable_id) in &self.groups[source_id].assignments {
+				if let Some(&target_variable_id) = self.groups[target_id].variables.get(name) {
+					log::debug!(
+						" Adding mutable flag to assignment '{}' with id {}",
+						name,
+						target_variable_id
+					);
+					let mutable_id = self.variables[target_variable_id]
+						.1
+						.unwrap_or_else(generate_mutable_id);
 					self.variables[source_variable_id] = (
 						self.variables[source_variable_id].0.clone(),
 						Some(mutable_id),

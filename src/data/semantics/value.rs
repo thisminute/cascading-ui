@@ -5,6 +5,7 @@ pub enum Value {
 	Static(StaticValue),
 	Variable(usize, Option<StaticValue>),
 	UnrenderedVariable(String),
+	ClassRef(String),
 }
 
 #[derive(Clone, Debug)]

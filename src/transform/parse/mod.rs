@@ -6,6 +6,7 @@ use {
 	proc_macro2::Span,
 	syn::{
 		braced,
+		ext::IdentExt,
 		parse::{Parse, ParseStream},
 		Ident, LitInt, LitStr, Token,
 	},
@@ -32,9 +33,16 @@ fn parse_content(
 		classes: Vec::new(),
 		listeners: Vec::new(),
 		variables: Vec::new(),
+		assignments: Vec::new(),
 	};
 	loop {
-		if input.peek_property() {
+		if input.peek_declaration() {
+			input.parse::<Token![let]>()?;
+			let assignment = input.parse::<Assignment>()?;
+			block
+				.variables
+				.push((assignment.variable.0.to_string(), assignment.value));
+		} else if input.peek_property() {
 			block.properties.push(input.parse()?);
 		} else if input.peek_element_block() {
 			block.elements.push(input.parse()?);
@@ -45,7 +53,7 @@ fn parse_content(
 		} else if input.peek_assignment() {
 			let assignment = input.parse::<Assignment>()?;
 			block
-				.variables
+				.assignments
 				.push((assignment.variable.0.to_string(), assignment.value));
 		} else {
 			break;
@@ -106,6 +114,10 @@ impl Parse for Value {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
 		Ok(if input.peek_variable() {
 			Self::Variable(input.parse::<Variable>()?)
+		} else if input.peek(Token![.]) && input.peek2(Ident::peek_any) {
+			input.parse::<Token![.]>()?;
+			let name = input.parse::<Ident>()?;
+			Self::ClassRef(name.to_string())
 		} else if input.peek(LitStr) {
 			Self::String(input.parse::<LitStr>()?.value())
 		} else {

@@ -10,7 +10,7 @@ test_header!();
 #[wasm_bindgen_test]
 fn from_listener() {
 	test_setup! {
-		$text: "click me";
+		let $text: "click me";
 		text: $text;
 		?click {
 			$text: "hello world";
@@ -24,7 +24,7 @@ fn from_listener() {
 #[wasm_bindgen_test]
 fn into_listener() {
 	test_setup! {
-		$text: "hello world";
+		let $text: "hello world";
 		text: "click me";
 		?click {
 			text: $text;
@@ -38,7 +38,7 @@ fn into_listener() {
 #[wasm_bindgen_test]
 fn between_listeners() {
 	test_setup! {
-		$text: "hello world";
+		let $text: "hello world";
 		text: "click me";
 		?click {
 			text: $text;
@@ -61,7 +61,7 @@ fn between_listeners() {
 // fn classes_1() {
 // 	test_setup! {
 // 		text: $text;
-// 		$text: "hello world";
+// 		let $text: "hello world";
 // 		?click {
 // 			$text: "1";
 // 		}
@@ -85,7 +85,7 @@ fn between_listeners() {
 // fn classes_2() {
 // 	test_setup! {
 // 		text: $text;
-// 		$text: "hello world";
+// 		let $text: "hello world";
 // 		button {
 // 			text: "click me";
 // 			?click {
@@ -131,7 +131,7 @@ fn between_listeners() {
 fn base() {
 	test_setup! {
 		text: $text;
-		$text: "click me";
+		let $text: "click me";
 		?click {
 			$text: "hello world";
 		}
@@ -145,7 +145,7 @@ fn base() {
 fn multiple_clicks() {
 	test_setup! {
 		text: $text;
-		$text: "first";
+		let $text: "first";
 		?click {
 			$text: "second";
 		}
@@ -161,7 +161,7 @@ fn multiple_clicks() {
 #[wasm_bindgen_test]
 fn variable_with_css() {
 	test_setup! {
-		$color: "red";
+		let $color: "red";
 		color: $color;
 		text: "styled";
 		?click {
@@ -178,7 +178,7 @@ fn variable_with_css() {
 #[wasm_bindgen_test]
 fn variable_in_child_element() {
 	test_setup! {
-		$text: "initial";
+		let $text: "initial";
 		?click {
 			$text: "updated";
 		}

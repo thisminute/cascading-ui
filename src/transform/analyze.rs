@@ -54,6 +54,14 @@ impl Semantics {
 			})
 			.collect();
 
+		let assignments: std::collections::HashMap<String, usize> = (block.assignments.iter())
+			.map(|(identifier, value)| {
+				let value = self.create_semantic_value(value);
+				self.variables.push((value, None));
+				(identifier.clone(), self.variables.len() - 1)
+			})
+			.collect();
+
 		let group_id = self.groups.len();
 		let group = if let Some(parent_id) = parent_id {
 			let identifier = block.identifier.to_string();
@@ -75,7 +83,9 @@ impl Semantics {
 					parent.listeners.push(group_id);
 				}
 			}
-			Group::new(Some(identifier), current_scope, variables)
+			let mut group = Group::new(Some(identifier), current_scope, variables);
+			group.assignments = assignments;
+			group
 		} else {
 			page_id = Some(self.pages.len());
 			self.pages.push(Page {
@@ -83,7 +93,9 @@ impl Semantics {
 				route: "/",
 				root_id: group_id,
 			});
-			Group::new(None, None, variables)
+			let mut group = Group::new(None, None, variables);
+			group.assignments = assignments;
+			group
 		};
 		self.groups.push(group);
 
@@ -119,6 +131,7 @@ impl Semantics {
 			AstValue::Variable(identifier) => Value::UnrenderedVariable(identifier.0.to_string()),
 			AstValue::Number(value) => Value::Static(StaticValue::Number(*value)),
 			AstValue::String(value) => Value::Static(StaticValue::String(value.clone())),
+			AstValue::ClassRef(name) => Value::ClassRef(name.clone()),
 		}
 	}
 }

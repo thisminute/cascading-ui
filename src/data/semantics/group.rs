@@ -13,6 +13,7 @@ pub struct Group {
 	pub listeners: Vec<usize>,
 	pub properties: HashMap<Property, Value>,
 	pub variables: HashMap<String, usize>,
+	pub assignments: HashMap<String, usize>,
 
 	// for element groups
 	pub tag: &'static str,
@@ -40,6 +41,7 @@ impl Group {
 			listeners: Vec::new(),
 			properties: HashMap::new(),
 			variables,
+			assignments: HashMap::new(),
 
 			tag: "div",
 			member_of: Vec::new(),
@@ -66,6 +68,7 @@ impl Group {
 			listeners: self.listeners.clone(),
 			properties: self.properties.clone(),
 			variables: HashMap::new(),
+			assignments: HashMap::new(),
 
 			tag: "div",
 			member_of: vec![source_id],

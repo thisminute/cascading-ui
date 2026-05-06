@@ -19,6 +19,7 @@ pub struct Block {
 	pub classes: Vec<Block>,
 	pub listeners: Vec<Block>,
 	pub variables: Vec<(String, Value)>,
+	pub assignments: Vec<(String, Value)>,
 }
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone)]
@@ -29,6 +30,7 @@ pub enum Value {
 	Number(i32),
 	String(String),
 	Variable(Variable),
+	ClassRef(String),
 }
 
 pub struct Property {

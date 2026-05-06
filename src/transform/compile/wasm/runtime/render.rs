@@ -121,6 +121,7 @@ impl Semantics {
 					Property::Text => element.text(value),
 					Property::Tooltip => (),
 					Property::Image => (),
+					Property::Apply => (),
 				}
 			}
 		}

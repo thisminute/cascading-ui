@@ -10,7 +10,7 @@ test_header!();
 #[wasm_bindgen_test]
 fn base() {
 	test_setup! {
-		$text: "hello world";
+		let $text: "hello world";
 		text: $text;
 	}
 	assert_eq!(root.inner_html(), "hello world");
@@ -23,7 +23,7 @@ fn class_1() {
 			text: $text;
 		}
 		.a {
-			$text: "hello world";
+			let $text: "hello world";
 		}
 	}
 	assert_eq!(
@@ -38,7 +38,7 @@ fn class_1() {
 fn class_2() {
 	test_setup! {
 		a {
-			$text: "hello world";
+			let $text: "hello world";
 		}
 		.a {
 			text: $text;
@@ -56,11 +56,11 @@ fn class_2() {
 fn priority_1() {
 	test_setup! {
 		a {
-			$text: "hello world";
+			let $text: "hello world";
 			text: $text;
 		}
 		.a {
-			$text: "hi";
+			let $text: "hi";
 		}
 	}
 	assert_eq!(
@@ -75,10 +75,10 @@ fn priority_1() {
 fn priority_2() {
 	test_setup! {
 		a {
-			$text: "hello world";
+			let $text: "hello world";
 		}
 		.a {
-			$text: "hi";
+			let $text: "hi";
 			text: $text;
 		}
 	}

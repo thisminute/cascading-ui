@@ -102,6 +102,7 @@ impl Semantics {
 		let properties = self.compiled_dynamic_properties(group_id);
 
 		let variables = (self.groups[group_id].variables.iter())
+			.chain(self.groups[group_id].assignments.iter())
 			.filter_map(|(_, variable_id)| {
 				if let (value, Some(mutable_id)) = &self.variables[*variable_id] {
 					Some((value, mutable_id))
