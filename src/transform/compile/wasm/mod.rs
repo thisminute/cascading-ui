@@ -4,7 +4,7 @@ mod runtime;
 use {
 	crate::data::semantics::{Semantics, StaticValue},
 	proc_macro2::{Span, TokenStream},
-	quote::{quote, quote_spanned},
+	quote::{format_ident, quote, quote_spanned},
 };
 
 fn header() -> TokenStream {
@@ -198,12 +198,54 @@ impl Semantics {
 		}
 	}
 
+	/// Generate standalone apply functions for each class referenced by
+	/// `apply:` properties. These functions apply a class's properties and
+	/// set up its listeners on the given element. They're standalone to
+	/// allow circular references (e.g. A's listener applies B, B's applies A).
+	pub fn compiled_apply_functions(&self) -> TokenStream {
+		self.apply_targets
+			.iter()
+			.map(|(class_name, &class_group_id)| {
+				let fn_name = format_ident!("apply_{}", class_name);
+				let properties = self.compiled_dynamic_properties(class_group_id);
+				let listeners = self.compiled_listeners(class_group_id);
+
+				if self.mutable_count > 0 {
+					quote! {
+						fn #fn_name(
+							element: &mut HtmlElement,
+							document: &web_sys::Document,
+							classes: &mut HashMap<&'static str, Group>,
+							state: &mut Vec<(Value, Vec<Effect>)>,
+						) {
+							#properties
+							#listeners
+						}
+					}
+				} else {
+					quote! {
+						fn #fn_name(
+							element: &mut HtmlElement,
+							document: &web_sys::Document,
+							classes: &mut HashMap<&'static str, Group>,
+						) {
+							#properties
+							#listeners
+						}
+					}
+				}
+			})
+			.collect()
+	}
+
 	fn full(&self, document: TokenStream) -> TokenStream {
 		let header = Self::runtime();
 		let state = self.compiled_variables();
+		let apply_functions = self.compiled_apply_functions();
 		quote! {
 			#header
 			#state
+			#apply_functions
 
 			extern crate console_error_panic_hook;
 

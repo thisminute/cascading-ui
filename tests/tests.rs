@@ -8,7 +8,7 @@ mod classes {
 	mod parallel_nesting;
 }
 mod data {
-	// mod apply; // TODO: requires `let`, assignment, and `apply:` features
+	mod apply;
 	mod dynamic;
 	mod r#static;
 }

@@ -74,8 +74,10 @@ pub fn test_setup(input: TokenStream) -> TokenStream {
 	let content = pages.get("/").unwrap();
 
 	let wasm = semantics.wasm(false);
+	let apply_functions = semantics.compiled_apply_functions();
 	let mutables = semantics.get_mutables();
 	let wasm = quote! {
+		#apply_functions
 		STATE.with(|state| {
 			let mut state = state.borrow_mut();
 			state.clear();

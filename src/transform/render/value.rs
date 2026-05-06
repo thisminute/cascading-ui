@@ -1,5 +1,8 @@
 use {
-	crate::data::semantics::{Semantics, StaticValue, Value},
+	crate::data::semantics::{
+		properties::{CuiProperty, Property},
+		Semantics, StaticValue, Value,
+	},
 	crate::misc::id_gen::generate_mutable_id,
 	proc_macro2::TokenStream,
 	quote::ToTokens,
@@ -71,7 +74,7 @@ impl Semantics {
 				}
 				panic!("unable to render variable '{}' from ancestors", identifier)
 			}
-			Value::Variable(..) => panic!("already rendered variable"),
+			Value::Variable(..) => value, // already rendered, idempotent
 			value => value,
 		}
 	}
@@ -82,6 +85,7 @@ impl Semantics {
 	pub fn render_dynamic_subtree(&mut self, group_id: usize, ancestors: &[usize]) {
 		self.render_values(group_id, ancestors);
 		self.link_ancestor_assignments(group_id, ancestors);
+		self.resolve_apply_targets(group_id, ancestors);
 		for element_id in self.groups[group_id].elements.clone() {
 			self.render_dynamic_subtree(element_id, ancestors);
 		}
@@ -127,6 +131,45 @@ impl Semantics {
 						name, variable_id, ancestor_var_id, mutable_id
 					);
 					break;
+				}
+			}
+		}
+	}
+
+	/// When a group has `apply: .class_name`, find the target class group in
+	/// ancestor scopes and record it in `apply_targets`. Also render the target
+	/// class's dynamic subtree so its variable references and nested apply
+	/// targets are resolved.
+	fn resolve_apply_targets(&mut self, group_id: usize, ancestors: &[usize]) {
+		let apply_prop = self.groups[group_id]
+			.properties
+			.get(&Property::Cui(CuiProperty::Apply))
+			.cloned();
+
+		if let Some(Value::ClassRef(class_name)) = apply_prop {
+			// Already resolved — don't re-render (prevents infinite loops in
+			// circular apply references like A → B → A)
+			if self.apply_targets.contains_key(&class_name) {
+				return;
+			}
+
+			// Search ancestors (nearest first) for a class with this name
+			for &ancestor_id in ancestors.iter().rev() {
+				if let Some(class_ids) = self.groups[ancestor_id].classes.get(&class_name) {
+					if let Some(&class_id) = class_ids.first() {
+						log::debug!(
+							"Resolved apply target '{}' to class group {}",
+							class_name,
+							class_id
+						);
+						self.apply_targets.insert(class_name.clone(), class_id);
+
+						// Render the target class's dynamic subtree so its
+						// listeners have their variables resolved and any nested
+						// apply: references are also resolved.
+						self.render_dynamic_subtree(class_id, ancestors);
+						break;
+					}
 				}
 			}
 		}

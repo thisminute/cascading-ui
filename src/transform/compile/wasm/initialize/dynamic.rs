@@ -6,7 +6,7 @@ use {
 		Semantics, Value,
 	},
 	proc_macro2::TokenStream,
-	quote::quote,
+	quote::{format_ident, quote},
 };
 
 impl Semantics {
@@ -101,6 +101,8 @@ impl Semantics {
 
 		let properties = self.compiled_dynamic_properties(group_id);
 
+		let apply = self.compiled_apply_call(group_id);
+
 		let variables = (self.groups[group_id].variables.iter())
 			.chain(self.groups[group_id].assignments.iter())
 			.filter_map(|(_, variable_id)| {
@@ -150,10 +152,34 @@ impl Semantics {
 			#( #classes )*
 			#listeners
 			#properties
+			#apply
 		}
 	}
 
-	fn compiled_dynamic_properties(&self, group_id: usize) -> TokenStream {
+	/// If the group has an `apply: .class_name` property, generate a call to
+	/// the corresponding apply function.
+	fn compiled_apply_call(&self, group_id: usize) -> TokenStream {
+		let apply_prop = self.groups[group_id]
+			.properties
+			.get(&Property::Cui(CuiProperty::Apply));
+
+		if let Some(Value::ClassRef(class_name)) = apply_prop {
+			let fn_name = format_ident!("apply_{}", class_name);
+			if self.mutable_count > 0 {
+				quote! {
+					#fn_name(&mut element, &document, &mut *classes, &mut *state);
+				}
+			} else {
+				quote! {
+					#fn_name(&mut element, &document, &mut *classes);
+				}
+			}
+		} else {
+			quote! {}
+		}
+	}
+
+	pub(crate) fn compiled_dynamic_properties(&self, group_id: usize) -> TokenStream {
 		let properties = &self.groups[group_id].properties;
 		let mut effects = Vec::new();
 

@@ -7,7 +7,7 @@ pub use self::{
 	value::{StaticValue, Value},
 };
 
-use self::properties::CssRules;
+use {self::properties::CssRules, std::collections::HashMap};
 
 pub struct Page {
 	pub title: Value,
@@ -26,4 +26,7 @@ pub struct Semantics {
 	pub variables: Vec<(Value, Option<usize>)>,
 
 	pub mutable_count: usize,
+
+	/// Maps class names to group_ids for classes referenced by `apply:` properties
+	pub apply_targets: HashMap<String, usize>,
 }
