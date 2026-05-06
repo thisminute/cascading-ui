@@ -9,6 +9,8 @@
 4. **dynamic.rs type mismatch** — `compiled_dynamic_value` was returning `state[mutable_id]` (a tuple) instead of `state[mutable_id].0.clone()` (the Value). `compiled_dynamic_properties` was double-wrapping in `Value::String(...)`.
 5. **Effect propagation** — `EffectTarget::Class` now handled in the generated code. Effects use current state value instead of literal.
 6. **Unresolved variables in listeners** — Added `render_dynamic_subtree()` to resolve variable references in listener subtrees that weren't going through `render_element()`.
+7. **html.rs hardcoded import** — `import init from './cui/cui_app_template.js'` was hardcoded. Now derives from `CARGO_PKG_NAME` env var so each CUI app loads the correct Wasm module.
+8. **Submodule SSH URLs** — Changed `.gitmodules` in both `cascading-ui` and `cui-tools` from SSH (`git@github.com:`) to HTTPS (`https://github.com/`) so CI can resolve dependencies.
 
 ### Modernization
 - Edition 2015 → 2021 (all `use` paths updated to `crate::`)
@@ -31,6 +33,8 @@ The 3 layers (static/initialize/runtime) are determined by `listener_scope`:
 
 Mutable detection happens in `cascade.rs` when `virtual_=true` and both source and target have the same variable name.
 
+**Critical limitation discovered**: Mutable variable detection only works when the variable definition and listener modification are on the SAME element. Cross-element mutation (variable on parent, listener on child/sibling) fails because the cascade only checks the direct parent, not the entire ancestor chain. This is the same root cause as the disabled `classes_1/2/3` tests.
+
 ### Parser improvements (for the website)
 - Added hyphenated CSS property parsing (`font-family`, `border-radius`, etc.)
   - Changed `Property.property` from `Ident` to `String` in AST
@@ -41,10 +45,20 @@ Mutable detection happens in `cascade.rs` when `virtual_=true` and both source a
 ### Website (cascading-ui.net)
 - Created at `../cascading-ui.net/` as a workspace with `app` (CUI source) and `server` (actix-web)
 - Builds to HTML + Wasm via `wasm-pack build --target web`
-- Has interactive demo with mutable variable (click button)
+- Has interactive demo with mutable variable (click button changes its own text)
 - The website IS the demo — built entirely in CUI syntax
+- **Deployed live** at https://cascading-ui.net via GitHub Pages
+- CI/CD pipeline: push to main → wasm-pack build → deploy to Pages
+- SSL auto-provisioned by GitHub Pages
+
+### Deploy pipeline fixes
+- Fixed HTML output path in CI: `target/html/index.html` (workspace root, not `app/target/html/`)
+- Fixed Wasm import path: now uses `CARGO_PKG_NAME` instead of hardcoded `cui_app_template`
+- Fixed all SSH submodule URLs to HTTPS for CI compatibility
 
 ## Next priorities
-1. Class + mutable variable interaction (remaining 3 tests)
+1. **Cross-element mutable variable detection** — cascade needs to check ancestor chain, not just direct parent. This unblocks:
+   - The remaining 3 disabled tests (`classes_1/2/3`)
+   - Richer interactive demos on the website
 2. Tooltip/image codegen
 3. Multi-page routing
