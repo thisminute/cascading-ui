@@ -32,7 +32,7 @@ pub enum Value {
 }
 
 pub struct Property {
-	pub property: Ident,
+	pub property: String,
 	pub value: Value,
 }
 

@@ -14,7 +14,9 @@ pub trait Peek {
 
 impl Peek for ParseStream<'_> {
 	fn peek_property(&self) -> bool {
-		self.peek(Ident::peek_any) && self.peek2(Token![:])
+		// A property starts with an Ident but is NOT followed by a brace (that's an element block).
+		// This handles hyphenated CSS properties like font-family, max-width, etc.
+		self.peek(Ident::peek_any) && !self.peek2(Brace)
 	}
 	fn peek_element_block(&self) -> bool {
 		self.peek(Ident::peek_any) && self.peek2(Brace)

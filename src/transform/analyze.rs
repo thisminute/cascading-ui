@@ -1,4 +1,4 @@
-use data::{
+use crate::data::{
 	ast::{Block, Document, Prefix, Value as AstValue},
 	semantics::{properties::Property, Group, Page, Semantics, StaticValue, Value},
 };
@@ -88,7 +88,7 @@ impl Semantics {
 		self.groups.push(group);
 
 		for property in block.properties {
-			let (property, value) = (property.property.to_string(), property.value);
+			let (property, value) = (property.property, property.value);
 			log::debug!(
 				" Applying property {}:{:?} to group {}",
 				property,

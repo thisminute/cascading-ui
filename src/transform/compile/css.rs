@@ -1,4 +1,4 @@
-use data::semantics::properties::{CssProperties, CssRules, Properties, Property};
+use crate::data::semantics::properties::{CssProperties, CssRules, Properties, Property};
 
 pub trait Css {
 	fn css(&self) -> String;

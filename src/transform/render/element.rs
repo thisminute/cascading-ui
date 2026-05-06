@@ -1,9 +1,9 @@
 use {
-	data::semantics::{
+	crate::data::semantics::{
 		properties::{CuiProperty, Property},
 		Semantics,
 	},
-	misc::id_gen::generate_class_id,
+	crate::misc::id_gen::generate_class_id,
 };
 
 impl Semantics {
@@ -83,6 +83,12 @@ impl Semantics {
 
 		ancestors.push(element_id);
 		self.render_values(element_id, ancestors);
+
+		// Resolve variable references in listener subtrees (they contain properties
+		// that reference variables from ancestors but aren't rendered as elements)
+		for listener_id in self.groups[element_id].listeners.clone() {
+			self.render_dynamic_subtree(listener_id, ancestors);
+		}
 
 		for element_id in self.groups[element_id].elements.clone() {
 			self.render_element(element_id, ancestors);

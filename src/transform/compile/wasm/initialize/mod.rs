@@ -2,7 +2,7 @@ mod compiled;
 mod dynamic;
 mod register;
 
-use {data::semantics::Semantics, proc_macro2::TokenStream, quote::quote};
+use {crate::data::semantics::Semantics, proc_macro2::TokenStream, quote::quote};
 
 // entry point for wasm compilation
 

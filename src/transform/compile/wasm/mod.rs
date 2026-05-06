@@ -2,7 +2,7 @@ mod initialize;
 mod runtime;
 
 use {
-	data::semantics::{Semantics, StaticValue},
+	crate::data::semantics::{Semantics, StaticValue},
 	proc_macro2::{Span, TokenStream},
 	quote::{quote, quote_spanned},
 };

@@ -1,4 +1,4 @@
-use {data::semantics::Semantics, proc_macro2::TokenStream, quote::quote};
+use {crate::data::semantics::Semantics, proc_macro2::TokenStream, quote::quote};
 
 impl Semantics {
 	pub fn runtime_register_functions() -> TokenStream {

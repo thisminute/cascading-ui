@@ -1,18 +1,12 @@
-extern crate log;
-extern crate phf;
 extern crate proc_macro;
-extern crate proc_macro2;
-extern crate quote;
-extern crate simple_logger;
-extern crate syn;
 mod data;
 mod misc;
 mod transform;
 
 use {
-	data::{ast::Document, semantics::Semantics},
+	crate::data::{ast::Document, semantics::Semantics},
 	log::LevelFilter,
-	misc::id_gen::reset_mutable_counter,
+	crate::misc::id_gen::reset_mutable_counter,
 	proc_macro::TokenStream,
 	proc_macro2::TokenStream as TokenStream2,
 	quote::{quote, ToTokens},

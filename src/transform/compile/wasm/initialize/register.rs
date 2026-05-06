@@ -1,5 +1,5 @@
 use {
-	data::semantics::{properties::Property, Semantics},
+	crate::data::semantics::{properties::Property, Semantics},
 	proc_macro2::TokenStream,
 	quote::quote,
 };

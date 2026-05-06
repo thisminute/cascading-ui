@@ -1,5 +1,5 @@
 use {
-	data::semantics::{Semantics, StaticValue, Value},
+	crate::data::semantics::{Semantics, StaticValue, Value},
 	proc_macro2::TokenStream,
 	quote::ToTokens,
 	std::fmt,
@@ -34,7 +34,8 @@ impl Semantics {
 			.cloned()
 			.collect::<Vec<_>>()
 		{
-			self.render_value(self.variables[variable_id].0.clone(), ancestors);
+			let rendered = self.render_value(self.variables[variable_id].0.clone(), ancestors);
+			self.variables[variable_id].0 = rendered;
 		}
 
 		self.groups[element_id].properties = self.groups[element_id]
@@ -67,6 +68,24 @@ impl Semantics {
 			}
 			Value::Variable(..) => panic!("already rendered variable"),
 			value => value,
+		}
+	}
+
+	/// Recursively resolve variable references in a dynamic subtree (listeners,
+	/// their child elements, classes, and nested listeners). These groups aren't
+	/// rendered as elements but their properties may reference ancestor variables.
+	pub fn render_dynamic_subtree(&mut self, group_id: usize, ancestors: &[usize]) {
+		self.render_values(group_id, ancestors);
+		for element_id in self.groups[group_id].elements.clone() {
+			self.render_dynamic_subtree(element_id, ancestors);
+		}
+		for class_ids in self.groups[group_id].classes.clone().values().cloned().collect::<Vec<_>>() {
+			for class_id in class_ids {
+				self.render_dynamic_subtree(class_id, ancestors);
+			}
+		}
+		for listener_id in self.groups[group_id].listeners.clone() {
+			self.render_dynamic_subtree(listener_id, ancestors);
 		}
 	}
 

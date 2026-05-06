@@ -1,7 +1,7 @@
 use crate::data::semantics::StaticValue;
 
 use {
-	data::semantics::{
+	crate::data::semantics::{
 		properties::{CuiProperty, Property},
 		Semantics, Value,
 	},
@@ -113,7 +113,6 @@ impl Semantics {
 				let type_ = match self.get_static(value) {
 					StaticValue::Number(_) => quote! { Number },
 					StaticValue::String(_) => quote! { String },
-					// StaticValue::Color(_, _, _, _) => quote! { String },
 				};
 				let value = quote! {
 					Value::#type_(#value)
@@ -121,8 +120,23 @@ impl Semantics {
 				quote! {
 					state[#mutable_id].0 = #value;
 					for Effect { property, target } in &state[#mutable_id].1 {
-						if let EffectTarget::Element(element) = target {
-							render_property(element, property, #value);
+						match target {
+							EffectTarget::Element(element) => {
+								render_property(element, property, state[#mutable_id].0.clone());
+							}
+							EffectTarget::Class(class_name) => {
+								let window = web_sys::window().unwrap();
+								let document = window.document().unwrap();
+								let elements = document.get_elements_by_class_name(class_name);
+								for i in 0..elements.length() {
+									let element = elements
+										.item(i)
+										.unwrap()
+										.dyn_into::<HtmlElement>()
+										.unwrap();
+									render_property(&element, property, state[#mutable_id].0.clone());
+								}
+							}
 						}
 					}
 				}
@@ -144,7 +158,7 @@ impl Semantics {
 
 		if let Some(value) = properties.get(&Property::Cui(CuiProperty::Text)) {
 			let value = self.compiled_dynamic_value(value);
-			effects.push(quote! { element.text(Value::String(#value)); });
+			effects.push(quote! { element.text(#value); });
 		}
 
 		// if let Some(_value) = properties.get(&Property::Cui(CuiProperty::Link)) {
@@ -154,7 +168,7 @@ impl Semantics {
 		for (property, value) in properties {
 			if let Property::Css(property) = property {
 				let value = self.compiled_dynamic_value(value);
-				effects.push(quote! { element.css(#property, Value::String(#value)); });
+				effects.push(quote! { element.css(#property, #value); });
 			}
 		}
 		effects.into_iter().collect()
@@ -163,9 +177,14 @@ impl Semantics {
 	fn compiled_dynamic_value(&self, value: &Value) -> TokenStream {
 		if let &Value::Variable(variable_id, _) = value {
 			if let (_, Some(mutable_id)) = self.variables[variable_id] {
-				return quote! { state[#mutable_id] };
+				return quote! { state[#mutable_id].0.clone() };
 			}
 		}
-		quote! { #value }
+		// Static value — construct the runtime Value enum
+		let type_ = match self.get_static(value) {
+			StaticValue::Number(_) => quote! { Number },
+			StaticValue::String(_) => quote! { String },
+		};
+		quote! { Value::#type_(#value) }
 	}
 }

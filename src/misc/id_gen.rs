@@ -24,7 +24,7 @@ pub fn generate_class_id() -> String {
 		id.push(if digit < SYMBOLS_1.len() {
 			SYMBOLS_1[digit]
 		} else {
-			SYMBOLS_2[digit]
+			SYMBOLS_2[digit - SYMBOLS_1.len()]
 		});
 		n /= symbol_pool;
 		if n == 0 {

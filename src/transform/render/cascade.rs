@@ -1,4 +1,4 @@
-use {data::semantics::Semantics, misc::id_gen::generate_mutable_id};
+use {crate::data::semantics::Semantics, crate::misc::id_gen::generate_mutable_id};
 
 impl Semantics {
 	fn create_element_from_group(&mut self, source_id: usize, parent_id: usize) {
@@ -82,15 +82,15 @@ impl Semantics {
 			panic!("Source and target group specify different contents for the same element")
 		}
 
-		for source_id in self.groups[source_id].elements.clone() {
+		for element_id in self.groups[source_id].elements.clone() {
 			log::debug!(
-				" Cascading element with name {}",
-				self.groups[source_id].name.clone().unwrap()
+				" Cascading element with name {:?}",
+				self.groups[element_id].name
 			);
-			if self.groups[source_id].is_compiled() {
-				self.create_element_from_group(source_id, target_id);
+			if self.groups[element_id].is_compiled() {
+				self.create_element_from_group(element_id, target_id);
 			} else {
-				self.groups[target_id].elements.push(source_id);
+				self.groups[target_id].elements.push(element_id);
 			}
 		}
 	}

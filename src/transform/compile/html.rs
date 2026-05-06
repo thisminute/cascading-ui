@@ -1,10 +1,10 @@
 use {
-	data::semantics::{
+	crate::data::semantics::{
 		properties::{CuiProperty, Property},
 		Group, Semantics, StaticValue, Value,
 	},
 	std::collections::HashMap,
-	transform::compile::css::Css,
+	crate::transform::compile::css::Css,
 };
 
 impl Semantics {

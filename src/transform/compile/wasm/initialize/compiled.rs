@@ -1,5 +1,5 @@
 use {
-	data::semantics::{Semantics, Value},
+	crate::data::semantics::{Semantics, Value},
 	proc_macro2::TokenStream,
 	quote::quote,
 	std::convert::TryInto,

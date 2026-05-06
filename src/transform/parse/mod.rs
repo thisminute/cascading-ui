@@ -2,7 +2,7 @@ mod peek;
 
 use {
 	self::peek::Peek,
-	data::ast::{Assignment, Block, Document, Prefix, Property, Value, Variable},
+	crate::data::ast::{Assignment, Block, Document, Prefix, Property, Value, Variable},
 	proc_macro2::Span,
 	syn::{
 		braced,
@@ -77,7 +77,14 @@ impl Parse for Block {
 
 impl Parse for Property {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		let property = input.parse()?;
+		// Parse hyphenated property names like font-family, max-width, etc.
+		let mut property = input.parse::<Ident>()?.to_string();
+		while input.peek(Token![-]) {
+			input.parse::<Token![-]>()?;
+			let next = input.parse::<Ident>()?;
+			property.push('-');
+			property.push_str(&next.to_string());
+		}
 		input.parse::<Token![:]>()?;
 		let value = input.parse()?;
 		input.parse::<Token![;]>()?;
