@@ -1,5 +1,8 @@
 use {
-	super::{properties::Property, Value},
+	super::{
+		properties::Property,
+		Value,
+	},
 	std::collections::HashMap,
 };
 
@@ -66,7 +69,11 @@ impl Group {
 			elements: self.elements.clone(),
 			classes: HashMap::new(),
 			listeners: self.listeners.clone(),
-			properties: self.properties.clone(),
+			// CSS properties are applied via CSS class selectors, not inline
+			properties: self.properties.iter()
+				.filter(|(p, _)| !matches!(p, Property::Css(_)))
+				.map(|(p, v)| (p.clone(), v.clone()))
+				.collect(),
 			variables: HashMap::new(),
 			assignments: HashMap::new(),
 

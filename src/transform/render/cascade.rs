@@ -1,4 +1,7 @@
-use {crate::data::semantics::Semantics, crate::misc::id_gen::generate_mutable_id};
+use {
+	crate::data::semantics::{properties::Property, Semantics},
+	crate::misc::id_gen::generate_mutable_id,
+};
 
 impl Semantics {
 	fn create_element_from_group(&mut self, source_id: usize, parent_id: usize) {
@@ -23,6 +26,11 @@ impl Semantics {
 
 		if !virtual_ {
 			for (property, value) in self.groups[source_id].properties.clone() {
+				// CSS properties from classes are applied via CSS class selectors in <style>,
+				// not duplicated as inline styles on the element.
+				if let Property::Css(_) = property {
+					continue;
+				}
 				log::debug!(" Cascading cui property {:?}:{:?}", property, value);
 				self.groups[target_id]
 					.properties
