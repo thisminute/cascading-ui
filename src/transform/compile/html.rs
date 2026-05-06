@@ -30,11 +30,16 @@ impl Semantics {
 				} else {
 					format!("{}{}",
 						"<noscript>This page contains Webassembly and Javascript content. Please make sure that you are using the latest version of a modern browser and that Javascript and Webassembly (Wasm) are enabled.</noscript>",
-						format_args!(
+						{
+						let pkg_name = std::env::var("CARGO_PKG_NAME")
+							.unwrap_or_else(|_| "cui_app_template".to_string())
+							.replace('-', "_");
+						format!(
 							"<script type=\"module\">{}{}</script>",
-							"import init from './cui/cui_app_template.js';",
+							format!("import init from './cui/{}.js';", pkg_name),
 							"init();"
 						)
+					}
 					)
 				}
 			),
