@@ -23,7 +23,6 @@ impl Semantics {
 						.unwrap();
 					child.set_class_name(&element.class_names.join(" "));
 					parent.append_child(child).unwrap();
-					// register_variables(element);
 					render_classes(element, classes);
 					render_listeners(element, child);
 					render_properties(element, child);
@@ -39,7 +38,6 @@ impl Semantics {
 					let elements = document.get_elements_by_class_name(class.selector);
 					for i in 0..elements.length() {
 						let element = &mut elements.item(i).unwrap().dyn_into::<HtmlElement>().unwrap();
-						// register_variables(class);
 						render_elements(class, element, classes);
 						render_listeners(class, element);
 						render_properties(class, element);
@@ -57,9 +55,6 @@ impl Semantics {
 							e.stop_propagation();
 							CLASSES.with(|classes| {
 								let mut classes = classes.borrow_mut();
-
-								// TODO: does this make sense if something else changes the group?
-								// render_variables(&group);
 								render_classes(&group, &mut classes);
 								render_elements(&group, &mut element, &mut classes);
 								render_listeners(&group, &mut element);
@@ -81,38 +76,6 @@ impl Semantics {
 					render_property(element, property, value.clone());
 				}
 			}
-
-			// fn render_variables(group: &Group) {
-			// 	STATE.with(|state| {
-			// 		let mut state = state.borrow_mut();
-			// 		let window = web_sys::window().unwrap();
-			// 		let document = &window.document().unwrap();
-			// 		for (variable_id, value) in &group.variables {
-			// 			render_variable(variable_id, value);
-			// 		}
-			// 	})
-			// }
-
-			// fn render_variable(id: usize, value: Value) {
-			// 	state[*id] = value;
-			// 	for (target, property, value) in effects[*id] {
-			// 		match target {
-			// 			EffectTarget::Element(element) => render_property(element, property, value),
-			// 			EffectTarget::Class(class) => {
-			// 				let elements = document.get_elements_by_class_name(class);
-			// 				for i in 0..elements.length() {
-			// 					let element = &mut elements
-			// 						.item(i)
-			// 						.unwrap()
-			// 						.dyn_into::<HtmlElement>()
-			// 						.unwrap();
-			// 					render_property(element, property, value);
-			// 				}
-			// 			}
-			// 			EffectTarget::Variable(variable_id) => render_variable(variable_id, value),
-			// 		}
-			// 	}
-			// }
 
 			fn render_property(element: &HtmlElement, property: &Property, value: Value) {
 				match property {

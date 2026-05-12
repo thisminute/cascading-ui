@@ -117,13 +117,9 @@ impl Semantics {
 		let mut mutables = vec![quote! {}; self.mutable_count];
 		for (value, mutable_id) in &self.variables {
 			if let &Some(mutable_id) = mutable_id {
-				// if !mutables[mutable_id].is_empty() {
-				// 	panic!("multiple default values for same mutable")
-				// }
 				let type_ = match self.get_static(value) {
 					StaticValue::Number(_) => quote! { Number },
 					StaticValue::String(_) => quote! { String },
-					// StaticValue::Color(_, _, _, _) => quote! { String },
 				};
 				mutables[mutable_id] = quote! {
 					Value::#type_(#value)
