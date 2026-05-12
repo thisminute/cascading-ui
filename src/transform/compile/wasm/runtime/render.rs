@@ -122,6 +122,11 @@ impl Semantics {
 					Property::Tooltip => (),
 					Property::Image => (),
 					Property::Apply => (),
+					Property::Attribute(name) => {
+						if let Value::String(val) = value {
+							element.set_attribute(name, val).unwrap();
+						}
+					},
 				}
 			}
 		}

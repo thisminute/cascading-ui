@@ -58,7 +58,7 @@ impl Semantics {
 impl Group {
 	fn html(&self, groups: &[Group]) -> String {
 		let link = self.properties.get(&Property::Cui(CuiProperty::Link));
-		let attributes = [
+		let mut attributes = [
 			("style", &*self.properties.css()),
 			("class", &*self.class_names.join(" ")),
 			(
@@ -72,6 +72,13 @@ impl Group {
 		.filter(|(_, value)| !value.is_empty())
 		.map(|(attribute, value)| format!(" {}='{}'", attribute, value))
 		.collect::<String>();
+
+		// Render Property::Attribute entries as HTML attributes
+		for (property, value) in &self.properties {
+			if let Property::Attribute(name) = property {
+				attributes.push_str(&format!(" {}='{}'", name, value));
+			}
+		}
 
 		let children = (self.elements.iter())
 			.filter(|&&element_id| groups[element_id].is_compiled())
