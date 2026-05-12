@@ -192,6 +192,13 @@ impl Semantics {
 		// 	effects.push(quote! {});
 		// }
 
+		if let Some(value) = properties.get(&Property::Cui(CuiProperty::Role)) {
+			let value = self.compiled_dynamic_value(value);
+			effects.push(quote! {
+				if let Value::String(s) = #value { element.set_attribute("role", s).unwrap(); }
+			});
+		}
+
 		for (property, value) in properties {
 			if let Property::Css(property) = property {
 				let value = self.compiled_dynamic_value(value);
