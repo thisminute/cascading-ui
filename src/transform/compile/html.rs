@@ -58,20 +58,28 @@ impl Semantics {
 impl Group {
 	fn html(&self, groups: &[Group]) -> String {
 		let link = self.properties.get(&Property::Cui(CuiProperty::Link));
-		let attributes = [
-			("style", &*self.properties.css()),
-			("class", &*self.class_names.join(" ")),
+		let empty = Value::Static(StaticValue::String("".to_string()));
+		let mut attr_pairs: Vec<(&str, String)> = vec![
+			("style", self.properties.css()),
+			("class", self.class_names.join(" ")),
 			(
 				"href",
-				&*link
-					.unwrap_or(&Value::Static(StaticValue::String("".to_string())))
-					.to_string(),
+				link.unwrap_or(&empty).to_string(),
 			),
-		]
-		.iter()
-		.filter(|(_, value)| !value.is_empty())
-		.map(|(attribute, value)| format!(" {}='{}'", attribute, value))
-		.collect::<String>();
+		];
+
+		// Collect generic attribute properties (aria-*, data-*, etc.)
+		for (property, value) in &self.properties {
+			if let Property::Cui(CuiProperty::Attribute(name)) = property {
+				attr_pairs.push((name, value.to_string()));
+			}
+		}
+
+		let attributes = attr_pairs
+			.iter()
+			.filter(|(_, value)| !value.is_empty())
+			.map(|(attribute, value)| format!(" {}='{}'", attribute, value))
+			.collect::<String>();
 
 		let children = (self.elements.iter())
 			.filter(|&&element_id| groups[element_id].is_compiled())
