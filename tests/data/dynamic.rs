@@ -54,78 +54,60 @@ fn between_listeners() {
 	assert_eq!(root.inner_html(), "hello world<div></div>");
 }
 
-// TODO: classes_1, classes_2, classes_3 require class+mutable variable interaction
-// which needs EffectTarget::Class handling. See SUGGESTIONS.md.
+// classes_2: Variable assignment inside a class block within a listener.
+// Clicking root should assign $text via the .a class block, updating both a elements.
+#[wasm_bindgen_test]
+fn classes_2() {
+	test_setup! {
+		let $text: "initial";
+		text: "click me";
+		?click {
+			.a {
+				$text: "updated";
+			}
+		}
+		a {
+			text: $text;
+		}
+		a {
+			text: $text;
+		}
+	}
+	let a1 = root.children().item(0).unwrap();
+	let a2 = root.children().item(1).unwrap();
+	assert_eq!(a1.inner_html(), "initial");
+	assert_eq!(a2.inner_html(), "initial");
+	root.click();
+	assert_eq!(a1.inner_html(), "updated");
+	assert_eq!(a2.inner_html(), "updated");
+}
 
-// #[wasm_bindgen_test]
-// fn classes_1() {
-// 	test_setup! {
-// 		text: $text;
-// 		let $text: "hello world";
-// 		?click {
-// 			$text: "1";
-// 		}
-//
-// 		a {
-// 			text: $text;
-// 		}
-// 		b {
-// 			text: $text;
-// 			?click {
-// 				$text: "2";
-// 			}
-// 		}
-// 	}
-// 	// After fixing EffectTarget::Class, assertions should verify:
-// 	// - All elements referencing $text update when it changes
-// 	// - Priority: b's click handler sets $text: "2" which propagates to all references
-// }
-
-// #[wasm_bindgen_test]
-// fn classes_2() {
-// 	test_setup! {
-// 		text: $text;
-// 		let $text: "hello world";
-// 		button {
-// 			text: "click me";
-// 			?click {
-// 				$text: "hello world";
-// 			}
-// 		}
-// 		? {
-// 			$text: ;
-// 		}
-// 		?click {
-// 			.a {
-// 				$text: "hello world";
-// 			}
-// 		}
-// 		a {
-// 			text: $text;
-// 		}
-// 		a {
-// 			text: $text;
-// 		}
-// 	}
-// }
-
-// #[wasm_bindgen_test]
-// fn classes_3() {
-// 	test_setup! {
-// 		text: "click me";
-// 		?click {
-// 			.a {
-// 				$text: "hello world";
-// 			}
-// 		}
-// 		a {
-// 			text: $text;
-// 		}
-// 		a {
-// 			text: $text;
-// 		}
-// 	}
-// }
+// classes_3: Class block in listener with property assignment (not variable).
+// Clicking root should set text on all .a elements directly.
+#[wasm_bindgen_test]
+fn classes_3() {
+	test_setup! {
+		text: "click me";
+		?click {
+			.a {
+				text: "updated by class";
+			}
+		}
+		a {
+			text: "before";
+		}
+		a {
+			text: "before";
+		}
+	}
+	let a1 = root.children().item(0).unwrap();
+	let a2 = root.children().item(1).unwrap();
+	assert_eq!(a1.inner_html(), "before");
+	assert_eq!(a2.inner_html(), "before");
+	root.click();
+	assert_eq!(a1.inner_html(), "updated by class");
+	assert_eq!(a2.inner_html(), "updated by class");
+}
 
 #[wasm_bindgen_test]
 fn base() {
