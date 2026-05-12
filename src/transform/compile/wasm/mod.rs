@@ -122,6 +122,7 @@ impl Semantics {
 				// }
 				let type_ = match self.get_static(value) {
 					StaticValue::Number(_) => quote! { Number },
+					StaticValue::Float(_) => quote! { String },
 					StaticValue::String(_) => quote! { String },
 					// StaticValue::Color(_, _, _, _) => quote! { String },
 				};

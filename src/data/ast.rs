@@ -28,6 +28,7 @@ pub struct Variable(pub Ident);
 #[derive(Clone, Debug)]
 pub enum Value {
 	Number(i32),
+	Float(f64),
 	String(String),
 	Variable(Variable),
 	ClassRef(String),

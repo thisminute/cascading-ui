@@ -130,6 +130,7 @@ impl Semantics {
 		match value {
 			AstValue::Variable(identifier) => Value::UnrenderedVariable(identifier.0.to_string()),
 			AstValue::Number(value) => Value::Static(StaticValue::Number(*value)),
+			AstValue::Float(value) => Value::Static(StaticValue::Float(*value)),
 			AstValue::String(value) => Value::Static(StaticValue::String(value.clone())),
 			AstValue::ClassRef(name) => Value::ClassRef(name.clone()),
 		}

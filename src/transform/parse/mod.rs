@@ -8,7 +8,7 @@ use {
 		braced,
 		ext::IdentExt,
 		parse::{Parse, ParseStream},
-		Ident, LitInt, LitStr, Token,
+		Ident, LitFloat, LitInt, LitStr, Token,
 	},
 };
 
@@ -120,6 +120,8 @@ impl Parse for Value {
 			Self::ClassRef(name.to_string())
 		} else if input.peek(LitStr) {
 			Self::String(input.parse::<LitStr>()?.value())
+		} else if input.peek(LitFloat) {
+			Self::Float(input.parse::<LitFloat>()?.base10_parse::<f64>()?)
 		} else {
 			Self::Number(input.parse::<LitInt>()?.base10_parse::<i32>()?)
 		})

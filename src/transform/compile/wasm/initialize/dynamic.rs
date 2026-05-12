@@ -115,6 +115,7 @@ impl Semantics {
 			.map(|(value, mutable_id)| {
 				let type_ = match self.get_static(value) {
 					StaticValue::Number(_) => quote! { Number },
+					StaticValue::Float(_) => quote! { String },
 					StaticValue::String(_) => quote! { String },
 				};
 				let value = quote! {
@@ -210,6 +211,7 @@ impl Semantics {
 		// Static value — construct the runtime Value enum
 		let type_ = match self.get_static(value) {
 			StaticValue::Number(_) => quote! { Number },
+			StaticValue::Float(_) => quote! { String },
 			StaticValue::String(_) => quote! { String },
 		};
 		quote! { Value::#type_(#value) }
