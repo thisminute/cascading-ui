@@ -2,7 +2,10 @@ mod peek;
 
 use {
 	self::peek::Peek,
-	crate::data::ast::{Assignment, Block, Document, Prefix, Property, Value, Variable},
+	crate::data::ast::{
+		Assignment, Block, Document, KeyframeStep, KeyframesBlock, Prefix, Property, Value,
+		Variable,
+	},
 	proc_macro2::Span,
 	syn::{
 		braced,
@@ -14,9 +17,9 @@ use {
 
 impl Parse for Document {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		Ok(Self {
-			root: parse_content(input, Ident::new("_", Span::call_site()), Prefix::Element)?,
-		})
+		let root = parse_content(input, Ident::new("_", Span::call_site()), Prefix::Element)?;
+		let keyframes = root.keyframes.clone();
+		Ok(Self { root, keyframes })
 	}
 }
 
@@ -32,6 +35,7 @@ fn parse_content(
 		elements: Vec::new(),
 		classes: Vec::new(),
 		listeners: Vec::new(),
+		keyframes: Vec::new(),
 		variables: Vec::new(),
 		assignments: Vec::new(),
 	};
@@ -55,6 +59,8 @@ fn parse_content(
 			block
 				.assignments
 				.push((assignment.variable.0.to_string(), assignment.value));
+		} else if input.peek(Token![@]) {
+			block.keyframes.push(parse_keyframes(input)?);
 		} else {
 			break;
 		}
@@ -81,6 +87,43 @@ impl Parse for Block {
 
 		parse_content(&content, identifier, prefix)
 	}
+}
+
+fn parse_keyframes(input: ParseStream) -> Result<KeyframesBlock, syn::Error> {
+	input.parse::<Token![@]>()?;
+	let directive: Ident = input.call(Ident::parse_any)?;
+	if directive != "keyframes" {
+		return Err(syn::Error::new(
+			directive.span(),
+			format!("expected 'keyframes' after '@', got '{}'", directive),
+		));
+	}
+	let name: Ident = input.call(Ident::parse_any)?;
+
+	let content;
+	braced!(content in input);
+
+	let mut steps = Vec::new();
+	while !content.is_empty() {
+		let selector: Ident = content.call(Ident::parse_any)?;
+		let step_content;
+		braced!(step_content in content);
+
+		let mut properties = Vec::new();
+		while !step_content.is_empty() {
+			properties.push(step_content.parse::<Property>()?);
+		}
+
+		steps.push(KeyframeStep {
+			selector: selector.to_string(),
+			properties,
+		});
+	}
+
+	Ok(KeyframesBlock {
+		name: name.to_string(),
+		steps,
+	})
 }
 
 impl Parse for Property {
