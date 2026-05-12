@@ -1,7 +1,7 @@
 use {
 	crate::data::semantics::{
 		properties::{CuiProperty, Property},
-		Semantics,
+		Semantics, Value,
 	},
 	crate::misc::id_gen::generate_class_id,
 };
@@ -67,18 +67,23 @@ impl Semantics {
 				continue;
 			}
 
-			self.styles.insert(
-				format!(".{}", selector),
-				(self.groups[source_id].properties.iter())
-					.filter_map(|(property, value)| {
-						if let Property::Css(property) = property {
-							Some((property.clone(), value.clone()))
-						} else {
-							None
-						}
-					})
-					.collect(),
-			);
+			// Collect CSS properties, then resolve any variable references
+			// so the style rule has valid initial values (e.g. "red" not "@variable")
+			let css_props: Vec<(String, Value)> = self.groups[source_id].properties.iter()
+				.filter_map(|(property, value)| {
+					if let Property::Css(property) = property {
+						Some((property.clone(), value.clone()))
+					} else {
+						None
+					}
+				})
+				.collect();
+
+			let resolved_css = css_props.into_iter()
+				.map(|(prop, value)| (prop, self.render_value(value, ancestors)))
+				.collect();
+
+			self.styles.insert(format!(".{}", selector), resolved_css);
 		}
 
 		ancestors.push(element_id);

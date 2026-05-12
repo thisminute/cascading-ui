@@ -54,78 +54,98 @@ fn between_listeners() {
 	assert_eq!(root.inner_html(), "hello world<div></div>");
 }
 
-// TODO: classes_1, classes_2, classes_3 require class+mutable variable interaction
-// which needs EffectTarget::Class handling. See SUGGESTIONS.md.
+// Enabled — tests for multiple elements referencing same mutable variable
+#[wasm_bindgen_test]
+fn classes_1() {
+	test_setup! {
+		text: $text;
+		let $text: "hello world";
+		?click {
+			$text: "1";
+		}
 
-// #[wasm_bindgen_test]
-// fn classes_1() {
-// 	test_setup! {
-// 		text: $text;
-// 		let $text: "hello world";
-// 		?click {
-// 			$text: "1";
-// 		}
-//
-// 		a {
-// 			text: $text;
-// 		}
-// 		b {
-// 			text: $text;
-// 			?click {
-// 				$text: "2";
-// 			}
-// 		}
-// 	}
-// 	// After fixing EffectTarget::Class, assertions should verify:
-// 	// - All elements referencing $text update when it changes
-// 	// - Priority: b's click handler sets $text: "2" which propagates to all references
-// }
+		a {
+			text: $text;
+		}
+		b {
+			text: $text;
+			?click {
+				$text: "2";
+			}
+		}
+	}
+	// Initial state: all show "hello world"
+	assert_eq!(root.child_nodes().item(0).unwrap().node_value().unwrap(), "hello world");
+	let child_a = root.children().item(0).unwrap();
+	assert_eq!(child_a.inner_html(), "hello world");
+	let child_b = root.children().item(1).unwrap();
+	assert_eq!(child_b.inner_html(), "hello world");
 
-// #[wasm_bindgen_test]
-// fn classes_2() {
-// 	test_setup! {
-// 		text: $text;
-// 		let $text: "hello world";
-// 		button {
-// 			text: "click me";
-// 			?click {
-// 				$text: "hello world";
-// 			}
-// 		}
-// 		? {
-// 			$text: ;
-// 		}
-// 		?click {
-// 			.a {
-// 				$text: "hello world";
-// 			}
-// 		}
-// 		a {
-// 			text: $text;
-// 		}
-// 		a {
-// 			text: $text;
-// 		}
-// 	}
-// }
+	// Click root: $text becomes "1", all should update
+	root.click();
+	assert_eq!(root.child_nodes().item(0).unwrap().node_value().unwrap(), "1");
+	assert_eq!(child_a.inner_html(), "1");
+	assert_eq!(child_b.inner_html(), "1");
 
-// #[wasm_bindgen_test]
-// fn classes_3() {
-// 	test_setup! {
-// 		text: "click me";
-// 		?click {
-// 			.a {
-// 				$text: "hello world";
-// 			}
-// 		}
-// 		a {
-// 			text: $text;
-// 		}
-// 		a {
-// 			text: $text;
-// 		}
-// 	}
-// }
+	// Click b: $text becomes "2", all should update
+	child_b.dyn_ref::<HtmlElement>().unwrap().click();
+	assert_eq!(root.child_nodes().item(0).unwrap().node_value().unwrap(), "2");
+	assert_eq!(child_a.inner_html(), "2");
+	assert_eq!(child_b.inner_html(), "2");
+}
+
+// classes_2, classes_3 — original tests used pre-syntax patterns (nameless listeners,
+// undeclared variables) that are no longer valid. Replaced with cleaner tests below.
+
+#[wasm_bindgen_test]
+fn class_variable_cascade() {
+	test_setup! {
+		let $text: "initial";
+		.msg {
+			text: $text;
+		}
+		msg {}
+		msg {}
+		?click {
+			$text: "updated";
+		}
+	}
+	let first = root.children().item(0).unwrap();
+	let second = root.children().item(1).unwrap();
+	assert_eq!(first.inner_html(), "initial");
+	assert_eq!(second.inner_html(), "initial");
+	root.click();
+	assert_eq!(first.inner_html(), "updated");
+	assert_eq!(second.inner_html(), "updated");
+}
+
+#[wasm_bindgen_test]
+fn class_variable_cascade_with_css() {
+	test_setup! {
+		let $color: "red";
+		.styled {
+			color: $color;
+		}
+		styled {}
+		styled {}
+		?click {
+			$color: "blue";
+		}
+	}
+	let first = root.children().item(0).unwrap()
+		.dyn_into::<HtmlElement>().unwrap();
+	let second = root.children().item(1).unwrap()
+		.dyn_into::<HtmlElement>().unwrap();
+	let style1 = window.get_computed_style(&first).unwrap().unwrap();
+	let style2 = window.get_computed_style(&second).unwrap().unwrap();
+	assert_eq!(style1.get_property_value("color").unwrap(), "rgb(255, 0, 0)");
+	assert_eq!(style2.get_property_value("color").unwrap(), "rgb(255, 0, 0)");
+	root.click();
+	let style1 = window.get_computed_style(&first).unwrap().unwrap();
+	let style2 = window.get_computed_style(&second).unwrap().unwrap();
+	assert_eq!(style1.get_property_value("color").unwrap(), "rgb(0, 0, 255)");
+	assert_eq!(style2.get_property_value("color").unwrap(), "rgb(0, 0, 255)");
+}
 
 #[wasm_bindgen_test]
 fn base() {

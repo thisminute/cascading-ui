@@ -54,7 +54,7 @@ impl Semantics {
 			.collect();
 	}
 
-	fn render_value(&mut self, value: Value, ancestors: &[usize]) -> Value {
+	pub(crate) fn render_value(&mut self, value: Value, ancestors: &[usize]) -> Value {
 		match value {
 			Value::UnrenderedVariable(identifier) => {
 				for &ancestor_id in ancestors {

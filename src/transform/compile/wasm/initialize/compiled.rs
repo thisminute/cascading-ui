@@ -74,11 +74,45 @@ impl Semantics {
 				}
 			});
 
+		// Register effects for CSS properties in classes that reference mutable variables.
+		// These properties live in <style> rules, but reactive updates set inline styles.
+		let class_css_effects: Vec<_> = self.groups[element_id].member_of.iter()
+			.flat_map(|&class_id| {
+				let selector = match &self.groups[class_id].selector {
+					Some(s) => s.clone(),
+					None => return vec![],
+				};
+				let style_key = format!(".{}", selector);
+				let css_rules = match self.styles.get(&style_key) {
+					Some(r) => r,
+					None => return vec![],
+				};
+				css_rules.iter()
+					.filter_map(|(prop_name, value)| {
+						if let Value::Variable(variable_id, _) = value {
+							if let (_, Some(mutable_id)) = self.variables[*variable_id] {
+								return Some(quote! {
+									state[#mutable_id].1.push(
+										Effect {
+											property: Property::Css(#prop_name),
+											target: EffectTarget::Element(element.clone()),
+										}
+									);
+								});
+							}
+						}
+						None
+					})
+					.collect::<Vec<_>>()
+			})
+			.collect();
+
 		quote! {
 			#( #elements )*
 			#( #classes )*
 			#listeners
 			#( #variables )*
+			#( #class_css_effects )*
 		}
 	}
 
