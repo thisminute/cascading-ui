@@ -16,9 +16,11 @@ impl Semantics {
 		// TODO: make this cleaner with a lightweight html!() macro
 
 		let html = format!(
-			"<html>{}{}</html>",
+			"<!DOCTYPE html><html lang='en'>{}{}</html>",
 			format_args!(
-				"<head>{}{}</head>",
+				"<head>{}{}{}{}</head>",
+				"<meta charset='UTF-8'>",
+				"<meta name='viewport' content='width=device-width, initial-scale=1.0'>",
 				format_args!("<title>{}</title>", root.title),
 				format_args!("<style>{}</style>", styles)
 			),
