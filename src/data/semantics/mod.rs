@@ -29,4 +29,9 @@ pub struct Semantics {
 
 	/// Maps class names to group_ids for classes referenced by `apply:` properties
 	pub apply_targets: HashMap<String, usize>,
+
+	/// Maps variable_id → variable_name for variables marked with `persist`
+	pub persistent_variables: HashMap<usize, String>,
+	/// Maps mutable_id → localStorage key for persistent variables (built after render)
+	pub persistent_mutables: HashMap<usize, String>,
 }

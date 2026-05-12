@@ -27,6 +27,24 @@ impl Semantics {
 			self.pages[i].title = title;
 			self.render_element(page_group_id, ancestors);
 		}
+
+		// Ensure persistent variables always have mutable_ids, even without
+		// listener assignments. This makes them reactive so localStorage
+		// values can be applied at startup.
+		for (&var_id, _) in self.persistent_variables.clone().iter() {
+			if self.variables[var_id].1.is_none() {
+				self.variables[var_id].1 = Some(generate_mutable_id());
+			}
+		}
+
 		self.mutable_count = generate_mutable_id();
+
+		// Build mutable_id → localStorage key mapping for persistent variables
+		for (&var_id, name) in self.persistent_variables.clone().iter() {
+			if let (_, Some(mutable_id)) = &self.variables[var_id] {
+				self.persistent_mutables
+					.insert(*mutable_id, format!("cui:{}", name));
+			}
+		}
 	}
 }

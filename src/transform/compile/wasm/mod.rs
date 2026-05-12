@@ -117,17 +117,39 @@ impl Semantics {
 		let mut mutables = vec![quote! {}; self.mutable_count];
 		for (value, mutable_id) in &self.variables {
 			if let &Some(mutable_id) = mutable_id {
-				// if !mutables[mutable_id].is_empty() {
-				// 	panic!("multiple default values for same mutable")
-				// }
+				// Only use the first variable for each mutable_id (the declaration).
+				// Assignment variables share the same mutable_id but have different
+				// values — skip them to avoid overwriting the declaration's default.
+				if !mutables[mutable_id].is_empty() {
+					continue;
+				}
+
 				let type_ = match self.get_static(value) {
 					StaticValue::Number(_) => quote! { Number },
 					StaticValue::String(_) => quote! { String },
-					// StaticValue::Color(_, _, _, _) => quote! { String },
 				};
-				mutables[mutable_id] = quote! {
-					Value::#type_(#value)
-				};
+
+				if let Some(key) = self.persistent_mutables.get(&mutable_id) {
+					// Load from localStorage if available, fall back to default
+					mutables[mutable_id] = quote! {
+						{
+							let window = web_sys::window().unwrap();
+							if let Ok(Some(storage)) = window.local_storage() {
+								if let Ok(Some(stored)) = storage.get_item(#key) {
+									Value::String(Box::leak(stored.into_boxed_str()))
+								} else {
+									Value::#type_(#value)
+								}
+							} else {
+								Value::#type_(#value)
+							}
+						}
+					};
+				} else {
+					mutables[mutable_id] = quote! {
+						Value::#type_(#value)
+					};
+				}
 			}
 		}
 		quote! { vec![ #( (#mutables, Vec::new()), )* ] }

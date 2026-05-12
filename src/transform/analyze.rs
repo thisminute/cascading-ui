@@ -47,10 +47,14 @@ impl Semantics {
 		);
 
 		let variables = (block.variables.iter())
-			.map(|(identifier, value)| {
+			.map(|(identifier, value, persist)| {
 				let value = self.create_semantic_value(value);
 				self.variables.push((value, None));
-				(identifier.clone(), self.variables.len() - 1)
+				let var_id = self.variables.len() - 1;
+				if *persist {
+					self.persistent_variables.insert(var_id, identifier.clone());
+				}
+				(identifier.clone(), var_id)
 			})
 			.collect();
 
