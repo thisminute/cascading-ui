@@ -98,10 +98,16 @@ impl Semantics {
 					"blur" => quote! { set_onblur },
 					"focus" => quote! { set_onfocus },
 					"click" => quote! { set_onclick },
+					"dblclick" => quote! { set_ondblclick },
 					"mouseover" => quote! { set_onmouseover },
 					"mouseenter" => quote! { set_onmouseenter },
 					"mouseleave" => quote! { set_onmouseleave },
 					"mouseout" => quote! { set_onmouseout },
+					"input" => quote! { set_oninput },
+					"change" => quote! { set_onchange },
+					"keydown" => quote! { set_onkeydown },
+					"keyup" => quote! { set_onkeyup },
+					"scroll" => quote! { set_onscroll },
 					_ => panic!("unknown event id"),
 				};
 
