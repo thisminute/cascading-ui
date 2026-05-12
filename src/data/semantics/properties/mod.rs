@@ -30,7 +30,7 @@ fn is_css_property(name: &str) -> bool {
 
 impl Property {
 	pub fn new(property: String) -> Self {
-		if is_css_property(&property) {
+		if is_css_property(&property) || property.starts_with("--") {
 			Self::Css(property)
 		} else {
 			match property.as_str() {

@@ -17,7 +17,9 @@ impl Peek for ParseStream<'_> {
 	fn peek_property(&self) -> bool {
 		// A property starts with an Ident but is NOT followed by a brace (that's an element block).
 		// Exclude `let` keyword (that's a variable declaration).
-		self.peek(Ident::peek_any) && !self.peek2(Brace) && !self.peek(Token![let])
+		// Also match CSS custom properties: --property-name
+		(self.peek(Ident::peek_any) && !self.peek2(Brace) && !self.peek(Token![let]))
+			|| (self.peek(Token![-]) && self.peek2(Token![-]))
 	}
 	fn peek_element_block(&self) -> bool {
 		self.peek(Ident::peek_any) && self.peek2(Brace) && !self.peek(Token![let])

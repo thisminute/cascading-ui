@@ -85,8 +85,17 @@ impl Parse for Block {
 
 impl Parse for Property {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
-		// Parse hyphenated property names like font-family, max-width, etc.
-		let mut property = input.parse::<Ident>()?.to_string();
+		// Parse property names, including:
+		// - Simple: color, text, link
+		// - Hyphenated: font-family, max-width
+		// - CSS custom properties: --my-color, --theme-bg
+		let mut property = if input.peek(Token![-]) && input.peek2(Token![-]) {
+			input.parse::<Token![-]>()?;
+			input.parse::<Token![-]>()?;
+			format!("--{}", input.parse::<Ident>()?.to_string())
+		} else {
+			input.parse::<Ident>()?.to_string()
+		};
 		while input.peek(Token![-]) {
 			input.parse::<Token![-]>()?;
 			let next = input.parse::<Ident>()?;
