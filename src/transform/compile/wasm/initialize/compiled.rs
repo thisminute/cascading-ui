@@ -90,11 +90,19 @@ impl Semantics {
 					return quote! {};
 				}
 
-				let event = match &**self.groups[listener_id]
+				let name = &**self.groups[listener_id]
 					.name
 					.as_ref()
-					.expect("every listener should have an event id")
-				{
+					.expect("every listener should have an event id");
+
+				if name == "init" {
+					// ?init runs immediately during initialization, not on an event.
+					// No CLASSES.with needed — we're already inside it from document().
+					let rules = self.provide_state(rules);
+					return quote! { { #rules } };
+				}
+
+				let event = match name {
 					"blur" => quote! { set_onblur },
 					"focus" => quote! { set_onfocus },
 					"click" => quote! { set_onclick },
