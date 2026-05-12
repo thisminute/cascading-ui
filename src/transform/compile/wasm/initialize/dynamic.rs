@@ -188,6 +188,11 @@ impl Semantics {
 			effects.push(quote! { element.text(#value); });
 		}
 
+		if let Some(value) = properties.get(&Property::Cui(CuiProperty::Tooltip)) {
+			let value = self.compiled_dynamic_value(value);
+			effects.push(quote! { element.tooltip(#value); });
+		}
+
 		// if let Some(_value) = properties.get(&Property::Cui(CuiProperty::Link)) {
 		// 	effects.push(quote! {});
 		// }

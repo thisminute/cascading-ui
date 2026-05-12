@@ -119,7 +119,7 @@ impl Semantics {
 					Property::Css(property) => element.css(property, value),
 					Property::Link => (),
 					Property::Text => element.text(value),
-					Property::Tooltip => (),
+					Property::Tooltip => element.tooltip(value),
 					Property::Image => (),
 					Property::Apply => (),
 				}
