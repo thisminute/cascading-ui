@@ -117,7 +117,7 @@ impl Semantics {
 			fn render_property(element: &HtmlElement, property: &Property, value: Value) {
 				match property {
 					Property::Css(property) => element.css(property, value),
-					Property::Link => (),
+					Property::Link => element.link(value),
 					Property::Text => element.text(value),
 					Property::Tooltip => (),
 					Property::Image => (),
