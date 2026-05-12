@@ -21,7 +21,11 @@ impl Semantics {
 			target_id
 		);
 		if source_id == target_id {
-			panic!("the build process should never try to cascade a group into itself")
+			panic!(
+				"compiler bug: attempted to cascade group {} into itself. \
+				This indicates a cycle in the class/element relationship graph.",
+				source_id
+			)
 		}
 
 		if !virtual_ {
@@ -117,7 +121,12 @@ impl Semantics {
 			&& !self.groups[source_id].elements.is_empty()
 			&& !self.groups[target_id].elements.is_empty()
 		{
-			panic!("Source and target group specify different contents for the same element")
+			panic!(
+				"conflicting element children: group {} (source) and group {} (target) \
+				both define child elements in the same listener scope. \
+				Only one group in a cascade chain should define element children.",
+				source_id, target_id
+			)
 		}
 
 		for element_id in self.groups[source_id].elements.clone() {

@@ -56,14 +56,14 @@ impl Semantics {
 			}
 		});
 		let properties =
-			(self.groups[group_id].properties.iter()).map(|(property, value)| match property {
-				Property::Css(property) => quote! {
+			(self.groups[group_id].properties.iter()).filter_map(|(property, value)| match property {
+				Property::Css(property) => Some(quote! {
 					group.properties.insert(Property::Css(#property), Value::String(#value));
-				},
-				Property::Cui(property) => quote! {
+				}),
+				Property::Cui(property) => Some(quote! {
 					group.properties.insert(Property::#property, Value::String(#value));
-				},
-				_ => panic!("aaaAA"),
+				}),
+				Property::Page(_) => None, // Page properties don't get registered in runtime groups
 			});
 		quote! {
 			#( #elements )*

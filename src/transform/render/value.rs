@@ -72,7 +72,12 @@ impl Semantics {
 						);
 					}
 				}
-				panic!("unable to render variable '{}' from ancestors", identifier)
+				panic!(
+						"undefined variable '${}'. Variables must be declared with 'let' in an \
+						ancestor scope before use. Searched {} ancestor group(s).",
+						identifier,
+						ancestors.len()
+					)
 			}
 			Value::Variable(..) => value, // already rendered, idempotent
 			value => value,
@@ -180,8 +185,13 @@ impl Semantics {
 			Value::Static(value) => value.clone(),
 			&Value::Variable(variable_id, None) => self.get_static(&self.variables[variable_id].0),
 			Value::Variable(_, Some(value)) => value.clone(),
-			Value::UnrenderedVariable(_) => {
-				panic!("cannot get static value of unrendered variable")
+			Value::UnrenderedVariable(ref name) => {
+				panic!(
+					"cannot get static value of unrendered variable '${}'. \
+					This is a compiler bug — the variable should have been resolved \
+					during the render phase before reaching codegen.",
+					name
+				)
 			}
 			Value::ClassRef(name) => StaticValue::String(format!(".{}", name)),
 		}

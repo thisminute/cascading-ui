@@ -90,11 +90,11 @@ impl Semantics {
 					return quote! {};
 				}
 
-				let event = match &**self.groups[listener_id]
+				let event_name = self.groups[listener_id]
 					.name
 					.as_ref()
-					.expect("every listener should have an event id")
-				{
+					.expect("every listener should have an event name");
+				let event = match &**event_name {
 					"blur" => quote! { set_onblur },
 					"focus" => quote! { set_onfocus },
 					"click" => quote! { set_onclick },
@@ -102,7 +102,11 @@ impl Semantics {
 					"mouseenter" => quote! { set_onmouseenter },
 					"mouseleave" => quote! { set_onmouseleave },
 					"mouseout" => quote! { set_onmouseout },
-					_ => panic!("unknown event id"),
+					unknown => panic!(
+						"unknown event type '?{}'. Supported events: blur, focus, click, \
+						mouseover, mouseenter, mouseleave, mouseout",
+						unknown
+					),
 				};
 
 				let rules = self.provide_state(rules);
