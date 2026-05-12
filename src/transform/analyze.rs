@@ -7,6 +7,16 @@ impl Document {
 	pub fn analyze(self) -> Semantics {
 		let mut semantics = Semantics::default();
 		semantics.styles.insert(
+			"*, *::before, *::after".to_string(),
+			[(
+				"box-sizing".to_string(),
+				Value::Static(StaticValue::String("border-box".to_string())),
+			)]
+			.iter()
+			.cloned()
+			.collect(),
+		);
+		semantics.styles.insert(
 			"body".to_string(),
 			[(
 				"margin".to_string(),
