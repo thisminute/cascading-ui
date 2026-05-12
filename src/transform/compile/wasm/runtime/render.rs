@@ -122,6 +122,11 @@ impl Semantics {
 					Property::Tooltip => (),
 					Property::Image => (),
 					Property::Apply => (),
+					Property::Id => {
+						if let Value::String(s) = value {
+							element.set_id(s);
+						}
+					},
 				}
 			}
 		}
