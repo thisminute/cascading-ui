@@ -18,6 +18,8 @@ mod misc {
 	mod events;
 }
 mod properties {
+	mod image;
 	mod text;
 	mod title;
+	mod tooltip;
 }

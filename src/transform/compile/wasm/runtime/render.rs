@@ -115,12 +115,28 @@ impl Semantics {
 			// }
 
 			fn render_property(element: &HtmlElement, property: &Property, value: Value) {
+				let window = web_sys::window().unwrap();
+				let document = window.document().unwrap();
 				match property {
 					Property::Css(property) => element.css(property, value),
 					Property::Link => (),
 					Property::Text => element.text(value),
-					Property::Tooltip => (),
-					Property::Image => (),
+					Property::Tooltip => {
+						if let Value::String(string) = value {
+							element.set_attribute("title", string).unwrap();
+						}
+					},
+					Property::Image => {
+						if let Value::String(src) = value {
+							let img = document
+								.create_element("img")
+								.unwrap()
+								.dyn_into::<HtmlElement>()
+								.unwrap();
+							img.set_attribute("src", src).unwrap();
+							element.append_child(&img).unwrap();
+						}
+					},
 					Property::Apply => (),
 				}
 			}

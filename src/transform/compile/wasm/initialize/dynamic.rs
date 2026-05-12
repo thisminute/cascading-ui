@@ -188,6 +188,30 @@ impl Semantics {
 			effects.push(quote! { element.text(#value); });
 		}
 
+		if let Some(value) = properties.get(&Property::Cui(CuiProperty::Tooltip)) {
+			let value = self.compiled_dynamic_value(value);
+			effects.push(quote! {
+				if let Value::String(string) = #value {
+					element.set_attribute("title", string).unwrap();
+				}
+			});
+		}
+
+		if let Some(value) = properties.get(&Property::Cui(CuiProperty::Image)) {
+			let value = self.compiled_dynamic_value(value);
+			effects.push(quote! {
+				if let Value::String(src) = #value {
+					let img = document
+						.create_element("img")
+						.unwrap()
+						.dyn_into::<HtmlElement>()
+						.unwrap();
+					img.set_attribute("src", src).unwrap();
+					element.append_child(&img).unwrap();
+				}
+			});
+		}
+
 		// if let Some(_value) = properties.get(&Property::Cui(CuiProperty::Link)) {
 		// 	effects.push(quote! {});
 		// }
