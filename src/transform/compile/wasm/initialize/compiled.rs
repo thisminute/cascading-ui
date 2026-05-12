@@ -77,8 +77,8 @@ impl Semantics {
 		quote! {
 			#( #elements )*
 			#( #classes )*
-			#listeners
 			#( #variables )*
+			#listeners
 		}
 	}
 
@@ -90,11 +90,18 @@ impl Semantics {
 					return quote! {};
 				}
 
-				let event = match &**self.groups[listener_id]
+				let event_name = &**self.groups[listener_id]
 					.name
 					.as_ref()
-					.expect("every listener should have an event id")
-				{
+					.expect("every listener should have an event id");
+
+				// Init pseudo-event: execute rules immediately during initialization.
+				// No event binding — the code runs inline as part of element setup.
+				if event_name == "init" {
+					return rules;
+				}
+
+				let event = match event_name {
 					"blur" => quote! { set_onblur },
 					"focus" => quote! { set_onfocus },
 					"click" => quote! { set_onclick },
