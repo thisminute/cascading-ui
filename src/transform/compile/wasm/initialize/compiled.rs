@@ -102,6 +102,12 @@ impl Semantics {
 					"mouseenter" => quote! { set_onmouseenter },
 					"mouseleave" => quote! { set_onmouseleave },
 					"mouseout" => quote! { set_onmouseout },
+					"scroll" => quote! { set_onscroll },
+					"contextmenu" => quote! { set_oncontextmenu },
+					"wheel" => quote! { set_onwheel },
+					"touchstart" => quote! { set_ontouchstart },
+					"touchend" => quote! { set_ontouchend },
+					"touchmove" => quote! { set_ontouchmove },
 					_ => panic!("unknown event id"),
 				};
 
