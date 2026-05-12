@@ -107,19 +107,15 @@ impl Semantics {
 			.chain(self.groups[group_id].assignments.iter())
 			.filter_map(|(_, variable_id)| {
 				if let (value, Some(mutable_id)) = &self.variables[*variable_id] {
-					Some((value, mutable_id))
+					Some((value.clone(), *mutable_id))
 				} else {
 					None
 				}
 			})
+			.collect::<Vec<_>>()
+			.into_iter()
 			.map(|(value, mutable_id)| {
-				let type_ = match self.get_static(value) {
-					StaticValue::Number(_) => quote! { Number },
-					StaticValue::String(_) => quote! { String },
-				};
-				let value = quote! {
-					Value::#type_(#value)
-				};
+				let value = self.compiled_dynamic_value(&value);
 				quote! {
 					state[#mutable_id].0 = #value;
 					for Effect { property, target } in &state[#mutable_id].1 {
@@ -206,6 +202,16 @@ impl Semantics {
 			if let (_, Some(mutable_id)) = self.variables[variable_id] {
 				return quote! { state[#mutable_id].0.clone() };
 			}
+		}
+		if let Value::EventValue = value {
+			return quote! {
+				Value::String(Box::leak(
+					e.target().unwrap()
+						.dyn_into::<web_sys::HtmlInputElement>().unwrap()
+						.value()
+						.into_boxed_str()
+				))
+			};
 		}
 		// Static value — construct the runtime Value enum
 		let type_ = match self.get_static(value) {

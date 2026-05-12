@@ -6,6 +6,7 @@ pub enum Value {
 	Variable(usize, Option<StaticValue>),
 	UnrenderedVariable(String),
 	ClassRef(String),
+	EventValue,
 }
 
 #[derive(Clone, Debug)]

@@ -48,6 +48,7 @@ features = [
 	"HtmlCollection",
 	"HtmlElement",
 	"HtmlHeadElement",
+	"HtmlInputElement",
 	"Location",
 	"Node",
 	"NodeList",

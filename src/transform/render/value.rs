@@ -20,6 +20,7 @@ impl fmt::Display for Value {
 				Value::Variable(variable_id, None) => format!("<{}>", variable_id),
 				Value::UnrenderedVariable(_) => "@variable".to_string(),
 				Value::ClassRef(name) => format!(".{}", name),
+				Value::EventValue => "$value".to_string(),
 			}
 		)
 	}
@@ -28,7 +29,7 @@ impl fmt::Display for Value {
 impl ToTokens for Value {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
 		match self {
-			Value::ClassRef(_) => {}, // ClassRef is not a runtime value
+			Value::ClassRef(_) | Value::EventValue => {}, // not runtime-literal values
 			_ => self.to_string().to_tokens(tokens),
 		}
 	}
@@ -38,6 +39,16 @@ impl Semantics {
 	pub fn render_values(&mut self, element_id: usize, ancestors: &[usize]) {
 		for variable_id in self.groups[element_id]
 			.variables
+			.values()
+			.cloned()
+			.collect::<Vec<_>>()
+		{
+			let rendered = self.render_value(self.variables[variable_id].0.clone(), ancestors);
+			self.variables[variable_id].0 = rendered;
+		}
+
+		for variable_id in self.groups[element_id]
+			.assignments
 			.values()
 			.cloned()
 			.collect::<Vec<_>>()
@@ -71,6 +82,10 @@ impl Semantics {
 							},
 						);
 					}
+				}
+				// Built-in variable: $value reads the event target's value property
+				if identifier == "value" {
+					return Value::EventValue;
 				}
 				panic!("unable to render variable '{}' from ancestors", identifier)
 			}
@@ -184,6 +199,7 @@ impl Semantics {
 				panic!("cannot get static value of unrendered variable")
 			}
 			Value::ClassRef(name) => StaticValue::String(format!(".{}", name)),
+			Value::EventValue => StaticValue::String(String::new()),
 		}
 	}
 }

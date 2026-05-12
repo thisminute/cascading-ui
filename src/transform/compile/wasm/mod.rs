@@ -2,7 +2,7 @@ mod initialize;
 mod runtime;
 
 use {
-	crate::data::semantics::{Semantics, StaticValue},
+	crate::data::semantics::{Semantics, StaticValue, Value},
 	proc_macro2::{Span, TokenStream},
 	quote::{format_ident, quote, quote_spanned},
 };
@@ -37,6 +37,7 @@ fn header() -> TokenStream {
 			Tooltip,
 			Image,
 			Apply,
+			Tag,
 		}
 
 		#[derive(Clone, Debug)]
@@ -116,6 +117,11 @@ impl Semantics {
 	pub fn get_mutables(&self) -> TokenStream {
 		let mut mutables = vec![quote! {}; self.mutable_count];
 		for (value, mutable_id) in &self.variables {
+			// Skip EventValue — it's a runtime-only value (e.g. $value in a listener),
+			// not a valid initializer for mutable state
+			if let Value::EventValue = value {
+				continue;
+			}
 			if let &Some(mutable_id) = mutable_id {
 				// if !mutables[mutable_id].is_empty() {
 				// 	panic!("multiple default values for same mutable")

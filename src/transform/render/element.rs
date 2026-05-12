@@ -1,7 +1,7 @@
 use {
 	crate::data::semantics::{
 		properties::{CuiProperty, Property},
-		Semantics,
+		Semantics, StaticValue, Value,
 	},
 	crate::misc::id_gen::generate_class_id,
 };
@@ -95,7 +95,11 @@ impl Semantics {
 		}
 		ancestors.pop();
 
-		self.groups[element_id].tag = if self.groups[element_id]
+		self.groups[element_id].tag = if let Some(Value::Static(StaticValue::String(tag))) =
+			self.groups[element_id].properties.get(&Property::Cui(CuiProperty::Tag))
+		{
+			Box::leak(tag.clone().into_boxed_str())
+		} else if self.groups[element_id]
 			.properties
 			.contains_key(&Property::Cui(CuiProperty::Link))
 		{
