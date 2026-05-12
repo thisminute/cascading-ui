@@ -34,9 +34,25 @@ fn parse_content(
 		listeners: Vec::new(),
 		variables: Vec::new(),
 		assignments: Vec::new(),
+		imports: Vec::new(),
 	};
 	loop {
-		if input.peek_declaration() {
+		// Parse @import "url";
+		if input.peek(Token![@]) {
+			input.parse::<Token![@]>()?;
+			let directive: Ident = input.call(Ident::parse_any)?;
+			if directive == "import" {
+				let url = input.parse::<LitStr>()?.value();
+				input.parse::<Token![;]>()?;
+				block.imports.push(url);
+				continue;
+			} else {
+				return Err(syn::Error::new(
+					directive.span(),
+					format!("unknown directive '@{}'. Supported: @import", directive),
+				));
+			}
+		} else if input.peek_declaration() {
 			input.parse::<Token![let]>()?;
 			let assignment = input.parse::<Assignment>()?;
 			block
