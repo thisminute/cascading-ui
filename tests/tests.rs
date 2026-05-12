@@ -13,6 +13,7 @@ mod data {
 	mod r#static;
 }
 mod misc {
+	mod additional_events;
 	mod basics;
 	mod complex;
 	mod events;

@@ -90,23 +90,37 @@ impl Semantics {
 					return quote! {};
 				}
 
-				let event = match &**self.groups[listener_id]
+				let name = &**self.groups[listener_id]
 					.name
 					.as_ref()
-					.expect("every listener should have an event id")
-				{
-					"blur" => quote! { set_onblur },
-					"focus" => quote! { set_onfocus },
-					"click" => quote! { set_onclick },
-					"mouseover" => quote! { set_onmouseover },
-					"mouseenter" => quote! { set_onmouseenter },
-					"mouseleave" => quote! { set_onmouseleave },
-					"mouseout" => quote! { set_onmouseout },
-					_ => panic!("unknown event id"),
+					.expect("every listener should have an event id");
+
+				let setter = match name {
+					"blur" => Some(quote! { set_onblur }),
+					"focus" => Some(quote! { set_onfocus }),
+					"click" => Some(quote! { set_onclick }),
+					"dblclick" => Some(quote! { set_ondblclick }),
+					"mousedown" => Some(quote! { set_onmousedown }),
+					"mouseup" => Some(quote! { set_onmouseup }),
+					"mousemove" => Some(quote! { set_onmousemove }),
+					"mouseover" => Some(quote! { set_onmouseover }),
+					"mouseenter" => Some(quote! { set_onmouseenter }),
+					"mouseleave" => Some(quote! { set_onmouseleave }),
+					"mouseout" => Some(quote! { set_onmouseout }),
+					"keydown" => Some(quote! { set_onkeydown }),
+					"keyup" => Some(quote! { set_onkeyup }),
+					"keypress" => Some(quote! { set_onkeypress }),
+					"input" => Some(quote! { set_oninput }),
+					"change" => Some(quote! { set_onchange }),
+					"submit" => Some(quote! { set_onsubmit }),
+					"scroll" => Some(quote! { set_onscroll }),
+					"contextmenu" => Some(quote! { set_oncontextmenu }),
+					"wheel" => Some(quote! { set_onwheel }),
+					_ => None,
 				};
 
 				let rules = self.provide_state(rules);
-				quote! {
+				let closure = quote! {
 					let closure = {
 						let document = document.clone();
 						let mut element = element.clone();
@@ -118,8 +132,24 @@ impl Semantics {
 							});
 						}) as Box<dyn FnMut(Event)>)
 					};
-					element.#event(Some(closure.as_ref().unchecked_ref()));
-					closure.forget();
+				};
+
+				if let Some(event) = setter {
+					quote! {
+						#closure
+						element.#event(Some(closure.as_ref().unchecked_ref()));
+						closure.forget();
+					}
+				} else {
+					let event_name = name;
+					quote! {
+						#closure
+						element.add_event_listener_with_callback(
+							#event_name,
+							closure.as_ref().unchecked_ref(),
+						).unwrap();
+						closure.forget();
+					}
 				}
 			})
 			.collect()
