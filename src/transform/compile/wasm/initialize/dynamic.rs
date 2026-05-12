@@ -140,6 +140,10 @@ impl Semantics {
 									render_property(&element, property, state[#mutable_id].0.clone());
 								}
 							}
+							EffectTarget::Conditional(element) => {
+								let display = if is_truthy(&state[#mutable_id].0) { "block" } else { "none" };
+								element.style().set_property("display", display).unwrap();
+							}
 						}
 					}
 				}

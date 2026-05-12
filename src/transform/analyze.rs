@@ -124,6 +124,11 @@ impl Semantics {
 		for block in block.elements {
 			self.create_group_from_block(block, page_id, Some(group_id), listener_scope);
 		}
+		for (variable, conditional_block) in block.conditionals {
+			let wrapper_id = self.groups.len();
+			self.create_group_from_block(conditional_block, page_id, Some(group_id), listener_scope);
+			self.groups[wrapper_id].conditional_variable = Some(variable.0.to_string());
+		}
 	}
 
 	fn create_semantic_value(&self, value: &AstValue) -> Value {

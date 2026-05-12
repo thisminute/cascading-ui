@@ -1,7 +1,7 @@
 use {
 	crate::data::semantics::{
 		properties::{CuiProperty, Property},
-		Semantics,
+		Semantics, StaticValue, Value,
 	},
 	crate::misc::id_gen::generate_class_id,
 };
@@ -84,6 +84,11 @@ impl Semantics {
 		ancestors.push(element_id);
 		self.render_values(element_id, ancestors);
 
+		// Handle conditional (@if) display
+		if let Some(var_name) = self.groups[element_id].conditional_variable.clone() {
+			self.resolve_conditional(element_id, &var_name, ancestors);
+		}
+
 		// Resolve variable references in listener subtrees (they contain properties
 		// that reference variables from ancestors but aren't rendered as elements)
 		for listener_id in self.groups[element_id].listeners.clone() {
@@ -123,5 +128,32 @@ impl Semantics {
 			.into_iter()
 			.filter(|&group_id| listener_scope == self.groups[group_id].listener_scope)
 			.collect();
+	}
+
+	fn resolve_conditional(&mut self, element_id: usize, var_name: &str, ancestors: &[usize]) {
+		for &ancestor_id in ancestors.iter() {
+			if let Some(&variable_id) = self.groups[ancestor_id].variables.get(var_name) {
+				let is_truthy = match &self.variables[variable_id].0 {
+					Value::Static(StaticValue::String(s)) => !s.is_empty() && s != "false",
+					Value::Static(StaticValue::Number(n)) => *n != 0,
+					Value::Variable(_, Some(sv)) => match sv {
+						StaticValue::String(s) => !s.is_empty() && s != "false",
+						StaticValue::Number(n) => *n != 0,
+					},
+					_ => true,
+				};
+				let display = if is_truthy { "block" } else { "none" };
+				self.groups[element_id].properties.insert(
+					Property::Css("display".to_string()),
+					Value::Static(StaticValue::String(display.to_string())),
+				);
+				self.groups[element_id].conditional_variable_id = Some(variable_id);
+				return;
+			}
+		}
+		panic!(
+			"conditional variable '{}' not found in ancestors",
+			var_name
+		);
 	}
 }

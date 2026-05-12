@@ -74,11 +74,29 @@ impl Semantics {
 				}
 			});
 
+		let conditional = if let Some(variable_id) = self.groups[element_id].conditional_variable_id {
+			if let (_, Some(mutable_id)) = self.variables[variable_id] {
+				quote! {
+					state[#mutable_id].1.push(
+						Effect {
+							property: Property::Css("display"),
+							target: EffectTarget::Conditional(element.clone()),
+						}
+					);
+				}
+			} else {
+				quote! {}
+			}
+		} else {
+			quote! {}
+		};
+
 		quote! {
 			#( #elements )*
 			#( #classes )*
 			#listeners
 			#( #variables )*
+			#conditional
 		}
 	}
 

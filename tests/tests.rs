@@ -15,6 +15,7 @@ mod data {
 mod misc {
 	mod basics;
 	mod complex;
+	mod conditional;
 	mod events;
 }
 mod properties {
