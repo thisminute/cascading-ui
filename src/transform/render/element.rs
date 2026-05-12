@@ -100,6 +100,12 @@ impl Semantics {
 			.contains_key(&Property::Cui(CuiProperty::Link))
 		{
 			"a"
+		} else if let Some(tag) = self.groups[element_id]
+			.name
+			.as_deref()
+			.and_then(html_tag_for_name)
+		{
+			tag
 		} else {
 			"div"
 		};
@@ -124,4 +130,88 @@ impl Semantics {
 			.filter(|&group_id| listener_scope == self.groups[group_id].listener_scope)
 			.collect();
 	}
+}
+
+/// Returns a `&'static str` tag name if the CUI element name matches a known HTML5 element.
+/// This enables semantic HTML output — elements named `header`, `nav`, `section`, etc.
+/// generate the corresponding HTML tags instead of `<div>`.
+fn html_tag_for_name(name: &str) -> Option<&'static str> {
+	Some(match name {
+		// Sectioning
+		"header" => "header",
+		"footer" => "footer",
+		"nav" => "nav",
+		"main" => "main",
+		"section" => "section",
+		"article" => "article",
+		"aside" => "aside",
+		"address" => "address",
+		// Headings
+		"h1" => "h1",
+		"h2" => "h2",
+		"h3" => "h3",
+		"h4" => "h4",
+		"h5" => "h5",
+		"h6" => "h6",
+		// Text content
+		"p" => "p",
+		"pre" => "pre",
+		"blockquote" => "blockquote",
+		"figure" => "figure",
+		"figcaption" => "figcaption",
+		"hr" => "hr",
+		// Lists
+		"ul" => "ul",
+		"ol" => "ol",
+		"li" => "li",
+		"dl" => "dl",
+		"dt" => "dt",
+		"dd" => "dd",
+		// Table
+		"table" => "table",
+		"thead" => "thead",
+		"tbody" => "tbody",
+		"tfoot" => "tfoot",
+		"tr" => "tr",
+		"th" => "th",
+		"td" => "td",
+		"caption" => "caption",
+		// Form
+		"form" => "form",
+		"fieldset" => "fieldset",
+		"legend" => "legend",
+		"button" => "button",
+		"label" => "label",
+		"input" => "input",
+		"select" => "select",
+		"textarea" => "textarea",
+		"option" => "option",
+		"optgroup" => "optgroup",
+		// Interactive
+		"details" => "details",
+		"summary" => "summary",
+		"dialog" => "dialog",
+		// Inline semantics
+		"span" => "span",
+		"strong" => "strong",
+		"em" => "em",
+		"code" => "code",
+		"kbd" => "kbd",
+		"samp" => "samp",
+		"abbr" => "abbr",
+		"cite" => "cite",
+		"sub" => "sub",
+		"sup" => "sup",
+		// Media
+		"img" => "img",
+		"picture" => "picture",
+		"video" => "video",
+		"audio" => "audio",
+		"canvas" => "canvas",
+		"iframe" => "iframe",
+		// Other
+		"br" => "br",
+		"wbr" => "wbr",
+		_ => return None,
+	})
 }
