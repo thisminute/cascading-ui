@@ -38,7 +38,7 @@ impl Property {
 
 				property => Self::Cui(match property {
 					"text" => CuiProperty::Text,
-					"link" => CuiProperty::Link,
+					"link" | "href" => CuiProperty::Link,
 					"tooltip" => CuiProperty::Tooltip,
 					"image" => CuiProperty::Image,
 					"apply" => CuiProperty::Apply,
