@@ -95,7 +95,20 @@ impl Semantics {
 		}
 		ancestors.pop();
 
-		self.groups[element_id].tag = if self.groups[element_id]
+		self.groups[element_id].tag = if let Some(value) = self.groups[element_id]
+			.properties
+			.get(&Property::Cui(CuiProperty::Tag))
+		{
+			match value {
+				crate::data::semantics::Value::Static(
+					crate::data::semantics::StaticValue::String(s),
+				) => Box::leak(s.clone().into_boxed_str()),
+				crate::data::semantics::Value::Variable(_, Some(
+					crate::data::semantics::StaticValue::String(s),
+				)) => Box::leak(s.clone().into_boxed_str()),
+				_ => "div",
+			}
+		} else if self.groups[element_id]
 			.properties
 			.contains_key(&Property::Cui(CuiProperty::Link))
 		{
