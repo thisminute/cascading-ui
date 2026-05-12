@@ -8,6 +8,7 @@ pub trait Peek {
 	fn peek_variable(&self) -> bool;
 	fn peek_declaration(&self) -> bool;
 	fn peek_assignment(&self) -> bool;
+	fn peek_at_directive(&self) -> bool;
 
 	// keywords
 	fn peek_use(&self) -> bool;
@@ -36,6 +37,10 @@ impl Peek for ParseStream<'_> {
 	}
 	fn peek_variable(&self) -> bool {
 		self.peek(Token![$]) && self.peek2(Ident::peek_any)
+	}
+
+	fn peek_at_directive(&self) -> bool {
+		self.peek(Token![@])
 	}
 
 	fn peek_use(&self) -> bool {

@@ -4,6 +4,7 @@ use {
 		Semantics,
 	},
 	crate::misc::id_gen::generate_class_id,
+	crate::transform::compile::css::Css,
 };
 
 impl Semantics {
@@ -83,6 +84,53 @@ impl Semantics {
 
 		ancestors.push(element_id);
 		self.render_values(element_id, ancestors);
+
+		// Handle @media queries: move CSS to class rule, generate @media CSS
+		if !self.groups[element_id].media_rules.is_empty() {
+			let selector = generate_class_id();
+			self.groups[element_id].class_names.push(selector.clone());
+
+			// Move base CSS properties from inline to class rule
+			let css_props: std::collections::HashMap<String, _> = self.groups[element_id]
+				.properties
+				.iter()
+				.filter_map(|(p, v)| {
+					if let Property::Css(name) = p {
+						Some((name.clone(), v.clone()))
+					} else {
+						None
+					}
+				})
+				.collect();
+			if !css_props.is_empty() {
+				self.styles.insert(format!(".{}", selector), css_props);
+			}
+			self.groups[element_id]
+				.properties
+				.retain(|p, _| !matches!(p, Property::Css(_)));
+
+			// Generate @media rules
+			for (expr, props) in self.groups[element_id].media_rules.clone() {
+				let media_css: std::collections::HashMap<String, _> = props
+					.iter()
+					.filter_map(|(p, v)| {
+						if let Property::Css(name) = p {
+							Some((name.clone(), v.clone()))
+						} else {
+							None
+						}
+					})
+					.collect();
+				if !media_css.is_empty() {
+					self.media_styles.push(format!(
+						"@media {}{{.{}{{{}}}}}",
+						expr,
+						selector,
+						media_css.css()
+					));
+				}
+			}
+		}
 
 		// Resolve variable references in listener subtrees (they contain properties
 		// that reference variables from ancestors but aren't rendered as elements)

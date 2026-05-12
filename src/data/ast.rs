@@ -20,6 +20,7 @@ pub struct Block {
 	pub listeners: Vec<Block>,
 	pub variables: Vec<(String, Value)>,
 	pub assignments: Vec<(String, Value)>,
+	pub media_queries: Vec<(String, Vec<Property>)>,
 }
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone)]

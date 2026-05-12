@@ -124,6 +124,15 @@ impl Semantics {
 		for block in block.elements {
 			self.create_group_from_block(block, page_id, Some(group_id), listener_scope);
 		}
+		for (expr, props) in block.media_queries {
+			let mut media_props = std::collections::HashMap::new();
+			for prop in props {
+				let value = self.create_semantic_value(&prop.value);
+				let property = Property::new(prop.property);
+				media_props.insert(property, value);
+			}
+			self.groups[group_id].media_rules.push((expr, media_props));
+		}
 	}
 
 	fn create_semantic_value(&self, value: &AstValue) -> Value {

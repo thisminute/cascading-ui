@@ -34,6 +34,7 @@ fn parse_content(
 		listeners: Vec::new(),
 		variables: Vec::new(),
 		assignments: Vec::new(),
+		media_queries: Vec::new(),
 	};
 	loop {
 		if input.peek_declaration() {
@@ -55,6 +56,24 @@ fn parse_content(
 			block
 				.assignments
 				.push((assignment.variable.0.to_string(), assignment.value));
+		} else if input.peek_at_directive() {
+			input.parse::<Token![@]>()?;
+			let keyword = input.call(Ident::parse_any)?;
+			if keyword == "media" {
+				let expr: LitStr = input.parse()?;
+				let content;
+				braced!(content in input);
+				let mut props = Vec::new();
+				while content.peek(Ident::peek_any) {
+					props.push(content.parse::<Property>()?);
+				}
+				block.media_queries.push((expr.value(), props));
+			} else {
+				return Err(syn::Error::new(
+					keyword.span(),
+					format!("unknown @ directive: @{}", keyword),
+				));
+			}
 		} else {
 			break;
 		}

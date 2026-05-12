@@ -1,6 +1,6 @@
 use {
 	super::{
-		properties::Property,
+		properties::{Properties, Property},
 		Value,
 	},
 	std::collections::HashMap,
@@ -28,6 +28,9 @@ pub struct Group {
 	pub members: Vec<usize>,
 	pub has_css_properties: bool,
 	pub is_dynamic: bool,
+
+	// for elements with @media queries
+	pub media_rules: Vec<(String, Properties)>,
 }
 impl Group {
 	pub fn new(
@@ -54,6 +57,8 @@ impl Group {
 			members: Vec::new(),
 			has_css_properties: false,
 			is_dynamic: false,
+
+			media_rules: Vec::new(),
 		}
 	}
 
@@ -85,6 +90,8 @@ impl Group {
 			members: Vec::new(),
 			has_css_properties: self.has_css_properties,
 			is_dynamic: false,
+
+			media_rules: Vec::new(),
 		}
 	}
 
