@@ -11,17 +11,19 @@ use {
 
 impl fmt::Display for Value {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		write!(
-			f,
-			"{}",
-			match self {
-				Value::Static(value) => value.to_string(),
-				Value::Variable(_, Some(value)) => value.to_string(),
-				Value::Variable(variable_id, None) => format!("<{}>", variable_id),
-				Value::UnrenderedVariable(_) => "@variable".to_string(),
-				Value::ClassRef(name) => format!(".{}", name),
+		match self {
+			Value::Static(value) => write!(f, "{}", value),
+			Value::Variable(_, Some(value)) => write!(f, "{}", value),
+			Value::Variable(variable_id, None) => write!(f, "<{}>", variable_id),
+			Value::UnrenderedVariable(_) => write!(f, "@variable"),
+			Value::ClassRef(name) => write!(f, ".{}", name),
+			Value::Concat(parts) => {
+				for part in parts {
+					write!(f, "{}", part)?;
+				}
+				Ok(())
 			}
-		)
+		}
 	}
 }
 
@@ -29,6 +31,12 @@ impl ToTokens for Value {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
 		match self {
 			Value::ClassRef(_) => {}, // ClassRef is not a runtime value
+			Value::Concat(parts) => {
+				// Static concatenation was already collapsed in render_value.
+				// If we still have a Concat here, all parts should be static after rendering.
+				let s: String = parts.iter().map(|p| p.to_string()).collect();
+				s.to_tokens(tokens);
+			}
 			_ => self.to_string().to_tokens(tokens),
 		}
 	}
@@ -73,6 +81,14 @@ impl Semantics {
 					}
 				}
 				panic!("unable to render variable '{}' from ancestors", identifier)
+			}
+			Value::Concat(parts) => {
+				let rendered: Vec<Value> = parts
+					.into_iter()
+					.map(|part| self.render_value(part, ancestors))
+					.collect();
+				// Collapse to single static string if all parts resolved to static values
+				Value::Concat(rendered).try_collapse()
 			}
 			Value::Variable(..) => value, // already rendered, idempotent
 			value => value,
@@ -184,6 +200,10 @@ impl Semantics {
 				panic!("cannot get static value of unrendered variable")
 			}
 			Value::ClassRef(name) => StaticValue::String(format!(".{}", name)),
+			Value::Concat(parts) => {
+				let s: String = parts.iter().map(|p| self.get_static(p).to_string()).collect();
+				StaticValue::String(s)
+			}
 		}
 	}
 }

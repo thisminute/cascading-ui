@@ -94,7 +94,7 @@ impl Parse for Property {
 			property.push_str(&next.to_string());
 		}
 		input.parse::<Token![:]>()?;
-		let value = input.parse()?;
+		let value = parse_value_expr(input)?;
 		input.parse::<Token![;]>()?;
 		Ok(Self { property, value })
 	}
@@ -104,10 +104,24 @@ impl Parse for Assignment {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
 		let variable = input.parse()?;
 		input.parse::<Token![:]>()?;
-		let value = input.parse()?;
+		let value = parse_value_expr(input)?;
 		input.parse::<Token![;]>()?;
 		Ok(Self { variable, value })
 	}
+}
+
+/// Parse a value expression: a single value or multiple values concatenated.
+/// Multiple values before a `;` are wrapped in `Value::Concat`.
+fn parse_value_expr(input: ParseStream) -> Result<Value, syn::Error> {
+	let first: Value = input.parse()?;
+	if input.peek(Token![;]) {
+		return Ok(first);
+	}
+	let mut values = vec![first];
+	while !input.peek(Token![;]) {
+		values.push(input.parse()?);
+	}
+	Ok(Value::Concat(values))
 }
 
 impl Parse for Value {
