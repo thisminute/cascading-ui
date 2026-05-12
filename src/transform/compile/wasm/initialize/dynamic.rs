@@ -193,9 +193,18 @@ impl Semantics {
 		// }
 
 		for (property, value) in properties {
-			if let Property::Css(property) = property {
-				let value = self.compiled_dynamic_value(value);
-				effects.push(quote! { element.css(#property, #value); });
+			match property {
+				Property::Css(property) => {
+					let value = self.compiled_dynamic_value(value);
+					effects.push(quote! { element.css(#property, #value); });
+				}
+				Property::Cui(CuiProperty::Attribute(name)) => {
+					let value = self.compiled_dynamic_value(value);
+					effects.push(quote! {
+						if let Value::String(s) = #value { element.set_attribute(#name, s).unwrap(); }
+					});
+				}
+				_ => {}
 			}
 		}
 		effects.into_iter().collect()

@@ -43,7 +43,8 @@ impl Property {
 					"image" => CuiProperty::Image,
 					"apply" => CuiProperty::Apply,
 
-					property => panic!(" property not recognized: {}", property),
+					// Any unrecognized property becomes a generic HTML attribute
+					property => CuiProperty::Attribute(property.to_string()),
 				}),
 			}
 		}
@@ -62,6 +63,7 @@ impl ToTokens for Property {
 				CuiProperty::Tooltip => quote! { Tooltip },
 				CuiProperty::Image => quote! { Image },
 				CuiProperty::Apply => quote! { Apply },
+				CuiProperty::Attribute(name) => quote! { Attribute(#name) },
 			}
 		} else {
 			quote! {}

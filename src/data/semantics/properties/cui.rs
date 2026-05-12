@@ -8,13 +8,14 @@ pub enum PageProperty {
 	Title,
 }
 
-#[derive(Clone, Copy, Eq, PartialEq, Hash, Debug)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub enum CuiProperty {
 	Text,
 	Link,
 	Tooltip,
 	Image,
 	Apply,
+	Attribute(String),
 }
 
 impl ToTokens for CuiProperty {
@@ -25,6 +26,7 @@ impl ToTokens for CuiProperty {
 			Self::Tooltip => quote! { Tooltip },
 			Self::Image => quote! { Image },
 			Self::Apply => quote! { Apply },
+			Self::Attribute(name) => quote! { Attribute(#name) },
 		}
 		.to_tokens(tokens)
 	}
