@@ -102,6 +102,9 @@ impl Semantics {
 					"mouseenter" => quote! { set_onmouseenter },
 					"mouseleave" => quote! { set_onmouseleave },
 					"mouseout" => quote! { set_onmouseout },
+					"mousedown" => quote! { set_onmousedown },
+					"mouseup" => quote! { set_onmouseup },
+					"mousemove" => quote! { set_onmousemove },
 					_ => panic!("unknown event id"),
 				};
 
