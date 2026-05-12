@@ -176,19 +176,19 @@ impl Semantics {
 
 		log::debug!("Generated document");
 
-		if document.is_empty() {
-			return quote! {};
-		}
-
-		let document = self.provide_state(document);
-
 		let core = if !self.errors.is_empty() {
 			quote! {
 				#( #errors )*
 			}
+		} else if document.is_empty() {
+			return quote! {
+				#( #warnings )*
+			};
 		} else if full {
+			let document = self.provide_state(document);
 			self.full(document)
 		} else {
+			let document = self.provide_state(document);
 			document
 		};
 
