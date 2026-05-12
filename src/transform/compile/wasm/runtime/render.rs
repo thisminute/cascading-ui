@@ -120,7 +120,7 @@ impl Semantics {
 					Property::Link => (),
 					Property::Text => element.text(value),
 					Property::Tooltip => (),
-					Property::Image => (),
+					Property::Image => element.image(value),
 					Property::Apply => (),
 				}
 			}

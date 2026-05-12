@@ -100,6 +100,11 @@ impl Semantics {
 			.contains_key(&Property::Cui(CuiProperty::Link))
 		{
 			"a"
+		} else if self.groups[element_id]
+			.properties
+			.contains_key(&Property::Cui(CuiProperty::Image))
+		{
+			"img"
 		} else {
 			"div"
 		};

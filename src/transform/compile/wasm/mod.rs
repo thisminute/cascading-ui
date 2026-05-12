@@ -72,6 +72,7 @@ fn header() -> TokenStream {
 
 		trait Std {
 			fn text(&self, value: Value);
+			fn image(&self, value: Value);
 			fn css(&self, property: &'static str, value: Value);
 		}
 
@@ -85,6 +86,12 @@ fn header() -> TokenStream {
 				}
 				if let Value::String(string) = value {
 					self.prepend_with_str_1(string).unwrap();
+				}
+			}
+
+			fn image(&self, value: Value) {
+				if let Value::String(string) = value {
+					self.set_attribute("src", string).unwrap();
 				}
 			}
 
