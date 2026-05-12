@@ -79,6 +79,16 @@ impl Semantics {
 					})
 					.collect(),
 			);
+
+			// Generate CSS rules for pseudo-classes (e.g., .selector:hover { ... })
+			for (pseudo_class, css_properties) in
+				&self.groups[source_id].pseudo_class_styles
+			{
+				self.styles.insert(
+					format!(".{}:{}", selector, pseudo_class),
+					css_properties.clone(),
+				);
+			}
 		}
 
 		ancestors.push(element_id);
