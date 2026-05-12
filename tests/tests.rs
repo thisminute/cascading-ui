@@ -16,6 +16,7 @@ mod misc {
 	mod basics;
 	mod complex;
 	mod events;
+	mod keypress;
 }
 mod properties {
 	mod text;

@@ -48,6 +48,8 @@ features = [
 	"HtmlCollection",
 	"HtmlElement",
 	"HtmlHeadElement",
+	"KeyboardEvent",
+	"KeyboardEventInit",
 	"Location",
 	"Node",
 	"NodeList",
