@@ -16,6 +16,7 @@ mod misc {
 	mod basics;
 	mod complex;
 	mod events;
+	mod more_events;
 }
 mod properties {
 	mod text;

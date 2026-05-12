@@ -98,11 +98,26 @@ impl Semantics {
 					"blur" => quote! { set_onblur },
 					"focus" => quote! { set_onfocus },
 					"click" => quote! { set_onclick },
+					"dblclick" => quote! { set_ondblclick },
 					"mouseover" => quote! { set_onmouseover },
 					"mouseenter" => quote! { set_onmouseenter },
 					"mouseleave" => quote! { set_onmouseleave },
 					"mouseout" => quote! { set_onmouseout },
-					_ => panic!("unknown event id"),
+					"mousedown" => quote! { set_onmousedown },
+					"mouseup" => quote! { set_onmouseup },
+					"input" => quote! { set_oninput },
+					"change" => quote! { set_onchange },
+					"submit" => quote! { set_onsubmit },
+					"keydown" => quote! { set_onkeydown },
+					"keyup" => quote! { set_onkeyup },
+					"scroll" => quote! { set_onscroll },
+					"wheel" => quote! { set_onwheel },
+					unknown => panic!(
+						"unknown event type '?{}'. Supported events: blur, focus, click, \
+						dblclick, mouseover, mouseenter, mouseleave, mouseout, mousedown, \
+						mouseup, input, change, submit, keydown, keyup, scroll, wheel",
+						unknown
+					),
 				};
 
 				let rules = self.provide_state(rules);
