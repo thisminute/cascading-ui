@@ -48,34 +48,54 @@ impl Semantics {
 	}
 
 	pub fn html_parts(&self) -> (HashMap<&str, String>, String) {
+		let first_route = self.routes.first().map(|(name, _)| name.as_str());
 		let contents = (self.pages.iter())
-			.map(|page| (page.route, self.groups[page.root_id].html(&self.groups)))
+			.map(|page| (page.route, self.groups[page.root_id].html(&self.groups, first_route)))
 			.collect();
 		(contents, self.styles.css())
 	}
 }
 
 impl Group {
-	fn html(&self, groups: &[Group]) -> String {
+	fn html(&self, groups: &[Group], first_route: Option<&str>) -> String {
 		let link = self.properties.get(&Property::Cui(CuiProperty::Link));
-		let attributes = [
-			("style", &*self.properties.css()),
-			("class", &*self.class_names.join(" ")),
+
+		// Build style string — routes get display:none unless they're the default
+		let mut style = self.properties.css();
+		if let Some(route_name) = &self.route {
+			let is_default = first_route == Some(route_name.as_str());
+			if !is_default {
+				if style.is_empty() {
+					style = "display:none".to_string();
+				} else {
+					style = format!("{};display:none", style);
+				}
+			}
+		}
+
+		let mut attrs: Vec<(&str, String)> = vec![
+			("style", style),
+			("class", self.class_names.join(" ")),
 			(
 				"href",
-				&*link
-					.unwrap_or(&Value::Static(StaticValue::String("".to_string())))
+				link.unwrap_or(&Value::Static(StaticValue::String("".to_string())))
 					.to_string(),
 			),
-		]
-		.iter()
-		.filter(|(_, value)| !value.is_empty())
-		.map(|(attribute, value)| format!(" {}='{}'", attribute, value))
-		.collect::<String>();
+		];
+
+		if let Some(route_name) = &self.route {
+			attrs.push(("data-route", route_name.clone()));
+		}
+
+		let attributes = attrs
+			.iter()
+			.filter(|(_, value)| !value.is_empty())
+			.map(|(attribute, value)| format!(" {}='{}'", attribute, value))
+			.collect::<String>();
 
 		let children = (self.elements.iter())
 			.filter(|&&element_id| groups[element_id].is_compiled())
-			.map(|&child_id| groups[child_id].html(groups))
+			.map(|&child_id| groups[child_id].html(groups, first_route))
 			.collect::<String>();
 
 		let contents = format!(

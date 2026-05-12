@@ -50,6 +50,8 @@ fn parse_content(
 			block.classes.push(input.parse()?);
 		} else if input.peek_listener_block() {
 			block.listeners.push(input.parse()?);
+		} else if input.peek_route_block() {
+			block.elements.push(input.parse()?);
 		} else if input.peek_assignment() {
 			let assignment = input.parse::<Assignment>()?;
 			block
@@ -70,6 +72,9 @@ impl Parse for Block {
 		} else if input.peek(Token![?]) {
 			input.parse::<Token![?]>()?;
 			Prefix::Listener
+		} else if input.peek(Token![/]) {
+			input.parse::<Token![/]>()?;
+			Prefix::Route
 		} else {
 			Prefix::Element
 		};

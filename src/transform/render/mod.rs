@@ -28,5 +28,14 @@ impl Semantics {
 			self.render_element(page_group_id, ancestors);
 		}
 		self.mutable_count = generate_mutable_id();
+
+		// Collect route groups for hash-based routing
+		for page in &self.pages {
+			for &element_id in &self.groups[page.root_id].elements {
+				if let Some(route) = &self.groups[element_id].route {
+					self.routes.push((route.clone(), element_id));
+				}
+			}
+		}
 	}
 }

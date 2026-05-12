@@ -22,6 +22,7 @@ pub struct Group {
 	pub tag: &'static str,
 	pub member_of: Vec<usize>,
 	pub class_names: Vec<String>,
+	pub route: Option<String>,
 
 	// for class groups
 	pub selector: Option<String>,
@@ -49,6 +50,7 @@ impl Group {
 			tag: "div",
 			member_of: Vec::new(),
 			class_names: Vec::new(),
+			route: None,
 
 			selector: None,
 			members: Vec::new(),
@@ -80,6 +82,7 @@ impl Group {
 			tag: "div",
 			member_of: vec![source_id],
 			class_names: Vec::new(),
+			route: None,
 
 			selector: None,
 			members: Vec::new(),

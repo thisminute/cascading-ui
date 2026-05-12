@@ -9,6 +9,7 @@ pub enum Prefix {
 	Element,
 	Class,
 	Listener,
+	Route,
 }
 
 pub struct Block {
