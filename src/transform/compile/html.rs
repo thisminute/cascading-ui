@@ -58,8 +58,16 @@ impl Semantics {
 impl Group {
 	fn html(&self, groups: &[Group]) -> String {
 		let link = self.properties.get(&Property::Cui(CuiProperty::Link));
+		let image = self.properties.get(&Property::Cui(CuiProperty::Image));
+		let style = {
+			let mut s = self.properties.css();
+			if let Some(value) = image {
+				s.push_str(&format!("background-image:url(\"{}\");", value));
+			}
+			s
+		};
 		let attributes = [
-			("style", &*self.properties.css()),
+			("style", &*style),
 			("class", &*self.class_names.join(" ")),
 			(
 				"href",

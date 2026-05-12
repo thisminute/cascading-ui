@@ -120,7 +120,11 @@ impl Semantics {
 					Property::Link => (),
 					Property::Text => element.text(value),
 					Property::Tooltip => (),
-					Property::Image => (),
+					Property::Image => {
+						if let Value::String(s) = value {
+							element.style().set_property("background-image", &format!("url('{}')", s)).unwrap();
+						}
+					},
 					Property::Apply => (),
 				}
 			}
