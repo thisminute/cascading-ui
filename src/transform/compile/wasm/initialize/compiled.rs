@@ -90,23 +90,32 @@ impl Semantics {
 					return quote! {};
 				}
 
-				let event = match &**self.groups[listener_id]
+				let name = &**self.groups[listener_id]
 					.name
 					.as_ref()
-					.expect("every listener should have an event id")
-				{
-					"blur" => quote! { set_onblur },
-					"focus" => quote! { set_onfocus },
-					"click" => quote! { set_onclick },
-					"mouseover" => quote! { set_onmouseover },
-					"mouseenter" => quote! { set_onmouseenter },
-					"mouseleave" => quote! { set_onmouseleave },
-					"mouseout" => quote! { set_onmouseout },
+					.expect("every listener should have an event id");
+
+				// Events with dedicated set_on* methods on HtmlElement
+				let setter = match name {
+					"blur" => Some(quote! { set_onblur }),
+					"focus" => Some(quote! { set_onfocus }),
+					"click" => Some(quote! { set_onclick }),
+					"mouseover" => Some(quote! { set_onmouseover }),
+					"mouseenter" => Some(quote! { set_onmouseenter }),
+					"mouseleave" => Some(quote! { set_onmouseleave }),
+					"mouseout" => Some(quote! { set_onmouseout }),
+					"pointerdown" => Some(quote! { set_onpointerdown }),
+					"pointerup" => Some(quote! { set_onpointerup }),
+					"pointermove" => Some(quote! { set_onpointermove }),
+					"pointerenter" => Some(quote! { set_onpointerenter }),
+					"pointerleave" => Some(quote! { set_onpointerleave }),
+					// Events that need addEventListener (no set_on* method)
+					"focusin" | "focusout" => None,
 					_ => panic!("unknown event id"),
 				};
 
 				let rules = self.provide_state(rules);
-				quote! {
+				let closure = quote! {
 					let closure = {
 						let document = document.clone();
 						let mut element = element.clone();
@@ -118,8 +127,24 @@ impl Semantics {
 							});
 						}) as Box<dyn FnMut(Event)>)
 					};
-					element.#event(Some(closure.as_ref().unchecked_ref()));
-					closure.forget();
+				};
+
+				if let Some(event) = setter {
+					quote! {
+						#closure
+						element.#event(Some(closure.as_ref().unchecked_ref()));
+						closure.forget();
+					}
+				} else {
+					let event_name = name;
+					quote! {
+						#closure
+						element.add_event_listener_with_callback(
+							#event_name,
+							closure.as_ref().unchecked_ref(),
+						).unwrap();
+						closure.forget();
+					}
 				}
 			})
 			.collect()
