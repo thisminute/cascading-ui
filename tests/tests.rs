@@ -10,6 +10,7 @@ mod classes {
 mod data {
 	mod apply;
 	mod dynamic;
+	mod multi_reader;
 	mod r#static;
 }
 mod misc {
