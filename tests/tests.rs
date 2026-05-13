@@ -18,6 +18,7 @@ mod misc {
 	mod events;
 }
 mod properties {
+	mod negative_values;
 	mod text;
 	mod title;
 }
