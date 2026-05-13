@@ -17,8 +17,8 @@ pub struct Page {
 
 #[derive(Default)]
 pub struct Semantics {
-	pub errors: Vec<&'static str>,
-	pub warnings: Vec<&'static str>,
+	pub errors: Vec<String>,
+	pub warnings: Vec<String>,
 	pub styles: CssRules,
 
 	pub pages: Vec<Page>,
