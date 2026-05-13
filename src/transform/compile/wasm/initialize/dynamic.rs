@@ -188,6 +188,16 @@ impl Semantics {
 			effects.push(quote! { element.text(#value); });
 		}
 
+	if let Some(value) = properties.get(&Property::Cui(CuiProperty::Image)) {
+			let value = self.compiled_dynamic_value(value);
+			effects.push(quote! {
+				if let Value::String(url) = #value {
+					element.style().set_property("background-image", &format!("url({})", url)).unwrap();
+					element.style().set_property("background-size", "cover").unwrap();
+				}
+			});
+		}
+
 		// if let Some(_value) = properties.get(&Property::Cui(CuiProperty::Link)) {
 		// 	effects.push(quote! {});
 		// }
