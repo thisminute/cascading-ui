@@ -42,6 +42,7 @@ impl Property {
 					"tooltip" => CuiProperty::Tooltip,
 					"image" => CuiProperty::Image,
 					"apply" => CuiProperty::Apply,
+					"id" => CuiProperty::Id,
 
 					property => panic!(" property not recognized: {}", property),
 				}),
@@ -62,6 +63,7 @@ impl ToTokens for Property {
 				CuiProperty::Tooltip => quote! { Tooltip },
 				CuiProperty::Image => quote! { Image },
 				CuiProperty::Apply => quote! { Apply },
+				CuiProperty::Id => quote! { Id },
 			}
 		} else {
 			quote! {}

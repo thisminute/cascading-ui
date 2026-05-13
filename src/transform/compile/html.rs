@@ -58,9 +58,21 @@ impl Semantics {
 impl Group {
 	fn html(&self, groups: &[Group]) -> String {
 		let link = self.properties.get(&Property::Cui(CuiProperty::Link));
+		let id_value = self
+			.properties
+			.get(&Property::Cui(CuiProperty::Id))
+			.map(|v| v.to_string())
+			.unwrap_or_default();
+		let tooltip_value = self
+			.properties
+			.get(&Property::Cui(CuiProperty::Tooltip))
+			.map(|v| v.to_string())
+			.unwrap_or_default();
 		let attributes = [
 			("style", &*self.properties.css()),
 			("class", &*self.class_names.join(" ")),
+			("id", &*id_value),
+			("title", &*tooltip_value),
 			(
 				"href",
 				&*link

@@ -188,6 +188,15 @@ impl Semantics {
 			effects.push(quote! { element.text(#value); });
 		}
 
+		if let Some(value) = properties.get(&Property::Cui(CuiProperty::Id)) {
+			let value = self.compiled_dynamic_value(value);
+			effects.push(quote! {
+				if let Value::String(s) = #value {
+					element.set_id(s);
+				}
+			});
+		}
+
 		// if let Some(_value) = properties.get(&Property::Cui(CuiProperty::Link)) {
 		// 	effects.push(quote! {});
 		// }
