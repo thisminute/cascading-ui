@@ -18,6 +18,7 @@ mod misc {
 	mod events;
 }
 mod properties {
+	mod modern_css;
 	mod text;
 	mod title;
 }
