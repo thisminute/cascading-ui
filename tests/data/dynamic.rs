@@ -54,32 +54,13 @@ fn between_listeners() {
 	assert_eq!(root.inner_html(), "hello world<div></div>");
 }
 
-// TODO: classes_1, classes_2, classes_3 require class+mutable variable interaction
-// which needs EffectTarget::Class handling. See SUGGESTIONS.md.
-
-// #[wasm_bindgen_test]
-// fn classes_1() {
-// 	test_setup! {
-// 		text: $text;
-// 		let $text: "hello world";
-// 		?click {
-// 			$text: "1";
-// 		}
+// NOTE: classes_1 now works — see tests/data/class_variable.rs for the enabled version
+// with proper assertions. classes_2 and classes_3 have separate issues:
 //
-// 		a {
-// 			text: $text;
-// 		}
-// 		b {
-// 			text: $text;
-// 			?click {
-// 				$text: "2";
-// 			}
-// 		}
-// 	}
-// 	// After fixing EffectTarget::Class, assertions should verify:
-// 	// - All elements referencing $text update when it changes
-// 	// - Priority: b's click handler sets $text: "2" which propagates to all references
-// }
+// classes_2: uses `? { $text: ; }` (listener with no event name) which is invalid syntax
+// classes_3: uses $text without `let` declaration — the variable is only assigned inside
+//            a class-in-listener, so it doesn't exist in the ancestor scope where elements
+//            try to read it. Fix: add `let $text: "";` at root scope.
 
 // #[wasm_bindgen_test]
 // fn classes_2() {

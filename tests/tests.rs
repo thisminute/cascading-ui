@@ -9,6 +9,7 @@ mod classes {
 }
 mod data {
 	mod apply;
+	mod class_variable;
 	mod dynamic;
 	mod r#static;
 }
