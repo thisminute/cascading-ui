@@ -54,32 +54,38 @@ fn between_listeners() {
 	assert_eq!(root.inner_html(), "hello world<div></div>");
 }
 
-// TODO: classes_1, classes_2, classes_3 require class+mutable variable interaction
-// which needs EffectTarget::Class handling. See SUGGESTIONS.md.
+// TODO: classes_2 has invalid syntax (bare `?` listener, empty `$text: ;`).
+// TODO: classes_3 uses `$text` without a `let` declaration.
 
-// #[wasm_bindgen_test]
-// fn classes_1() {
-// 	test_setup! {
-// 		text: $text;
-// 		let $text: "hello world";
-// 		?click {
-// 			$text: "1";
-// 		}
-//
-// 		a {
-// 			text: $text;
-// 		}
-// 		b {
-// 			text: $text;
-// 			?click {
-// 				$text: "2";
-// 			}
-// 		}
-// 	}
-// 	// After fixing EffectTarget::Class, assertions should verify:
-// 	// - All elements referencing $text update when it changes
-// 	// - Priority: b's click handler sets $text: "2" which propagates to all references
-// }
+#[wasm_bindgen_test]
+fn classes_1() {
+	test_setup! {
+		text: $text;
+		let $text: "hello world";
+		?click {
+			$text: "1";
+		}
+
+		a {
+			text: $text;
+		}
+		b {
+			text: $text;
+			?click {
+				$text: "2";
+			}
+		}
+	}
+	// Root and two child elements all read $text
+	assert_eq!(root.inner_html(), "hello world<div>hello world</div><div>hello world</div>");
+	// Clicking root sets $text to "1" — all readers update
+	root.click();
+	assert_eq!(root.inner_html(), "1<div>1</div><div>1</div>");
+	// Clicking the second child (b) sets $text to "2" — all readers update
+	let b_element = root.children().item(1).unwrap().dyn_into::<HtmlElement>().unwrap();
+	b_element.click();
+	assert_eq!(root.inner_html(), "2<div>2</div><div>2</div>");
+}
 
 // #[wasm_bindgen_test]
 // fn classes_2() {
