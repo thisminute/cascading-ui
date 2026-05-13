@@ -20,4 +20,5 @@ mod misc {
 mod properties {
 	mod text;
 	mod title;
+	mod tooltip;
 }
