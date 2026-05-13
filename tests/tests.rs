@@ -11,6 +11,7 @@ mod data {
 	mod apply;
 	mod dynamic;
 	mod r#static;
+	mod variable_scope;
 }
 mod misc {
 	mod basics;
