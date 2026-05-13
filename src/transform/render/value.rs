@@ -72,7 +72,12 @@ impl Semantics {
 						);
 					}
 				}
-				panic!("unable to render variable '{}' from ancestors", identifier)
+				self.errors.push(format!(
+					"variable '{}' is not declared. Add `let ${}: \"default_value\";` in an ancestor scope.",
+					identifier, identifier
+				));
+				// Return a placeholder value so compilation can continue and report the error
+				Value::Static(StaticValue::String(String::new()))
 			}
 			Value::Variable(..) => value, // already rendered, idempotent
 			value => value,
