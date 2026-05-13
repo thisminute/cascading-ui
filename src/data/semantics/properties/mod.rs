@@ -29,22 +29,23 @@ fn is_css_property(name: &str) -> bool {
 }
 
 impl Property {
-	pub fn new(property: String) -> Self {
+	pub fn new(property: String) -> Result<Self, String> {
 		if is_css_property(&property) {
-			Self::Css(property)
+			Ok(Self::Css(property))
 		} else {
 			match property.as_str() {
-				"title" => Self::Page(PageProperty::Title),
-
-				property => Self::Cui(match property {
-					"text" => CuiProperty::Text,
-					"link" => CuiProperty::Link,
-					"tooltip" => CuiProperty::Tooltip,
-					"image" => CuiProperty::Image,
-					"apply" => CuiProperty::Apply,
-
-					property => panic!(" property not recognized: {}", property),
-				}),
+				"title" => Ok(Self::Page(PageProperty::Title)),
+				property => match property {
+					"text" => Ok(Self::Cui(CuiProperty::Text)),
+					"link" => Ok(Self::Cui(CuiProperty::Link)),
+					"tooltip" => Ok(Self::Cui(CuiProperty::Tooltip)),
+					"image" => Ok(Self::Cui(CuiProperty::Image)),
+					"apply" => Ok(Self::Cui(CuiProperty::Apply)),
+					property => Err(format!(
+						"property '{}' is not recognized. Use a CSS property or a CUI property (text, link, tooltip, image, apply).",
+						property
+					)),
+				},
 			}
 		}
 	}
