@@ -5,6 +5,7 @@ wasm_bindgen_test_configure!(run_in_browser);
 mod classes {
 	mod basics;
 	mod event_parallel_nesting;
+	mod nesting;
 	mod parallel_nesting;
 }
 mod data {
