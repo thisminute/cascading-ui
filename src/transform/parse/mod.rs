@@ -86,10 +86,11 @@ impl Parse for Block {
 impl Parse for Property {
 	fn parse(input: ParseStream) -> Result<Self, syn::Error> {
 		// Parse hyphenated property names like font-family, max-width, etc.
-		let mut property = input.parse::<Ident>()?.to_string();
+		// Use parse_any to accept Rust keywords (e.g., type, box) as property names.
+		let mut property = Ident::parse_any(input)?.to_string();
 		while input.peek(Token![-]) {
 			input.parse::<Token![-]>()?;
-			let next = input.parse::<Ident>()?;
+			let next = Ident::parse_any(input)?;
 			property.push('-');
 			property.push_str(&next.to_string());
 		}
