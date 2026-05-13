@@ -98,11 +98,23 @@ impl Semantics {
 					"blur" => quote! { set_onblur },
 					"focus" => quote! { set_onfocus },
 					"click" => quote! { set_onclick },
+					"dblclick" => quote! { set_ondblclick },
+					"mousedown" => quote! { set_onmousedown },
+					"mouseup" => quote! { set_onmouseup },
 					"mouseover" => quote! { set_onmouseover },
 					"mouseenter" => quote! { set_onmouseenter },
 					"mouseleave" => quote! { set_onmouseleave },
 					"mouseout" => quote! { set_onmouseout },
-					_ => panic!("unknown event id"),
+					"mousemove" => quote! { set_onmousemove },
+					"keydown" => quote! { set_onkeydown },
+					"keyup" => quote! { set_onkeyup },
+					"input" => quote! { set_oninput },
+					"change" => quote! { set_onchange },
+					"submit" => quote! { set_onsubmit },
+					"scroll" => quote! { set_onscroll },
+					"contextmenu" => quote! { set_oncontextmenu },
+					_ => panic!("unknown event: {}", &**self.groups[listener_id]
+						.name.as_ref().unwrap()),
 				};
 
 				let rules = self.provide_state(rules);
