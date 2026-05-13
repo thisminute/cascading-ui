@@ -18,6 +18,7 @@ mod misc {
 	mod events;
 }
 mod properties {
+	mod override_tests;
 	mod text;
 	mod title;
 }
