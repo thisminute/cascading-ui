@@ -54,32 +54,13 @@ fn between_listeners() {
 	assert_eq!(root.inner_html(), "hello world<div></div>");
 }
 
-// TODO: classes_1, classes_2, classes_3 require class+mutable variable interaction
-// which needs EffectTarget::Class handling. See SUGGESTIONS.md.
+// NOTE: classes_1 actually passes and is enabled in PR #134.
+// It was previously disabled with an incorrect comment about EffectTarget::Class.
 
-// #[wasm_bindgen_test]
-// fn classes_1() {
-// 	test_setup! {
-// 		text: $text;
-// 		let $text: "hello world";
-// 		?click {
-// 			$text: "1";
-// 		}
-//
-// 		a {
-// 			text: $text;
-// 		}
-// 		b {
-// 			text: $text;
-// 			?click {
-// 				$text: "2";
-// 			}
-// 		}
-// 	}
-// 	// After fixing EffectTarget::Class, assertions should verify:
-// 	// - All elements referencing $text update when it changes
-// 	// - Priority: b's click handler sets $text: "2" which propagates to all references
-// }
+// DISABLED: classes_2 has invalid syntax:
+//   - `? { ... }` is a bare listener with no event name (should be `?click { ... }`)
+//   - `$text: ;` assigns an empty value which is not valid
+// This test needs to be redesigned with valid syntax before it can be enabled.
 
 // #[wasm_bindgen_test]
 // fn classes_2() {
@@ -108,6 +89,12 @@ fn between_listeners() {
 // 		}
 // 	}
 // }
+
+// DISABLED: classes_3 uses `$text` in element properties without declaring it
+// with `let $text: "value"`. The variable is only assigned inside a
+// class-in-listener (`?click { .a { $text: "hello world"; } }`), which means
+// it doesn't exist in the ancestor scope where `text: $text` tries to read it.
+// Fix: add `let $text: "";` at the top of the test_setup! block.
 
 // #[wasm_bindgen_test]
 // fn classes_3() {
