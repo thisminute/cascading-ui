@@ -34,6 +34,7 @@ fn parse_content(
 		listeners: Vec::new(),
 		variables: Vec::new(),
 		assignments: Vec::new(),
+		conditionals: Vec::new(),
 	};
 	loop {
 		if input.peek_declaration() {
@@ -55,6 +56,21 @@ fn parse_content(
 			block
 				.assignments
 				.push((assignment.variable.0.to_string(), assignment.value));
+		} else if input.peek_conditional() {
+			input.parse::<Token![@]>()?;
+			let keyword = input.call(Ident::parse_any)?;
+			if keyword != "if" {
+				return Err(syn::Error::new(keyword.span(), "expected 'if' after '@'"));
+			}
+			let variable: Variable = input.parse()?;
+			let content;
+			braced!(content in input);
+			let body = parse_content(
+				&content,
+				Ident::new("_conditional", Span::call_site()),
+				Prefix::Element,
+			)?;
+			block.conditionals.push((variable, body));
 		} else {
 			break;
 		}

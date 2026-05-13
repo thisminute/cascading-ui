@@ -28,6 +28,10 @@ pub struct Group {
 	pub members: Vec<usize>,
 	pub has_css_properties: bool,
 	pub is_dynamic: bool,
+
+	// for conditional (@if) wrapper elements
+	pub conditional_variable: Option<String>,
+	pub conditional_variable_id: Option<usize>,
 }
 impl Group {
 	pub fn new(
@@ -54,6 +58,9 @@ impl Group {
 			members: Vec::new(),
 			has_css_properties: false,
 			is_dynamic: false,
+
+			conditional_variable: None,
+			conditional_variable_id: None,
 		}
 	}
 
@@ -85,6 +92,9 @@ impl Group {
 			members: Vec::new(),
 			has_css_properties: self.has_css_properties,
 			is_dynamic: false,
+
+			conditional_variable: None,
+			conditional_variable_id: None,
 		}
 	}
 

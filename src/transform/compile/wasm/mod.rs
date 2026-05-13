@@ -56,6 +56,15 @@ fn header() -> TokenStream {
 		enum EffectTarget {
 			Element(HtmlElement),
 			Class(&'static str),
+			Conditional(HtmlElement),
+		}
+
+		fn is_truthy(value: &Value) -> bool {
+			match value {
+				Value::String(s) => !s.is_empty() && *s != "false",
+				Value::Number(n) => *n != 0,
+				Value::Variable(_) => true,
+			}
 		}
 
 		#[derive(Clone, Default)]
