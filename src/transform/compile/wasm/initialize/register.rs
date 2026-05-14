@@ -63,7 +63,11 @@ impl Semantics {
 				Property::Cui(property) => quote! {
 					group.properties.insert(Property::#property, Value::String(#value));
 				},
-				_ => panic!("aaaAA"),
+				Property::Page(_) => {
+					// Page properties (title) are handled at the document level,
+					// not at the group registration level
+					quote! {}
+				}
 			});
 		quote! {
 			#( #elements )*
