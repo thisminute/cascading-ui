@@ -15,6 +15,7 @@ mod data {
 mod misc {
 	mod basics;
 	mod complex;
+	mod escape_bug;
 	mod events;
 }
 mod properties {

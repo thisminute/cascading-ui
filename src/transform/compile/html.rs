@@ -92,6 +92,9 @@ impl Group {
 			"{}{}",
 			if let Some(value) = self.properties.get(&Property::Cui(CuiProperty::Text)) {
 				value.to_string()
+					.replace('&', "&amp;")
+					.replace('<', "&lt;")
+					.replace('>', "&gt;")
 			} else {
 				"".into()
 			},
