@@ -20,6 +20,7 @@ pub enum Property {
 	Css(String),
 	Cui(CuiProperty),
 	Page(PageProperty),
+	Attribute(String),
 }
 
 pub type Properties = HashMap<Property, Value>;
@@ -36,15 +37,16 @@ impl Property {
 			match property.as_str() {
 				"title" => Self::Page(PageProperty::Title),
 
-				property => Self::Cui(match property {
-					"text" => CuiProperty::Text,
-					"link" => CuiProperty::Link,
-					"tooltip" => CuiProperty::Tooltip,
-					"image" => CuiProperty::Image,
-					"apply" => CuiProperty::Apply,
+				property => match property {
+					"text" => Self::Cui(CuiProperty::Text),
+					"link" => Self::Cui(CuiProperty::Link),
+					"tooltip" => Self::Cui(CuiProperty::Tooltip),
+					"image" => Self::Cui(CuiProperty::Image),
+					"apply" => Self::Cui(CuiProperty::Apply),
 
-					property => panic!(" property not recognized: {}", property),
-				}),
+					// Unrecognized properties become HTML attributes
+					property => Self::Attribute(property.to_string()),
+				},
 			}
 		}
 	}
@@ -53,18 +55,17 @@ impl Property {
 impl ToTokens for Property {
 	fn to_tokens(&self, tokens: &mut TokenStream) {
 		quote! {Property::}.to_tokens(tokens);
-		if let Property::Css(name) = self {
-			quote! {Css(#name)}
-		} else if let Property::Cui(property) = self {
-			match property {
+		match self {
+			Property::Css(name) => quote! { Css(#name) },
+			Property::Cui(property) => match property {
 				CuiProperty::Text => quote! { Text },
 				CuiProperty::Link => quote! { Link },
 				CuiProperty::Tooltip => quote! { Tooltip },
 				CuiProperty::Image => quote! { Image },
 				CuiProperty::Apply => quote! { Apply },
-			}
-		} else {
-			quote! {}
+			},
+			Property::Attribute(name) => quote! { Attribute(#name) },
+			_ => quote! {},
 		}
 		.to_tokens(tokens)
 	}
