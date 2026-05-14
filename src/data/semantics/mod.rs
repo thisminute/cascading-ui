@@ -29,4 +29,7 @@ pub struct Semantics {
 
 	/// Maps class names to group_ids for classes referenced by `apply:` properties
 	pub apply_targets: HashMap<String, usize>,
+
+	/// Route group IDs for hash-based routing (ordered, first is default)
+	pub routes: Vec<(String, usize)>,
 }

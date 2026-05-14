@@ -5,6 +5,7 @@ pub trait Peek {
 	fn peek_element_block(&self) -> bool;
 	fn peek_class_block(&self) -> bool;
 	fn peek_listener_block(&self) -> bool;
+	fn peek_route_block(&self) -> bool;
 	fn peek_variable(&self) -> bool;
 	fn peek_declaration(&self) -> bool;
 	fn peek_assignment(&self) -> bool;
@@ -27,6 +28,9 @@ impl Peek for ParseStream<'_> {
 	}
 	fn peek_listener_block(&self) -> bool {
 		self.peek(Token![?]) && self.peek2(Ident::peek_any) && self.peek3(Brace)
+	}
+	fn peek_route_block(&self) -> bool {
+		self.peek(Token![/]) && self.peek2(Ident::peek_any) && self.peek3(Brace)
 	}
 	fn peek_declaration(&self) -> bool {
 		self.peek(Token![let]) && self.peek2(Token![$]) && self.peek3(Ident::peek_any)

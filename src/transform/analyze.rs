@@ -68,7 +68,7 @@ impl Semantics {
 			let parent = &mut self.groups[parent_id];
 			let current_scope = listener_scope;
 			match block.prefix {
-				Prefix::Element => {
+				Prefix::Element | Prefix::Route => {
 					parent.elements.push(group_id);
 				}
 				Prefix::Class => {
@@ -83,8 +83,11 @@ impl Semantics {
 					parent.listeners.push(group_id);
 				}
 			}
-			let mut group = Group::new(Some(identifier), current_scope, variables);
+			let mut group = Group::new(Some(identifier.clone()), current_scope, variables);
 			group.assignments = assignments;
+			if let Prefix::Route = block.prefix {
+				group.route = Some(identifier);
+			}
 			group
 		} else {
 			page_id = Some(self.pages.len());
