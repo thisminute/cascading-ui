@@ -73,13 +73,8 @@ impl Group {
 		.iter()
 		.filter(|(_, value)| !value.is_empty())
 		.map(|(attribute, value)| {
-			let escaped = value
-				.replace('&', "&amp;")
-				.replace('\'', "&#39;")
-				.replace('"', "&quot;")
-				.replace('<', "&lt;")
-				.replace('>', "&gt;");
-			format!(" {}='{}'", attribute, escaped)
+			let escaped = value.replace('"', "&quot;");
+			format!(" {}=\"{}\"", attribute, escaped)
 		})
 		.collect::<String>();
 
@@ -94,7 +89,6 @@ impl Group {
 				value.to_string()
 					.replace('&', "&amp;")
 					.replace('<', "&lt;")
-					.replace('>', "&gt;")
 			} else {
 				"".into()
 			},

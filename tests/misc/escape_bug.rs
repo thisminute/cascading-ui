@@ -8,15 +8,15 @@ use self::{
 test_header!();
 
 #[wasm_bindgen_test]
-fn href_single_quote_breaks_link() {
-	// href='...' uses single-quote delimiters, so a ' in the value
-	// terminates the attribute early and truncates the URL.
+fn href_double_quote_breaks_link() {
+	// The compiler generates href="..." with double-quote delimiters.
+	// A " in the URL terminates the attribute early — the link breaks.
 	test_setup! {
 		text: "link";
-		link: "https://example.com/it's-here";
+		link: "https://example.com/a\"b";
 	}
 	let href = root.get_attribute("href").unwrap_or_default();
-	assert_eq!(href, "https://example.com/it's-here");
+	assert_eq!(href, "https://example.com/a\"b");
 }
 
 #[wasm_bindgen_test]
