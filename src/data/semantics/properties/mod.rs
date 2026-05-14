@@ -43,6 +43,10 @@ impl Property {
 					"image" => CuiProperty::Image,
 					"apply" => CuiProperty::Apply,
 
+					property if property.starts_with("aria-") => {
+						CuiProperty::Attribute(property.to_string())
+					}
+
 					property => panic!(" property not recognized: {}", property),
 				}),
 			}
@@ -62,6 +66,7 @@ impl ToTokens for Property {
 				CuiProperty::Tooltip => quote! { Tooltip },
 				CuiProperty::Image => quote! { Image },
 				CuiProperty::Apply => quote! { Apply },
+				CuiProperty::Attribute(name) => quote! { Attribute(#name) },
 			}
 		} else {
 			quote! {}
