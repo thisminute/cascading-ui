@@ -16,9 +16,11 @@ impl Semantics {
 		// TODO: make this cleaner with a lightweight html!() macro
 
 		let html = format!(
-			"<html>{}{}</html>",
+			"<!DOCTYPE html><html lang='en'>{}{}</html>",
 			format_args!(
-				"<head>{}{}</head>",
+				"<head>{}{}{}{}</head>",
+				"<meta charset='UTF-8'>",
+				"<meta name='viewport' content='width=device-width, initial-scale=1.0'>",
 				format_args!("<title>{}</title>", root.title),
 				format_args!("<style>{}</style>", styles)
 			),
@@ -70,7 +72,10 @@ impl Group {
 		]
 		.iter()
 		.filter(|(_, value)| !value.is_empty())
-		.map(|(attribute, value)| format!(" {}='{}'", attribute, value))
+		.map(|(attribute, value)| {
+			let escaped = value.replace('"', "&quot;");
+			format!(" {}=\"{}\"", attribute, escaped)
+		})
 		.collect::<String>();
 
 		let children = (self.elements.iter())
@@ -82,6 +87,8 @@ impl Group {
 			"{}{}",
 			if let Some(value) = self.properties.get(&Property::Cui(CuiProperty::Text)) {
 				value.to_string()
+					.replace('&', "&amp;")
+					.replace('<', "&lt;")
 			} else {
 				"".into()
 			},
