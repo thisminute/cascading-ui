@@ -51,6 +51,7 @@ features = [
 	"Location",
 	"Node",
 	"NodeList",
+	"Storage",
 	"Window",
 ]
 version = "^0.3.60"

@@ -120,8 +120,23 @@ impl Semantics {
 				let value = quote! {
 					Value::#type_(#value)
 				};
+
+				let persist_save = if let Some(key) = self.persistent_mutables.get(mutable_id) {
+					quote! {
+						if let Value::String(s) = &state[#mutable_id].0 {
+							let window = web_sys::window().unwrap();
+							if let Ok(Some(storage)) = window.local_storage() {
+								storage.set_item(#key, s).ok();
+							}
+						}
+					}
+				} else {
+					quote! {}
+				};
+
 				quote! {
 					state[#mutable_id].0 = #value;
+					#persist_save
 					for Effect { property, target } in &state[#mutable_id].1 {
 						match target {
 							EffectTarget::Element(element) => {

@@ -12,6 +12,9 @@ impl Semantics {
 		if rules.is_empty() {
 			return quote! {};
 		}
+
+		let persistent_apply = self.compiled_persistent_apply();
+
 		quote! {
 			CLASSES.with(|classes| {
 				let mut classes = classes.borrow_mut();
@@ -27,7 +30,46 @@ impl Semantics {
 					.dyn_into::<HtmlElement>()
 					.unwrap();
 				#rules
+				#persistent_apply
 			});
+		}
+	}
+
+	/// After all effects are registered, apply current values for persistent
+	/// variables. These may differ from compile-time defaults if localStorage
+	/// had a stored value.
+	fn compiled_persistent_apply(&self) -> TokenStream {
+		let applies: Vec<TokenStream> = self
+			.persistent_mutables
+			.keys()
+			.map(|mutable_id| {
+				quote! {
+					for Effect { property, target } in &state[#mutable_id].1 {
+						match target {
+							EffectTarget::Element(element) => {
+								render_property(element, property, state[#mutable_id].0.clone());
+							}
+							EffectTarget::Class(class_name) => {
+								let elements = document.get_elements_by_class_name(class_name);
+								for i in 0..elements.length() {
+									let element = elements
+										.item(i)
+										.unwrap()
+										.dyn_into::<HtmlElement>()
+										.unwrap();
+									render_property(&element, property, state[#mutable_id].0.clone());
+								}
+							}
+						}
+					}
+				}
+			})
+			.collect();
+
+		if applies.is_empty() {
+			quote! {}
+		} else {
+			quote! { #( #applies )* }
 		}
 	}
 }

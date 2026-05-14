@@ -38,10 +38,21 @@ fn parse_content(
 	loop {
 		if input.peek_declaration() {
 			input.parse::<Token![let]>()?;
+			// Check for optional 'persist' modifier: let persist $var: value;
+			let persist = !input.peek(Token![$]);
+			if persist {
+				let keyword = input.call(Ident::parse_any)?;
+				if keyword != "persist" {
+					return Err(syn::Error::new(
+						keyword.span(),
+						"expected 'persist' or '$' after 'let'",
+					));
+				}
+			}
 			let assignment = input.parse::<Assignment>()?;
 			block
 				.variables
-				.push((assignment.variable.0.to_string(), assignment.value));
+				.push((assignment.variable.0.to_string(), assignment.value, persist));
 		} else if input.peek_property() {
 			block.properties.push(input.parse()?);
 		} else if input.peek_element_block() {

@@ -18,7 +18,7 @@ pub struct Block {
 	pub elements: Vec<Block>,
 	pub classes: Vec<Block>,
 	pub listeners: Vec<Block>,
-	pub variables: Vec<(String, Value)>,
+	pub variables: Vec<(String, Value, bool)>, // (name, value, persist)
 	pub assignments: Vec<(String, Value)>,
 }
 
