@@ -132,6 +132,9 @@ impl Semantics {
 			AstValue::Number(value) => Value::Static(StaticValue::Number(*value)),
 			AstValue::String(value) => Value::Static(StaticValue::String(value.clone())),
 			AstValue::ClassRef(name) => Value::ClassRef(name.clone()),
+			AstValue::Concat(values) => {
+				Value::Concat(values.iter().map(|v| self.create_semantic_value(v)).collect())
+			}
 		}
 	}
 }

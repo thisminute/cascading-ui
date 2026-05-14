@@ -31,6 +31,7 @@ pub enum Value {
 	String(String),
 	Variable(Variable),
 	ClassRef(String),
+	Concat(Vec<Value>),
 }
 
 pub struct Property {
