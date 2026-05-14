@@ -37,6 +37,7 @@ fn header() -> TokenStream {
 			Tooltip,
 			Image,
 			Apply,
+			Id,
 		}
 
 		#[derive(Clone, Debug)]
