@@ -28,6 +28,12 @@ impl Document {
 		);
 		log::debug!("...Creating groups...");
 		semantics.create_group_from_block(self.root, None, None, None);
+
+		// Process @keyframes blocks into raw CSS strings
+		for kf in self.keyframes {
+			semantics.keyframes_css.push(kf.to_css());
+		}
+
 		semantics
 	}
 }

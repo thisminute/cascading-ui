@@ -29,4 +29,7 @@ pub struct Semantics {
 
 	/// Maps class names to group_ids for classes referenced by `apply:` properties
 	pub apply_targets: HashMap<String, usize>,
+
+	/// Raw CSS for @keyframes rules
+	pub keyframes_css: Vec<String>,
 }
