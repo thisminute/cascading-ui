@@ -188,9 +188,10 @@ impl Semantics {
 			effects.push(quote! { element.text(#value); });
 		}
 
-		// if let Some(_value) = properties.get(&Property::Cui(CuiProperty::Link)) {
-		// 	effects.push(quote! {});
-		// }
+		if let Some(value) = properties.get(&Property::Cui(CuiProperty::Link)) {
+			let value = self.compiled_dynamic_value(value);
+			effects.push(quote! { element.link(#value); });
+		}
 
 		for (property, value) in properties {
 			if let Property::Css(property) = property {
