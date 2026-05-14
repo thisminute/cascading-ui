@@ -51,7 +51,12 @@ impl Semantics {
 		let contents = (self.pages.iter())
 			.map(|page| (page.route, self.groups[page.root_id].html(&self.groups)))
 			.collect();
-		(contents, self.styles.css())
+		// Prepend @import rules before other CSS (CSS requires imports first)
+		let mut css = self.imports.iter()
+			.map(|url| format!("@import url('{}');", url))
+			.collect::<String>();
+		css.push_str(&self.styles.css());
+		(contents, css)
 	}
 }
 

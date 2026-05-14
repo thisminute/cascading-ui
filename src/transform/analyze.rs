@@ -115,6 +115,11 @@ impl Semantics {
 			self.groups[group_id].properties.insert(property, value);
 		}
 
+		// Collect @import URLs
+		for url in block.imports {
+			self.imports.push(url);
+		}
+
 		for block in block.listeners {
 			self.create_group_from_block(block, page_id, Some(group_id), listener_scope);
 		}
