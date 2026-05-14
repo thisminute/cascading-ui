@@ -11,7 +11,9 @@ impl Semantics {
 				let window = web_sys::window().unwrap();
 				let document = &window.document().unwrap();
 				for element in &group.elements {
-					let tag = if element.properties.get(&Property::Link).is_some() {
+					let tag = if let Some(Value::String(t)) = element.properties.get(&Property::Tag) {
+						t
+					} else if element.properties.get(&Property::Link).is_some() {
 						"a"
 					} else {
 						"div"
@@ -122,6 +124,7 @@ impl Semantics {
 					Property::Tooltip => (),
 					Property::Image => (),
 					Property::Apply => (),
+					Property::Tag => (), // tag is compile-time only
 				}
 			}
 		}
