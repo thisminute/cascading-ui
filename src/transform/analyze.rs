@@ -3,29 +3,29 @@ use crate::data::{
 	semantics::{properties::Property, Group, Page, Semantics, StaticValue, Value},
 };
 
+fn default_style(selector: &str, property: &str, value: &str) -> (String, std::collections::HashMap<String, Value>) {
+	(
+		selector.to_string(),
+		[(
+			property.to_string(),
+			Value::Static(StaticValue::String(value.to_string())),
+		)]
+		.iter()
+		.cloned()
+		.collect(),
+	)
+}
+
 impl Document {
 	pub fn analyze(self) -> Semantics {
 		let mut semantics = Semantics::default();
-		semantics.styles.insert(
-			"body".to_string(),
-			[(
-				"margin".to_string(),
-				Value::Static(StaticValue::String("0".to_string())),
-			)]
-			.iter()
-			.cloned()
-			.collect(),
-		);
-		semantics.styles.insert(
-			"a".to_string(),
-			[(
-				"display".to_string(),
-				Value::Static(StaticValue::String("block".to_string())),
-			)]
-			.iter()
-			.cloned()
-			.collect(),
-		);
+		for (k, v) in [
+			default_style("*, *::before, *::after", "box-sizing", "border-box"),
+			default_style("body", "margin", "0"),
+			default_style("a", "display", "block"),
+		] {
+			semantics.styles.insert(k, v);
+		}
 		log::debug!("...Creating groups...");
 		semantics.create_group_from_block(self.root, None, None, None);
 		semantics
