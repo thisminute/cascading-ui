@@ -51,7 +51,11 @@ impl Semantics {
 		let contents = (self.pages.iter())
 			.map(|page| (page.route, self.groups[page.root_id].html(&self.groups)))
 			.collect();
-		(contents, self.styles.css())
+		let mut css = self.styles.css();
+		for rule in &self.media_styles {
+			css.push_str(rule);
+		}
+		(contents, css)
 	}
 }
 
