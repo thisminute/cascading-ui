@@ -119,7 +119,11 @@ impl Semantics {
 					Property::Css(property) => element.css(property, value),
 					Property::Link => (),
 					Property::Text => element.text(value),
-					Property::Tooltip => (),
+					Property::Tooltip => {
+						if let Value::String(s) = value {
+							element.set_title(s);
+						}
+					}
 					Property::Image => (),
 					Property::Apply => (),
 				}
