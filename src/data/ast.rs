@@ -9,6 +9,7 @@ pub enum Prefix {
 	Element,
 	Class,
 	Listener,
+	PseudoClass,
 }
 
 pub struct Block {
@@ -20,6 +21,7 @@ pub struct Block {
 	pub listeners: Vec<Block>,
 	pub variables: Vec<(String, Value)>,
 	pub assignments: Vec<(String, Value)>,
+	pub pseudo_classes: Vec<Block>,
 }
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone)]

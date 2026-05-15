@@ -1,6 +1,6 @@
 use {
 	super::{
-		properties::Property,
+		properties::{CssProperties, Property},
 		Value,
 	},
 	std::collections::HashMap,
@@ -28,6 +28,10 @@ pub struct Group {
 	pub members: Vec<usize>,
 	pub has_css_properties: bool,
 	pub is_dynamic: bool,
+
+	/// CSS pseudo-class rules (e.g., `:hover`, `:focus`)
+	/// Maps pseudo-class name to CSS property-value pairs
+	pub pseudo_class_styles: HashMap<String, CssProperties>,
 }
 impl Group {
 	pub fn new(
@@ -54,6 +58,8 @@ impl Group {
 			members: Vec::new(),
 			has_css_properties: false,
 			is_dynamic: false,
+
+			pseudo_class_styles: HashMap::new(),
 		}
 	}
 
@@ -85,6 +91,8 @@ impl Group {
 			members: Vec::new(),
 			has_css_properties: self.has_css_properties,
 			is_dynamic: false,
+
+			pseudo_class_styles: HashMap::new(),
 		}
 	}
 

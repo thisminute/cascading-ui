@@ -34,6 +34,7 @@ fn parse_content(
 		listeners: Vec::new(),
 		variables: Vec::new(),
 		assignments: Vec::new(),
+		pseudo_classes: Vec::new(),
 	};
 	loop {
 		if input.peek_declaration() {
@@ -50,6 +51,8 @@ fn parse_content(
 			block.classes.push(input.parse()?);
 		} else if input.peek_listener_block() {
 			block.listeners.push(input.parse()?);
+		} else if input.peek_pseudo_class_block() {
+			block.pseudo_classes.push(input.parse()?);
 		} else if input.peek_assignment() {
 			let assignment = input.parse::<Assignment>()?;
 			block
@@ -70,6 +73,9 @@ impl Parse for Block {
 		} else if input.peek(Token![?]) {
 			input.parse::<Token![?]>()?;
 			Prefix::Listener
+		} else if input.peek(Token![:]) {
+			input.parse::<Token![:]>()?;
+			Prefix::PseudoClass
 		} else {
 			Prefix::Element
 		};

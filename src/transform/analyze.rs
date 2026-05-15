@@ -82,6 +82,10 @@ impl Semantics {
 					listener_scope = Some(group_id);
 					parent.listeners.push(group_id);
 				}
+				Prefix::PseudoClass => {
+					// Pseudo-classes are handled separately via block.pseudo_classes
+					// They shouldn't reach here as standalone blocks
+				}
 			}
 			let mut group = Group::new(Some(identifier), current_scope, variables);
 			group.assignments = assignments;
@@ -113,6 +117,33 @@ impl Semantics {
 				self.groups[group_id].has_css_properties = true;
 			}
 			self.groups[group_id].properties.insert(property, value);
+		}
+
+		// Process pseudo-class blocks — extract CSS properties and store on the group
+		for pseudo_block in block.pseudo_classes {
+			let name = pseudo_block.identifier.to_string();
+			let css_props = pseudo_block
+				.properties
+				.iter()
+				.filter_map(|prop| {
+					let property = Property::new(prop.property.clone());
+					if let Property::Css(css_name) = property {
+						Some((css_name, self.create_semantic_value(&prop.value)))
+					} else {
+						None
+					}
+				})
+				.collect();
+			self.groups[group_id]
+				.pseudo_class_styles
+				.insert(name, css_props);
+			// Pseudo-classes with CSS properties should trigger selector generation
+			if !self.groups[group_id]
+				.pseudo_class_styles
+				.is_empty()
+			{
+				self.groups[group_id].has_css_properties = true;
+			}
 		}
 
 		for block in block.listeners {

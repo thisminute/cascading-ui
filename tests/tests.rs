@@ -6,6 +6,7 @@ mod classes {
 	mod basics;
 	mod event_parallel_nesting;
 	mod parallel_nesting;
+	mod pseudo_classes;
 }
 mod data {
 	mod apply;
