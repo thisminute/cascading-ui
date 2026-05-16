@@ -19,6 +19,7 @@ mod misc {
 	mod events;
 }
 mod properties {
+	mod tabindex;
 	mod text;
 	mod title;
 }
