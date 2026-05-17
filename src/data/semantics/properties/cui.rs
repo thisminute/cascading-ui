@@ -15,6 +15,7 @@ pub enum CuiProperty {
 	Tooltip,
 	Image,
 	Apply,
+	Target,
 }
 
 impl ToTokens for CuiProperty {
@@ -25,6 +26,7 @@ impl ToTokens for CuiProperty {
 			Self::Tooltip => quote! { Tooltip },
 			Self::Image => quote! { Image },
 			Self::Apply => quote! { Apply },
+			Self::Target => quote! { Target },
 		}
 		.to_tokens(tokens)
 	}
