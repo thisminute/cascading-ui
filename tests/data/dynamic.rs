@@ -54,78 +54,108 @@ fn between_listeners() {
 	assert_eq!(root.inner_html(), "hello world<div></div>");
 }
 
-// TODO: classes_1, classes_2, classes_3 require class+mutable variable interaction
-// which needs EffectTarget::Class handling. See SUGGESTIONS.md.
+#[wasm_bindgen_test]
+fn classes_1() {
+	test_setup! {
+		text: $text;
+		let $text: "hello world";
+		?click {
+			$text: "1";
+		}
 
-// #[wasm_bindgen_test]
-// fn classes_1() {
-// 	test_setup! {
-// 		text: $text;
-// 		let $text: "hello world";
-// 		?click {
-// 			$text: "1";
-// 		}
-//
-// 		a {
-// 			text: $text;
-// 		}
-// 		b {
-// 			text: $text;
-// 			?click {
-// 				$text: "2";
-// 			}
-// 		}
-// 	}
-// 	// After fixing EffectTarget::Class, assertions should verify:
-// 	// - All elements referencing $text update when it changes
-// 	// - Priority: b's click handler sets $text: "2" which propagates to all references
-// }
+		a {
+			text: $text;
+		}
+		b {
+			text: $text;
+			?click {
+				$text: "2";
+			}
+		}
+	}
+	let a_el = root.children().item(0).unwrap().dyn_into::<HtmlElement>().unwrap();
+	let b_el = root.children().item(1).unwrap().dyn_into::<HtmlElement>().unwrap();
 
-// #[wasm_bindgen_test]
-// fn classes_2() {
-// 	test_setup! {
-// 		text: $text;
-// 		let $text: "hello world";
-// 		button {
-// 			text: "click me";
-// 			?click {
-// 				$text: "hello world";
-// 			}
-// 		}
-// 		? {
-// 			$text: ;
-// 		}
-// 		?click {
-// 			.a {
-// 				$text: "hello world";
-// 			}
-// 		}
-// 		a {
-// 			text: $text;
-// 		}
-// 		a {
-// 			text: $text;
-// 		}
-// 	}
-// }
+	// Initial: all show "hello world"
+	assert_eq!(a_el.inner_html(), "hello world");
+	assert_eq!(b_el.inner_html(), "hello world");
 
-// #[wasm_bindgen_test]
-// fn classes_3() {
-// 	test_setup! {
-// 		text: "click me";
-// 		?click {
-// 			.a {
-// 				$text: "hello world";
-// 			}
-// 		}
-// 		a {
-// 			text: $text;
-// 		}
-// 		a {
-// 			text: $text;
-// 		}
-// 	}
-// }
+	// Click root: $text becomes "1", all references update
+	root.click();
+	assert_eq!(a_el.inner_html(), "1");
+	assert_eq!(b_el.inner_html(), "1");
+}
+
+#[wasm_bindgen_test]
+fn classes_2() {
+	test_setup! {
+		let $text: "initial";
+		button {
+			text: "reset";
+			?click {
+				$text: "reset value";
+			}
+		}
+		?click {
+			.a {
+				$text: "class updated";
+			}
+		}
+		a {
+			text: $text;
+		}
+		a {
+			text: $text;
+		}
+	}
+	let button_el = root.children().item(0).unwrap().dyn_into::<HtmlElement>().unwrap();
+	let a1 = root.children().item(1).unwrap().dyn_into::<HtmlElement>().unwrap();
+	let a2 = root.children().item(2).unwrap().dyn_into::<HtmlElement>().unwrap();
+
+	// Initial
+	assert_eq!(a1.inner_html(), "initial");
+	assert_eq!(a2.inner_html(), "initial");
+
+	// Click root: class .a sets $text for matching elements
+	root.click();
+	assert_eq!(a1.inner_html(), "class updated");
+	assert_eq!(a2.inner_html(), "class updated");
+
+	// Click button: direct assignment resets $text
+	button_el.click();
+	assert_eq!(a1.inner_html(), "reset value");
+	assert_eq!(a2.inner_html(), "reset value");
+}
+
+#[wasm_bindgen_test]
+fn classes_3() {
+	test_setup! {
+		let $text: "initial";
+		text: "click me";
+		?click {
+			.a {
+				$text: "updated via class";
+			}
+		}
+		a {
+			text: $text;
+		}
+		a {
+			text: $text;
+		}
+	}
+	let a1 = root.children().item(0).unwrap().dyn_into::<HtmlElement>().unwrap();
+	let a2 = root.children().item(1).unwrap().dyn_into::<HtmlElement>().unwrap();
+
+	// Initial: both a elements show "initial"
+	assert_eq!(a1.inner_html(), "initial");
+	assert_eq!(a2.inner_html(), "initial");
+
+	// Click root: class .a sets $text for matching elements, all update
+	root.click();
+	assert_eq!(a1.inner_html(), "updated via class");
+	assert_eq!(a2.inner_html(), "updated via class");
+}
 
 #[wasm_bindgen_test]
 fn base() {

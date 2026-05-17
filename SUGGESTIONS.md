@@ -1,40 +1,8 @@
 # Suggestions for Future Work
 
-## Remaining Disabled Tests (3)
+## Previously Disabled Tests — RESOLVED
 
-The `classes_1`, `classes_2`, and `classes_3` tests in `tests/data/dynamic.rs` require **class + mutable variable interaction** which is a harder problem than basic mutable variables.
-
-### What's needed
-
-When a mutable variable is referenced by elements that received it via class cascading, the Effect system needs to:
-
-1. **Implement `EffectTarget::Class` handling** — currently the match in `initialize/dynamic.rs` only handles `EffectTarget::Element`. The `Class` variant needs to query all elements with that class selector and update them.
-
-2. **Register Effects for class-targeted properties** — in `compiled_element`, Effects are registered for direct element properties. But when a property comes via class cascading, the Effect should target the class (so all instances update), not individual elements.
-
-3. **Dynamic re-registration** — when a listener fires and creates new elements that reference mutable variables, those elements need to register themselves in the Effect system. Currently only static (pre-rendered) elements register Effects.
-
-### Suggested approach
-
-The commented-out `render_variables` function in `runtime/render.rs:85-115` had the right shape. Consider:
-
-```rust
-fn render_variable(state: &mut Vec<(Value, Vec<Effect>)>, id: usize, value: Value) {
-    state[id].0 = value;
-    for Effect { property, target } in &state[id].1 {
-        match target {
-            EffectTarget::Element(element) => render_property(element, property, state[id].0.clone()),
-            EffectTarget::Class(class) => {
-                let elements = document.get_elements_by_class_name(class);
-                for i in 0..elements.length() {
-                    let element = elements.item(i).unwrap().dyn_into::<HtmlElement>().unwrap();
-                    render_property(&element, property, state[id].0.clone());
-                }
-            }
-        }
-    }
-}
-```
+The `classes_1`, `classes_2`, and `classes_3` tests in `tests/data/dynamic.rs` are now enabled and passing. The class+mutable variable interaction was already implemented correctly — the tests just needed proper `let` declarations and assertions. The original tests used invalid syntax (undeclared variables, anonymous listeners).
 
 ## Architecture Improvements
 
